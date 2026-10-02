@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bata 1 (Control de Stock)</title>
+
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Escáner QR/Barcode Html5Qrcode -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            bata: { red: '#D32F2F', dark: '#1E293B', light: '#F8FAFC' }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .carrusel-container {
+      scroll-snap-type: x mandatory;
+    }
+    .carrusel-card {
+      scroll-snap-align: center;
+      scroll-snap-stop: always;
+    }
+
+    .img-contain {
+      object-fit: contain;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));
+    }
+  </style>
+</head>
+<body class="bg-slate-900 font-sans h-screen w-screen overflow-hidden text-slate-800 flex flex-col justify-center items-center select-none antialiased">
+
+  <!-- MARCO PRINCIPAL MÓVIL / RESPONSIVE -->
+  <div class="w-full max-w-md h-full bg-slate-100 flex flex-col justify-between overflow-hidden relative shadow-2xl">
+
+    <!-- CABECERA SIMPLE -->
+    <header class="bg-white border-b border-slate-200 px-3 py-2.5 flex-shrink-0 z-40">
+      <div class="flex items-center justify-between gap-2">
+        
+        <div>
+          <h1 class="font-black text-slate-900 text-sm leading-tight">
+            Bata 1 <span class="text-slate-400 font-medium text-xs">(Control de Stock)</span>
+          </h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+            <button id="btn-modo-consulta" onclick="cambiarModo('consulta')" class="px-2.5 py-1 rounded-md text-[10px] font-extrabold transition bg-white text-slate-800 shadow-xs">
+              <i class="fa-solid fa-magnifying-glass text-bata-red mr-1"></i> Consulta
+            </button>
+            <button id="btn-modo-selectivo" onclick="cambiarModo('selectivo')" class="px-2.5 py-1 rounded-md text-[10px] font-extrabold transition text-slate-500">
+              <i class="fa-solid fa-pen-to-square mr-1"></i> Selectivo
+            </button>
+          </div>
+
+          <button onclick="sincronizarDatos()" class="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 text-xs active:scale-95">
+            <i id="icon-sync" class="fa-solid fa-rotate"></i>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- CUERPO -->
+    <main class="w-full px-3 py-2 flex-1 flex flex-col justify-between overflow-hidden gap-2">
+
+      <!-- BÚSQUEDA Y HERRAMIENTAS -->
+      <div class="space-y-1.5 flex-shrink-0">
+        <div class="relative flex items-center">
+          <i class="fa-solid fa-search absolute left-3 text-slate-400 text-xs"></i>
+          
+          <input type="number" pattern="[0-9]*" id="input-busqueda" placeholder="Buscar por código (solo números)..." 
+                 class="w-full pl-8 pr-20 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-bata-red/20 focus:border-bata-red font-bold text-xs shadow-2xs"
+                 oninput="buscarYCentrarArticulo(false)">
+          
+          <div class="absolute right-2 flex items-center gap-1.5">
+            <button id="btn-limpiar" onclick="limpiarBusqueda()" class="hidden text-slate-400 hover:text-slate-600 mr-0.5">
+              <i class="fa-solid fa-circle-xmark text-xs"></i>
+            </button>
+            <button onclick="activarBusquedaVoz()" title="Búsqueda por voz (Sólo números)" class="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-xs transition active:scale-95">
+              <i id="icon-voz" class="fa-solid fa-microphone"></i>
+            </button>
+            <button onclick="abrirCamaraEscaner()" title="Escanear código de barras" class="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-xs transition active:scale-95">
+              <i class="fa-solid fa-barcode"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-[10px] text-slate-500 font-bold px-1">
+          <span id="txt-posicion" class="bg-slate-200/70 px-2 py-0.5 rounded text-slate-700">Conectando...</span>
+          <span id="txt-modo-banner" class="text-bata-red bg-red-50 px-2 py-0.5 rounded border border-red-100 font-black">
+            CONSULTA
+          </span>
+        </div>
+      </div>
+
+      <!-- SLIDER / CARRUSEL -->
+      <div class="relative flex-1 flex items-center min-h-0">
+        <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full h-full items-center gap-3">
+          <div class="carrusel-card min-w-full bg-white rounded-2xl p-6 border border-slate-200 text-center space-y-2 shadow-2xs my-auto">
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-bata-red"></i>
+            <p class="text-xs font-bold text-slate-600">Obteniendo datos de Google Sheets...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center text-[9px] text-slate-400 font-semibold flex-shrink-0">
+        <i class="fa-solid fa-mobile-screen-button mr-1"></i> Agita el celular para escanear código de barras
+      </div>
+
+    </main>
+
+    <!-- MODAL ESCÁNER CÁMARA (Html5Qrcode) -->
+    <div id="modal-escaner" class="fixed inset-0 bg-slate-900/90 z-50 hidden flex-col items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+        <div class="bg-slate-900 text-white p-3 flex items-center justify-between">
+          <span class="text-xs font-black"><i class="fa-solid fa-barcode text-bata-red mr-1.5"></i> Escanear Código</span>
+          <button onclick="cerrarCamaraEscaner()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+        </div>
+        <div class="relative bg-black w-full h-64 flex items-center justify-center overflow-hidden">
+          <div id="reader" class="w-full h-full"></div>
+        </div>
+        <div class="p-3 text-center bg-slate-50">
+          <p class="text-[10px] text-slate-500 font-bold">Coloca el código de barras frente a la cámara</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICACIÓN -->
+    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-4 py-2 rounded-xl shadow-xl flex items-center gap-2 text-xs z-50">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+      <span id="toast-msg">Mensaje</span>
+    </div>
+
+  </div>
+
+  <script>
+    const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbx-pUdg1wOtaxE_V27ZO6-zLAh7lkge8GHKfURNDF_HPim4WGSktwfz4jKyHIEGa81P0A/exec";
+
+    let dbInventario = [];
+    let modoActual = 'consulta'; 
+    let indiceActual = 0;
+    let guardandoBloqueo = false;
+    let html5QrCodeScanner = null;
+    let ultimoShake = 0;
+
+    window.onload = function() {
+      sincronizarDatos();
+      inicializarSensorShake();
+
+      const carrusel = document.getElementById('carrusel');
+      carrusel.addEventListener('scroll', () => {
+        if (guardandoBloqueo) return;
+        const width = carrusel.offsetWidth + 12;
+        const nuevoIndice = Math.round(carrusel.scrollLeft / width);
+        if (nuevoIndice !== indiceActual && dbInventario[nuevoIndice]) {
+          indiceActual = nuevoIndice;
+          actualizarContadorPosicion();
+        }
+      });
+    };
+
+    // SENSOR PARA DETECTAR CUANDO SE AGITA EL CELULAR (SHAKE)
+    function inicializarSensorShake() {
+      if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', (e) => {
+          const ahora = Date.now();
+          if ((ahora - ultimoShake) < 2000) return; // Evita disparos seguidos
+
+          const acc = e.accelerationIncludingGravity;
+          if (!acc) return;
+
+          const fuerza = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+          if (fuerza > 28) { // Umbral de agitado
+            ultimoShake = ahora;
+            abrirCamaraEscaner();
+          }
+        }, false);
+      }
+    }
+
+    function sincronizarDatos() {
+      const iconSync = document.getElementById('icon-sync');
+      iconSync.classList.add('fa-spin');
+
+      fetch(`${URL_APPS_SCRIPT}?action=obtenerInventario`)
+        .then(res => res.json())
+        .then(data => {
+          dbInventario = data;
+          renderizarCarrusel();
+          mostrarToast("Base de datos cargada", "success");
+        })
+        .catch(err => {
+          console.error(err);
+          mostrarToast("Error de conexión con Sheets", "error");
+        })
+        .finally(() => {
+          iconSync.classList.remove('fa-spin');
+        });
+    }
+
+    function buscarYCentrarArticulo(suave = false) {
+      const q = document.getElementById('input-busqueda').value.trim().toLowerCase();
+      document.getElementById('btn-limpiar').classList.toggle('hidden', q.length === 0);
+
+      if (q === "") return;
+
+      const indexEncontrado = dbInventario.findIndex(item => {
+        const cod = String(obtenerPropiedad(item, ['articulo', 'Articulo', 'ARTICULO']) || "").toLowerCase();
+        return cod.includes(q);
+      });
+
+      if (indexEncontrado !== -1) {
+        irAlIndice(indexEncontrado, suave);
+      }
+    }
+
+    function irAlIndice(index, suave = false) {
+      const carrusel = document.getElementById('carrusel');
+      const width = carrusel.offsetWidth + 12;
+      indiceActual = index;
+      carrusel.scrollTo({ 
+        left: index * width, 
+        behavior: suave ? 'smooth' : 'auto' 
+      });
+      actualizarContadorPosicion();
+    }
+
+    function limpiarBusqueda() {
+      document.getElementById('input-busqueda').value = '';
+      document.getElementById('btn-limpiar').classList.add('hidden');
+    }
+
+    // BÚSQUEDA POR VOZ (FILTRADO SOLO NÚMEROS)
+    function activarBusquedaVoz() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        mostrarToast("Tu navegador no soporta reconocimiento de voz", "error");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'es-ES';
+      recognition.interimResults = false;
+
+      const iconVoz = document.getElementById('icon-voz');
+      iconVoz.className = "fa-solid fa-microphone-lines text-bata-red fa-bounce";
+      mostrarToast("Di el número del artículo...", "info");
+
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        let texto = event.results[0][0].transcript;
+        // Reemplazar palabras numéricas comunes y limpiar texto
+        let soloNumeros = texto.replace(/\D/g, ''); 
+
+        if (soloNumeros) {
+          document.getElementById('input-busqueda').value = soloNumeros;
+          buscarYCentrarArticulo(false);
+          mostrarToast(`Buscando código: ${soloNumeros}`, "success");
+        } else {
+          mostrarToast("No se detectaron números en lo hablado", "error");
+        }
+      };
+
+      recognition.onerror = () => {
+        mostrarToast("Error en reconocimiento de voz", "error");
+      };
+
+      recognition.onend = () => {
+        iconVoz.className = "fa-solid fa-microphone";
+      };
+    }
+
+    // ESCÁNER MEDIANTE Html5Qrcode
+    function abrirCamaraEscaner() {
+      document.getElementById('modal-escaner').classList.remove('hidden');
+      document.getElementById('modal-escaner').classList.add('flex');
+
+      if (!html5QrCodeScanner) {
+        html5QrCodeScanner = new Html5Qrcode("reader");
+      }
+
+      const config = { fps: 15, qrbox: { width: 250, height: 150 } };
+
+      html5QrCodeScanner.start(
+        { facingMode: "environment" }, 
+        config, 
+        (decodedText) => {
+          const soloNum = decodedText.replace(/\D/g, '');
+          const codigoFinal = soloNum.length > 0 ? soloNum : decodedText;
+          
+          document.getElementById('input-busqueda').value = codigoFinal;
+          buscarYCentrarArticulo(false);
+          cerrarCamaraEscaner();
+          mostrarToast(`Escaneado: ${codigoFinal}`, "success");
+        },
+        (errorMessage) => {
+          // Ignorar frames vacíos
+        }
+      ).catch(err => {
+        console.error(err);
+        mostrarToast("No se pudo iniciar la cámara", "error");
+        cerrarCamaraEscaner();
+      });
+    }
+
+    function cerrarCamaraEscaner() {
+      if (html5QrCodeScanner) {
+        html5QrCodeScanner.stop().then(() => {
+          document.getElementById('modal-escaner').classList.add('hidden');
+          document.getElementById('modal-escaner').classList.remove('flex');
+        }).catch(err => {
+          document.getElementById('modal-escaner').classList.add('hidden');
+          document.getElementById('modal-escaner').classList.remove('flex');
+        });
+      } else {
+        document.getElementById('modal-escaner').classList.add('hidden');
+        document.getElementById('modal-escaner').classList.remove('flex');
+      }
+    }
+
+    function obtenerPropiedad(obj, llaves, valorDefecto = '') {
+      for (let k of llaves) {
+        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') {
+          return obj[k];
+        }
+      }
+      return valorDefecto;
+    }
+
+    function generarMatrizTallasElegante(cadenaTallas, stockTotal) {
+      if (!cadenaTallas) {
+        return `<div class="text-[10px] text-slate-400 italic text-center py-2 bg-slate-50 border border-slate-200 rounded-xl">Sin desglose de tallas</div>`;
+      }
+
+      const pares = [];
+      const items = String(cadenaTallas).split(/[,;]+/);
+
+      items.forEach(el => {
+        const limpio = el.trim();
+        if (limpio.includes('/')) {
+          const [t, c] = limpio.split('/');
+          if (t && c) pares.push({ talla: t.trim(), cant: c.trim() });
+        } else if (limpio.includes(':')) {
+          const [t, c] = limpio.split(':');
+          if (t && c) pares.push({ talla: t.trim(), cant: c.trim() });
+        }
+      });
+
+      if (pares.length === 0) {
+        return `<div class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-center text-xs font-black text-slate-700">${cadenaTallas}</div>`;
+      }
+
+      return `
+        <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-2xs">
+          <div class="flex items-center justify-between bg-slate-100 border-b border-slate-200 px-2.5 py-1 text-[10px]">
+            <span class="font-extrabold text-slate-500 uppercase tracking-wider">Desglose de Tallas</span>
+            <span class="font-black text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200">Total: ${stockTotal || 0} pares</span>
+          </div>
+          <div class="p-1.5 flex flex-wrap gap-1.5 justify-start max-h-[100px] overflow-y-auto no-scrollbar">
+            ${pares.map(p => `
+              <div class="flex flex-col items-center justify-center bg-slate-50 border border-slate-200/80 rounded-lg px-2 py-1 min-w-[38px] flex-1">
+                <span class="text-[9px] font-extrabold text-slate-400 leading-none">T-${p.talla}</span>
+                <span class="text-xs font-black text-slate-900 mt-0.5 leading-none">${p.cant}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+    }
+
+    function renderizarCarrusel() {
+      const carrusel = document.getElementById('carrusel');
+      
+      if (dbInventario.length === 0) {
+        carrusel.innerHTML = `
+          <div class="carrusel-card min-w-full bg-white rounded-2xl p-6 border border-slate-200 text-center text-slate-400 space-y-1 shadow-2xs">
+            <i class="fa-solid fa-box-open text-3xl text-slate-300"></i>
+            <p class="text-xs font-bold text-slate-600">No se encontraron artículos</p>
+          </div>`;
+        actualizarContadorPosicion();
+        return;
+      }
+
+      carrusel.innerHTML = dbInventario.map((item) => {
+        const cod = String(obtenerPropiedad(item, ['articulo', 'Articulo', 'ARTICULO'])).trim();
+        const stockBD = obtenerPropiedad(item, ['stock', 'Stock', 'STOCK'], '0');
+        const pPlanilla = obtenerPropiedad(item, ['pPlanilla', 'pplanilla', 'p_planilla', 'Planilla', 'PLANILLA'], '0.00');
+        const vtaAcc = obtenerPropiedad(item, ['vtaAcctalla', 'vtaAcc', 'vta_acc', 'VtaAcc', 'VentasAcumuladas'], '0');
+        const categoria = obtenerPropiedad(item, ['categoria', 'Categoria', 'CATEGORIA'], 'CALZADO');
+        const calidad = obtenerPropiedad(item, ['calidad', 'Calidad', 'CALIDAD'], '1');
+        const antiguedad = obtenerPropiedad(item, ['antiguedad', 'Antiguedad', 'ANTIGUEDAD', 'va', 'VA'], '');
+        const selectivo = obtenerPropiedad(item, ['selectivo', 'Selectivo', 'SELECTIVO'], '');
+        const tallaCantidadStr = obtenerPropiedad(item, ['tallaCantidad', 'tallacantidad', 'TallaCantidad', 'TALLACANTIDAD'], '');
+
+        const urlImagen = `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cod}_1.JPG`;
+        const htmlTallas = generarMatrizTallasElegante(tallaCantidadStr, stockBD);
+
+        return `
+          <div class="carrusel-card min-w-full h-full bg-white rounded-2xl border border-slate-200 p-3 shadow-2xs flex flex-col justify-between gap-2 overflow-hidden">
+            
+            <!-- MARCO FOTO Y BADGES -->
+            <div class="relative w-full flex-1 min-h-[110px] max-h-[145px] bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-2 overflow-hidden">
+              <img src="${urlImagen}" 
+                   onerror="this.onerror=null; this.src='https://via.placeholder.com/220x220/f8fafc/94a3b8?text=SIN+IMAGEN';" 
+                   alt="${cod}" class="max-h-full max-w-full img-contain">
+              
+              <div class="absolute top-2 left-2 flex items-center gap-1">
+                <span class="bg-white/90 border border-slate-200 text-[9px] font-black px-2 py-0.5 rounded-md text-slate-700 shadow-2xs">
+                  Calidad: ${calidad}
+                </span>
+                ${antiguedad ? `
+                  <span class="bg-slate-900 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md shadow-2xs flex items-center gap-1">
+                    <i class="fa-regular fa-clock text-[8px]"></i> ${antiguedad}
+                  </span>
+                ` : ''}
+              </div>
+
+              <span class="absolute top-2 right-2 bg-bata-dark text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                ${categoria}
+              </span>
+            </div>
+
+            <!-- DETALLES Y VENTAS ACUMULADAS -->
+            <div class="space-y-1.5 flex-shrink-0">
+              <div class="flex items-end justify-between px-0.5">
+                <div>
+                  <span class="text-[9px] font-bold text-slate-400 uppercase leading-none block">Código Art.</span>
+                  <h2 class="text-xl font-black text-slate-900 tracking-tight leading-none mt-0.5">${cod}</h2>
+                </div>
+                
+                <div class="flex items-center gap-3 text-[11px]">
+                  <div class="text-right">
+                    <span class="text-[9px] font-bold text-slate-400 leading-none block">P. Planilla</span>
+                    <span class="font-black text-slate-800">S/ ${pPlanilla}</span>
+                  </div>
+                  <div class="text-right bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-lg">
+                    <span class="text-[8px] font-black text-blue-500 leading-none block uppercase">Vta. Acc.</span>
+                    <span class="font-black text-blue-900 text-xs">${vtaAcc}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Matriz de Tallas -->
+              ${htmlTallas}
+            </div>
+
+            <!-- STOCK Y SELECTIVO -->
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center justify-between gap-2 flex-shrink-0">
+              
+              <div class="text-center px-2">
+                <span class="block text-[8px] font-extrabold uppercase text-slate-400 leading-none">Stock BD</span>
+                <span class="text-base font-black text-slate-900 leading-tight">${stockBD}</span>
+              </div>
+
+              <div class="h-6 w-px bg-slate-200"></div>
+
+              ${modoActual === 'selectivo' ? `
+                <div class="flex items-center gap-1.5 bg-amber-500/10 p-1 rounded-xl border border-amber-500/20 flex-1 justify-end">
+                  <span class="text-[9px] font-black text-amber-900 uppercase">Conteo:</span>
+                  <input type="number" id="input-sel-${cod}" value="${selectivo}" placeholder="0" 
+                         class="w-14 px-2 py-1 bg-white border border-amber-300 rounded-lg text-center font-black text-xs text-amber-900 focus:outline-none">
+                  <button onclick="guardarSelectivo('${cod}')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 py-1 rounded-lg transition shadow-2xs">
+                    <i class="fa-solid fa-check text-xs"></i>
+                  </button>
+                </div>
+              ` : `
+                <div class="text-center px-3">
+                  <span class="block text-[8px] font-extrabold uppercase text-slate-400 leading-none">Selectivo</span>
+                  <span class="text-base font-black text-bata-red leading-tight">${selectivo || '--'}</span>
+                </div>
+              `}
+
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+      setTimeout(() => {
+        const carrusel = document.getElementById('carrusel');
+        const width = carrusel.offsetWidth + 12;
+        carrusel.scrollLeft = indiceActual * width;
+        actualizarContadorPosicion();
+      }, 50);
+    }
+
+    function actualizarContadorPosicion() {
+      const txtPos = document.getElementById('txt-posicion');
+      if (dbInventario.length === 0) {
+        txtPos.innerText = `Sin datos`;
+      } else {
+        txtPos.innerText = `Artículo ${indiceActual + 1} de ${dbInventario.length}`;
+      }
+    }
+
+    function cambiarModo(modo) {
+      modoActual = modo;
+      const btnConsulta = document.getElementById('btn-modo-consulta');
+      const btnSelectivo = document.getElementById('btn-modo-selectivo');
+      const bannerModo = document.getElementById('txt-modo-banner');
+
+      if (modo === 'selectivo') {
+        btnSelectivo.className = "px-2.5 py-1 rounded-md text-[10px] font-extrabold transition bg-amber-500 text-white shadow-xs";
+        btnConsulta.className = "px-2.5 py-1 rounded-md text-[10px] font-extrabold transition text-slate-500";
+        bannerModo.innerText = "SELECTIVO";
+        bannerModo.className = "text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-black";
+      } else {
+        btnConsulta.className = "px-2.5 py-1 rounded-md text-[10px] font-extrabold transition bg-white text-slate-800 shadow-xs";
+        btnSelectivo.className = "px-2.5 py-1 rounded-md text-[10px] font-extrabold transition text-slate-500";
+        bannerModo.innerText = "CONSULTA";
+        bannerModo.className = "text-bata-red bg-red-50 px-2 py-0.5 rounded border border-red-100 font-black";
+      }
+
+      renderizarCarrusel();
+    }
+
+    function guardarSelectivo(codigo) {
+      const input = document.getElementById(`input-sel-${codigo}`);
+      const valorIngresado = input.value.trim();
+
+      mostrarToast(`Guardando ${codigo}...`, "info");
+      guardandoBloqueo = true;
+
+      fetch(URL_APPS_SCRIPT, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'actualizarSelectivo',
+          articulo: codigo,
+          selectivo: valorIngresado
+        })
+      })
+      .then(() => {
+        const obj = dbInventario.find(i => String(obtenerPropiedad(i, ['articulo', 'Articulo'])).trim() === String(codigo).trim());
+        if (obj) obj.selectivo = valorIngresado;
+        mostrarToast(`Selectivo (${valorIngresado}) guardado`, "success");
+      })
+      .catch(err => {
+        console.error(err);
+        mostrarToast("Error al conectar con Sheets", "error");
+      })
+      .finally(() => {
+        guardandoBloqueo = false;
+      });
+    }
+
+    function mostrarToast(mensaje, tipo = "success") {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toast-msg');
+      const icon = document.getElementById('toast-icon');
+
+      msg.innerText = mensaje;
+
+      if (tipo === "success") icon.className = "fa-solid fa-circle-check text-emerald-400";
+      else if (tipo === "error") icon.className = "fa-solid fa-circle-xmark text-rose-400";
+      else icon.className = "fa-solid fa-circle-info text-sky-400";
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+  </script>
+</body>
+</html>
