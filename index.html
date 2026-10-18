@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Bata 1 | Control de Stock</title>
 
-  <!-- Google Fonts & Tailwind CSS -->
+  <!-- Fuentes y Tailwind -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-  <!-- Escáner QR/Barcode -->
+  
+  <!-- Html5Qrcode Scanner -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <script>
@@ -33,9 +33,11 @@
   </script>
 
   <style>
+    /* Ocultar scrolls */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
+    /* Carrusel Snap */
     .carrusel-container {
       scroll-snap-type: x mandatory;
       touch-action: pan-x;
@@ -45,13 +47,14 @@
       scroll-snap-stop: always;
     }
     
+    /* Safe Area */
     body {
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
       overscroll-behavior: none;
     }
 
-    /* Sistema de Vistas (Secciones ocultas) */
+    /* Vistas SPA */
     .app-section {
       display: none;
       flex-direction: column;
@@ -60,27 +63,89 @@
       overflow: hidden;
       animation: fadeIn 0.2s ease-in-out;
     }
-    .app-section.active {
+    .app-section.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ====== ESTILOS DEL ESCÁNER ====== */
+    #reader { width: 100%; height: 100%; }
+    #reader video { object-fit: cover !important; }
+    
+    /* Overlay del escáner (Láser y esquinas) */
+    .scanner-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
       display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,0.4); /* Oscurece el fondo */
+    }
+    /* Ventana transparente en el medio */
+    .scanner-window {
+      width: 85%;
+      max-width: 320px;
+      height: 180px; /* Ajustado para EAN-13 horizontales */
+      background: transparent;
+      box-shadow: 0 0 0 100vmax rgba(0,0,0,0.6); /* Efecto de foco */
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Esquinas */
+    .scanner-window::before, .scanner-window::after {
+      content: ''; position: absolute; width: 30px; height: 30px; border-color: #E31E24; border-style: solid;
+    }
+    .scanner-window::before { top: 0; left: 0; border-width: 4px 0 0 4px; border-top-left-radius: 12px; }
+    .scanner-window::after { bottom: 0; right: 0; border-width: 0 4px 4px 0; border-bottom-right-radius: 12px; }
+    /* Esquinas faltantes (usando div extra) */
+    .corner-tr, .corner-bl { position: absolute; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; }
+    .corner-tr { top: 0; right: 0; border-width: 4px 4px 0 0; border-top-right-radius: 12px; }
+    .corner-bl { bottom: 0; left: 0; border-width: 0 0 4px 4px; border-bottom-left-radius: 12px; }
+    
+    /* Láser animado */
+    .laser {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: #E31E24;
+      box-shadow: 0 0 10px #E31E24;
+      animation: scan 2s infinite linear;
+    }
+    @keyframes scan {
+      0% { transform: translateY(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(180px); opacity: 0; }
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* Botones flotantes del escáner */
+    .scanner-btn {
+      pointer-events: auto;
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      border: 1px solid rgba(255,255,255,0.3);
+      transition: all 0.2s;
     }
+    .scanner-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.4); }
+    .scanner-btn.active { background: #E31E24; border-color: #E31E24; box-shadow: 0 0 15px rgba(227,30,36,0.5); }
   </style>
 </head>
 <body class="bg-slate-100 font-sans h-[100dvh] w-screen overflow-hidden text-slate-800 flex flex-col justify-center items-center antialiased">
 
-  <!-- MARCO PRINCIPAL -->
   <div class="w-full max-w-md h-full bg-slate-50 flex flex-col relative shadow-2xl overflow-hidden">
 
-    <!-- CABECERA (Oculta en algunas vistas si es necesario) -->
-    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/60 px-4 py-3 flex-shrink-0 z-40 sticky top-0">
+    <!-- CABECERA -->
+    <header class="bg-white border-b border-slate-200 px-4 py-3 flex-shrink-0 z-40 sticky top-0">
       <div class="flex items-center justify-between gap-2">
         <div>
-          <h1 id="header-title" class="font-black text-slate-900 text-base leading-tight tracking-tight">Bata 1</h1>
-          <p id="header-subtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Control de Stock</p>
+          <h1 id="header-title" class="font-black text-slate-900 text-base leading-tight tracking-tight">Buscador</h1>
+          <p id="header-subtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bata 1</p>
         </div>
         <button onclick="sincronizarDatos()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 active:scale-95 transition-transform">
           <i id="icon-sync" class="fa-solid fa-rotate text-sm"></i>
@@ -89,38 +154,45 @@
     </header>
 
     <!-- CONTENEDOR DE VISTAS -->
-    <main class="w-full flex-1 relative overflow-hidden pb-16"> <!-- pb-16 para dejar espacio al menú inferior -->
+    <main class="w-full flex-1 relative overflow-hidden pb-16">
 
-      <!-- ================= VISTA 1: INVENTARIO ================= -->
-      <section id="view-inventario" class="app-section active px-4 py-3 gap-3">
+      <!-- ================= VISTA 1: BUSCADOR / SELECTIVO ================= -->
+      <section id="view-buscar" class="app-section active px-4 py-3 gap-3">
         
-        <!-- Barra de búsqueda -->
-        <div class="space-y-2 flex-shrink-0 z-30">
-          <div class="relative flex items-center shadow-soft rounded-2xl">
-            <i class="fa-solid fa-search absolute left-4 text-slate-400 text-sm"></i>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" id="input-busqueda" placeholder="Buscar código..." 
-                   class="w-full pl-10 pr-24 py-3 rounded-2xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-bata-red/20 focus:border-bata-red font-bold text-sm transition-all"
+        <!-- Barra de Búsqueda Inteligente -->
+        <div class="flex-shrink-0 z-30 space-y-2">
+          <div class="relative flex items-center bg-white rounded-2xl shadow-soft border border-slate-200 p-1">
+            <i class="fa-solid fa-search text-slate-400 ml-3 text-sm"></i>
+            <input type="text" inputmode="numeric" id="input-busqueda" placeholder="Tipea o dicta el código..." 
+                   class="flex-1 bg-transparent px-3 py-2.5 text-sm font-bold text-slate-900 focus:outline-none placeholder-slate-400"
                    oninput="onBusquedaInput()">
-            <div class="absolute right-2 flex items-center gap-1">
-              <button id="btn-limpiar" onclick="limpiarBusqueda()" class="hidden w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 flex items-center justify-center">
+            
+            <div class="flex items-center gap-1 pr-1">
+              <button id="btn-limpiar" onclick="limpiarBusqueda()" class="hidden w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 flex items-center justify-center">
                 <i class="fa-solid fa-circle-xmark"></i>
               </button>
-              <button onclick="activarBusquedaVoz()" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition active:scale-95 border border-slate-100">
-                <i id="icon-voz" class="fa-solid fa-microphone text-sm"></i>
+              <button onclick="activarBusquedaVoz()" id="btn-voz" class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-all border border-slate-100 relative overflow-hidden">
+                <i id="icon-voz" class="fa-solid fa-microphone text-base z-10"></i>
+              </button>
+              <button onclick="abrirCamaraEscaner()" class="w-10 h-10 rounded-xl bg-bata-red text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
+                <i class="fa-solid fa-camera text-base"></i>
               </button>
             </div>
           </div>
 
+          <!-- Toggle Selectivo (Se activa aquí) -->
           <div class="flex items-center justify-between text-[11px] font-bold px-1">
             <span id="txt-posicion" class="text-slate-500">Cargando...</span>
-            <span id="txt-modo-banner" class="text-bata-red bg-red-50 px-2.5 py-1 rounded-md border border-red-100">CONSULTA</span>
+            <button onclick="toggleModoSelectivo()" id="btn-toggle-selectivo" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition">
+              <i class="fa-solid fa-pen-to-square"></i> 
+              <span>Modo Conteo</span>
+            </button>
           </div>
         </div>
 
-        <!-- Carrusel -->
+        <!-- Carrusel de Productos -->
         <div class="relative flex-1 flex min-h-0 -mx-2 px-2">
           <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full items-stretch gap-4 pb-2">
-            <!-- Skeleton de carga -->
             <div class="carrusel-card min-w-full bg-white rounded-3xl p-6 border border-slate-200 text-center flex flex-col items-center justify-center shadow-soft">
               <i class="fa-solid fa-circle-notch fa-spin text-2xl text-bata-red mb-2"></i>
               <p class="text-sm font-bold text-slate-700">Sincronizando...</p>
@@ -129,98 +201,124 @@
         </div>
       </section>
 
-      <!-- ================= VISTA 2: HISTORIAL (Ejemplo) ================= -->
-      <section id="view-historial" class="app-section px-4 py-6">
+      <!-- ================= VISTA 2: MOVIMIENTOS ================= -->
+      <section id="view-movimientos" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
           <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-clock-rotate-left"></i>
+            <i class="fa-solid fa-boxes-packing"></i>
           </div>
-          <h2 class="text-lg font-black text-slate-800">Historial de Escaneos</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Aquí puedes colocar la tabla o lista de movimientos que traigas desde Google Sheets.</p>
+          <h2 class="text-lg font-black text-slate-800">Recepción / Salida</h2>
+          <p class="text-sm text-slate-500 max-w-[250px]">Módulo para registrar ingreso de mercadería o bajas por venta.</p>
         </div>
       </section>
 
-      <!-- ================= VISTA 3: REPORTES (Ejemplo) ================= -->
+      <!-- ================= VISTA 3: REPORTES ================= -->
       <section id="view-reportes" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
           <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-chart-pie"></i>
+            <i class="fa-solid fa-chart-line"></i>
           </div>
-          <h2 class="text-lg font-black text-slate-800">Reportes y Métricas</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Gráficos de ventas o stock bajo. Puedes usar Chart.js aquí.</p>
+          <h2 class="text-lg font-black text-slate-800">Reportes</h2>
+          <p class="text-sm text-slate-500 max-w-[250px]">Métricas de stock y movimientos.</p>
         </div>
       </section>
 
-      <!-- ================= VISTA 4: AJUSTES (Ejemplo) ================= -->
-      <section id="view-ajustes" class="app-section px-4 py-6">
+      <!-- ================= VISTA 4: PLANILLA ================= -->
+      <section id="view-planilla" class="app-section px-4 py-6">
+        <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
+          <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+          </div>
+          <h2 class="text-lg font-black text-slate-800">Planilla</h2>
+          <p class="text-sm text-slate-500 max-w-[250px]">Consulta de precios y ventas acumuladas.</p>
+        </div>
+      </section>
+
+      <!-- ================= VISTA 5: HISTORIAL ================= -->
+      <section id="view-historial" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
           <div class="w-16 h-16 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-gear"></i>
+            <i class="fa-solid fa-clock-rotate-left"></i>
           </div>
-          <h2 class="text-lg font-black text-slate-800">Configuración</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Opciones de cuenta, conexión de Sheets, etc.</p>
+          <h2 class="text-lg font-black text-slate-800">Historial</h2>
+          <p class="text-sm text-slate-500 max-w-[250px]">Registro de búsquedas y escaneos recientes.</p>
         </div>
       </section>
 
     </main>
 
-    <!-- MENÚ INFERIOR (BOTTOM NAVIGATION) -->
-    <nav class="absolute bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 flex items-center justify-between z-40 shadow-nav rounded-t-2xl">
+    <!-- MENÚ INFERIOR (5 APARTADOS) -->
+    <nav class="absolute bottom-0 w-full bg-white border-t border-slate-200 px-1 py-1.5 flex items-center justify-around z-40 shadow-nav rounded-t-2xl">
       
-      <!-- Botón 1: Inventario -->
-      <button onclick="cambiarSeccion('view-inventario', this, 'Bata 1', 'Control de Stock')" 
+      <button onclick="cambiarSeccion('view-buscar', this, 'Buscador', 'Bata 1')" 
               class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-bata-red">
-        <i class="fa-solid fa-boxes-stacked text-lg mb-1"></i>
-        <span class="text-[9px] font-bold">Stock</span>
+        <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i>
+        <span class="text-[9px] font-bold">Buscar</span>
       </button>
 
-      <!-- Botón 2: Historial -->
-      <button onclick="cambiarSeccion('view-historial', this, 'Historial', 'Movimientos recientes')" 
-              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400 hover:text-slate-600">
+      <button onclick="cambiarSeccion('view-movimientos', this, 'Movimientos', 'Recepción / Salida')" 
+              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400">
+        <i class="fa-solid fa-boxes-packing text-lg mb-1"></i>
+        <span class="text-[9px] font-bold">Movs.</span>
+      </button>
+
+      <button onclick="cambiarSeccion('view-reportes', this, 'Reportes', 'Métricas y Análisis')" 
+              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400">
+        <i class="fa-solid fa-chart-line text-lg mb-1"></i>
+        <span class="text-[9px] font-bold">Reportes</span>
+      </button>
+
+      <button onclick="cambiarSeccion('view-planilla', this, 'Planilla', 'Precios y Ventas')" 
+              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400">
+        <i class="fa-solid fa-file-invoice-dollar text-lg mb-1"></i>
+        <span class="text-[9px] font-bold">Planilla</span>
+      </button>
+
+      <button onclick="cambiarSeccion('view-historial', this, 'Historial', 'Actividad Reciente')" 
+              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400">
         <i class="fa-solid fa-clock-rotate-left text-lg mb-1"></i>
         <span class="text-[9px] font-bold">Historial</span>
       </button>
 
-      <!-- Botón 3: Escáner (Botón Central Flotante) -->
-      <div class="relative w-16 flex justify-center">
-        <button onclick="abrirCamaraEscaner()" 
-                class="absolute -top-6 w-14 h-14 bg-bata-red text-white rounded-full flex items-center justify-center shadow-lg shadow-bata-red/30 active:scale-95 transition-transform border-4 border-white">
-          <i class="fa-solid fa-barcode text-xl"></i>
-        </button>
-        <span class="text-[9px] font-bold text-slate-400 mt-8">Escanear</span>
-      </div>
-
-      <!-- Botón 4: Reportes -->
-      <button onclick="cambiarSeccion('view-reportes', this, 'Reportes', 'Análisis de datos')" 
-              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400 hover:text-slate-600">
-        <i class="fa-solid fa-chart-pie text-lg mb-1"></i>
-        <span class="text-[9px] font-bold">Reportes</span>
-      </button>
-
-      <!-- Botón 5: Ajustes -->
-      <button onclick="cambiarSeccion('view-ajustes', this, 'Ajustes', 'Configuración')" 
-              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400 hover:text-slate-600">
-        <i class="fa-solid fa-gear text-lg mb-1"></i>
-        <span class="text-[9px] font-bold">Ajustes</span>
-      </button>
-
     </nav>
 
-    <!-- MODAL ESCÁNER -->
-    <div id="modal-escaner" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex-col items-center justify-center p-4">
-      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-        <div class="bg-white p-4 border-b border-slate-100 flex items-center justify-between">
-          <span class="text-sm font-black text-slate-800"><i class="fa-solid fa-barcode text-bata-red mr-2"></i> Escanear Artículo</span>
-          <button onclick="cerrarCamaraEscaner()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition">
-            <i class="fa-solid fa-xmark text-sm"></i>
-          </button>
+    <!-- MODAL ESCÁNER PRO -->
+    <div id="modal-escaner" class="fixed inset-0 bg-black z-50 hidden flex-col">
+      <!-- Controles Superiores -->
+      <div class="absolute top-0 left-0 right-0 p-4 pt-10 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent">
+        <button onclick="cerrarCamaraEscaner()" class="scanner-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <span class="text-white font-black text-sm tracking-wide bg-black/40 px-3 py-1 rounded-full">ESCÁNER EAN-13 / QR</span>
+        <button onclick="toggleLinterna()" id="btn-linterna" class="scanner-btn">
+          <i class="fa-solid fa-bolt"></i>
+        </button>
+      </div>
+
+      <!-- Contenedor del Video -->
+      <div class="relative w-full h-full bg-black">
+        <div id="reader" class="w-full h-full"></div>
+        
+        <!-- Overlay del escáner -->
+        <div class="scanner-overlay">
+          <div class="scanner-window">
+            <div class="corner-tr"></div>
+            <div class="corner-bl"></div>
+            <div class="laser"></div>
+          </div>
+          <p class="text-white/80 text-xs font-bold mt-6 tracking-wide">Alinea el código dentro del marco</p>
         </div>
-        <div class="relative bg-black w-full h-72 flex items-center justify-center overflow-hidden">
-          <div id="reader" class="w-full h-full"></div>
-        </div>
-        <div class="p-4 text-center bg-white">
-          <p class="text-xs text-slate-500 font-medium">Apunta al código de barras</p>
-        </div>
+      </div>
+
+      <!-- Controles Inferiores (Zoom) -->
+      <div class="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-6 z-50">
+        <button onclick="ajustarZoom(-0.5)" class="scanner-btn">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <div class="text-white font-black text-lg bg-black/40 px-4 py-2 rounded-full border border-white/20" id="txt-zoom">1.0x</div>
+        <button onclick="ajustarZoom(0.5)" class="scanner-btn">
+          <i class="fa-solid fa-plus"></i>
+        </button>
       </div>
     </div>
 
@@ -240,11 +338,13 @@
     let indiceActual = 0;
     let guardandoBloqueo = false;
     let html5QrCodeScanner = null;
-    let ultimoShake = 0;
     let tiempoDebounce;
 
+    // Variables de Cámara
+    let linternaEncendida = false;
+    let zoomActual = 1.0;
+
     window.onload = function() {
-      solicitarPermisoSensoresYIniciar();
       sincronizarDatos();
 
       const carrusel = document.getElementById('carrusel');
@@ -259,19 +359,13 @@
       });
     };
 
-    /* ================= NAVEGACIÓN ENTRE SECCIONES ================= */
+    /* ================= NAVEGACIÓN ================= */
     function cambiarSeccion(viewId, btn, titulo, subtitulo) {
-      // 1. Ocultar todas las secciones
       document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active'));
-      
-      // 2. Mostrar la seleccionada
       document.getElementById(viewId).classList.add('active');
-
-      // 3. Actualizar el header
       document.getElementById('header-title').innerText = titulo;
       document.getElementById('header-subtitle').innerText = subtitulo;
 
-      // 4. Actualizar colores del menú inferior
       document.querySelectorAll('.nav-btn').forEach(b => {
         b.classList.remove('text-bata-red');
         b.classList.add('text-slate-400');
@@ -281,38 +375,8 @@
         btn.classList.add('text-bata-red');
       }
 
-      // 5. Si volvemos a inventario, recalculamos el ancho del carrusel
-      if (viewId === 'view-inventario') {
+      if (viewId === 'view-buscar') {
         setTimeout(() => irAlIndice(indiceActual, false), 50);
-      }
-    }
-
-    /* ================= SENSOR SHAKE ================= */
-    function solicitarPermisoSensoresYIniciar() {
-      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-        document.body.addEventListener('click', async function pedirPermiso() {
-          try {
-            if (await DeviceMotionEvent.requestPermission() === 'granted') {
-              window.addEventListener('devicemotion', detectarShake, false);
-            }
-          } catch (e) {}
-          document.body.removeEventListener('click', pedirPermiso);
-        }, { once: true });
-      } else if (window.DeviceMotionEvent) {
-        window.addEventListener('devicemotion', detectarShake, false);
-      }
-    }
-
-    function detectarShake(e) {
-      const ahora = Date.now();
-      if ((ahora - ultimoShake) < 4000) return; 
-      const acc = e.accelerationIncludingGravity;
-      if (!acc) return;
-      const fuerza = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
-      if (fuerza > 45) { 
-        ultimoShake = ahora;
-        if (navigator.vibrate) navigator.vibrate(50);
-        abrirCamaraEscaner();
       }
     }
 
@@ -326,14 +390,9 @@
         .then(data => {
           dbInventario = data;
           renderizarCarrusel();
-          mostrarToast("Inventario actualizado", "success");
         })
-        .catch(err => {
-          mostrarToast("Error de conexión", "error");
-        })
-        .finally(() => {
-          iconSync.classList.remove('fa-spin');
-        });
+        .catch(err => mostrarToast("Error de conexión", "error"))
+        .finally(() => iconSync.classList.remove('fa-spin'));
     }
 
     function obtenerPropiedad(obj, llaves, valorDefecto = '') {
@@ -343,21 +402,18 @@
       return valorDefecto;
     }
 
-    /* ================= BÚSQUEDA ================= */
+    /* ================= BÚSQUEDA Y VOZ ================= */
     function onBusquedaInput() {
       const q = document.getElementById('input-busqueda').value.trim();
       document.getElementById('btn-limpiar').classList.toggle('hidden', q.length === 0);
-
       clearTimeout(tiempoDebounce);
-      tiempoDebounce = setTimeout(() => { buscarYCentrarArticulo(q); }, 200);
+      tiempoDebounce = setTimeout(() => buscarYCentrarArticulo(q), 200);
     }
 
     function buscarYCentrarArticulo(q) {
       if (!q) return;
       const query = q.toLowerCase();
-      let idx = dbInventario.findIndex(item => String(obtenerPropiedad(item, ['articulo', 'Articulo', 'ARTICULO'])).toLowerCase() === query);
-      if (idx === -1) idx = dbInventario.findIndex(item => String(obtenerPropiedad(item, ['articulo', 'Articulo', 'ARTICULO'])).toLowerCase().startsWith(query));
-      
+      let idx = dbInventario.findIndex(item => String(obtenerPropiedad(item, ['articulo', 'Articulo'])).toLowerCase().includes(query));
       if (idx !== -1) irAlIndice(idx, true);
       else mostrarToast(`Código "${q}" no encontrado`, "error");
     }
@@ -375,50 +431,83 @@
       document.getElementById('btn-limpiar').classList.add('hidden');
     }
 
-    /* ================= VOZ ================= */
     function activarBusquedaVoz() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) { mostrarToast("Voz no soportada", "error"); return; }
+      
       const recognition = new SpeechRecognition();
       recognition.lang = 'es-ES';
-      const iconVoz = document.getElementById('icon-voz');
-      iconVoz.className = "fa-solid fa-microphone-lines text-bata-red fa-bounce";
+      recognition.interimResults = false;
+      
+      const btnVoz = document.getElementById('btn-voz');
+      btnVoz.classList.add('bg-red-100', 'border-red-300');
+      btnVoz.classList.remove('bg-slate-50');
+      document.getElementById('icon-voz').className = "fa-solid fa-microphone-lines text-bata-red text-base fa-bounce z-10";
+      
       mostrarToast("Escuchando...", "info");
       recognition.start();
+
       recognition.onresult = (event) => {
-        let soloNumeros = event.results[0][0].transcript.replace(/\D/g, ''); 
+        let texto = event.results[0][0].transcript.toLowerCase();
+        
+        // Mapeo de números hablados a dígitos (Bala de velocidad)
+        const mapa = {
+          'cero':'0','uno':'1','dos':'2','tres':'3','cuatro':'4','cinco':'5','seis':'6','siete':'7','ocho':'8','nueve':'9','diez':'10'
+        };
+        
+        let soloNumeros = texto.split(' ').map(p => mapa[p] || p).join('').replace(/\D/g, '');
+        
         if (soloNumeros) {
           document.getElementById('input-busqueda').value = soloNumeros;
           buscarYCentrarArticulo(soloNumeros);
+        } else {
+          mostrarToast("No se detectaron números claros", "error");
         }
       };
-      recognition.onend = () => { iconVoz.className = "fa-solid fa-microphone text-sm"; };
+
+      recognition.onend = () => {
+        btnVoz.classList.remove('bg-red-100', 'border-red-300');
+        btnVoz.classList.add('bg-slate-50');
+        document.getElementById('icon-voz').className = "fa-solid fa-microphone text-base z-10";
+      };
     }
 
-    /* ================= ESCÁNER ================= */
+    /* ================= LÓGICA DEL ESCÁNER HTML5 ================= */
     function abrirCamaraEscaner() {
       document.getElementById('modal-escaner').classList.remove('hidden');
       document.getElementById('modal-escaner').classList.add('flex');
-      if (!html5QrCodeScanner) html5QrCodeScanner = new Html5Qrcode("reader");
+
+      if (!html5QrCodeScanner) {
+        html5QrCodeScanner = new Html5Qrcode("reader");
+      }
+
+      // Iniciar con resolución Full HD si es posible
+      const config = { 
+        fps: 15, 
+        // SIN qrbox, para que escanee toda la pantalla (ideal para EAN-13)
+        aspectRatio: 1.0
+      };
 
       html5QrCodeScanner.start(
         { facingMode: "environment" }, 
-        { fps: 15, qrbox: { width: 250, height: 150 } }, 
+        config, 
         (decodedText) => {
-          const soloNum = decodedText.replace(/\D/g, '');
-          const codigoFinal = soloNum.length > 0 ? soloNum : decodedText;
+          const codigoFinal = decodedText.replace(/\D/g, '');
           
-          // IMPORTANTE: Si escaneamos, volvemos a la vista de inventario automáticamente
-          cambiarSeccion('view-inventario', document.querySelector('.nav-btn'), 'Bata 1', 'Control de Stock');
-          
+          cambiarSeccion('view-buscar', document.querySelector('.nav-btn'), 'Buscador', 'Bata 1');
           document.getElementById('input-busqueda').value = codigoFinal;
           buscarYCentrarArticulo(codigoFinal);
           cerrarCamaraEscaner();
+          
+          if (navigator.vibrate) navigator.vibrate([50, 50, 50]); // Vibración triple al escanear
           mostrarToast(`Escaneado: ${codigoFinal}`, "success");
         },
-        () => {}
-      ).catch(err => {
-        mostrarToast("Error de cámara", "error");
+        () => {} // Ignorar errores de frames
+      ).then(() => {
+        // Aplicar zoom inicial tras encender
+        aplicarZoom();
+      }).catch(err => {
+        mostrarToast("Error al iniciar cámara", "error");
         cerrarCamaraEscaner();
       });
     }
@@ -428,24 +517,70 @@
         html5QrCodeScanner.stop().then(() => {
           document.getElementById('modal-escaner').classList.add('hidden');
           document.getElementById('modal-escaner').classList.remove('flex');
+          // Resetear estados de la cámara
+          linternaEncendida = false;
+          document.getElementById('btn-linterna').classList.remove('active');
+          zoomActual = 1.0;
+          document.getElementById('txt-zoom').innerText = "1.0x";
         }).catch(() => {});
       }
     }
 
-    /* ================= RENDERIZADO UI ================= */
+    // LINTERNA
+    function toggleLinterna() {
+      linternaEncendida = !linternaEncendida;
+      const btn = document.getElementById('btn-linterna');
+      
+      if (html5QrCodeScanner) {
+        // Usar la API de MediaTrackConstraints para la linterna
+        const track = html5QrCodeScanner.getRunningTrackCameraCapabilities().torchFeature();
+        if (track) {
+          track.apply(linternaEncendida);
+          btn.classList.toggle('active', linternaEncendida);
+        } else {
+          mostrarToast("Linterna no soportada en este dispositivo", "error");
+          linternaEncendida = false;
+        }
+      }
+    }
+
+    // ZOOM
+    function ajustarZoom(cambio) {
+      zoomActual += cambio;
+      if (zoomActual < 1.0) zoomActual = 1.0;
+      if (zoomActual > 4.0) zoomActual = 4.0; // Límite de 4x
+      
+      document.getElementById('txt-zoom').innerText = zoomActual.toFixed(1) + "x";
+      aplicarZoom();
+    }
+
+    function aplicarZoom() {
+      if (html5QrCodeScanner) {
+        try {
+          const caps = html5QrCodeScanner.getRunningTrackCameraCapabilities();
+          const zoomCap = caps.zoomFeature();
+          if (zoomCap) {
+            zoomCap.apply(zoomActual);
+          }
+        } catch(e) {
+          // Algunos navegadores no soportan zoom en la API
+        }
+      }
+    }
+
+    /* ================= RENDERIZADO DE TARJETAS ================= */
     function generarMatrizTallas(cadenaTallas, stockTotal) {
       if (!cadenaTallas) return `<div class="text-[11px] text-slate-400 text-center py-3 bg-slate-50/50 border border-slate-100 rounded-xl">Sin desglose</div>`;
+      
       const pares = [];
       String(cadenaTallas).split(/[,;]+/).forEach(el => {
         const limpio = el.trim();
         if (limpio.includes('/')) {
           const [t, c] = limpio.split('/');
           if (t && c) pares.push({ talla: t.trim(), cant: c.trim() });
-        } else if (limpio.includes(':')) {
-          const [t, c] = limpio.split(':');
-          if (t && c) pares.push({ talla: t.trim(), cant: c.trim() });
         }
       });
+      
       if (pares.length === 0) return `<div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center text-sm font-black text-slate-700">${cadenaTallas}</div>`;
 
       return `
@@ -470,10 +605,10 @@
       if (dbInventario.length === 0) return;
 
       carrusel.innerHTML = dbInventario.map((item) => {
-        const cod = String(obtenerPropiedad(item, ['articulo', 'Articulo', 'ARTICULO'])).trim();
-        const stockBD = obtenerPropiedad(item, ['stock', 'Stock', 'STOCK'], '0');
-        const pPlanilla = obtenerPropiedad(item, ['pPlanilla', 'pplanilla', 'p_planilla'], '0.00');
-        const vtaAcc = obtenerPropiedad(item, ['vtaAcctalla', 'vtaAcc', 'VtaAcc'], '0');
+        const cod = String(obtenerPropiedad(item, ['articulo', 'Articulo'])).trim();
+        const stockBD = obtenerPropiedad(item, ['stock', 'Stock'], '0');
+        const pPlanilla = obtenerPropiedad(item, ['pPlanilla', 'pplanilla'], '0.00');
+        const vtaAcc = obtenerPropiedad(item, ['vtaAcctalla', 'vtaAcc'], '0');
         const categoria = obtenerPropiedad(item, ['categoria', 'Categoria'], 'CALZADO');
         const calidad = obtenerPropiedad(item, ['calidad', 'Calidad'], '1');
         const antiguedad = obtenerPropiedad(item, ['antiguedad', 'Antiguedad'], '');
@@ -486,6 +621,7 @@
 
         return `
           <div class="carrusel-card min-w-full bg-white rounded-3xl border border-slate-200 p-4 shadow-soft flex flex-col gap-3 h-full">
+            
             <div class="flex items-start justify-between gap-2">
               <div class="flex flex-wrap gap-1.5">
                 <span class="bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-lg">Calidad: ${calidad}</span>
@@ -517,25 +653,30 @@
 
             ${htmlTallas}
 
-            <div class="mt-auto bg-slate-50 p-2.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+            <!-- Footer: Stock / Selectivo (con toggle interno) -->
+            <div class="mt-auto bg-slate-50 p-2.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3 transition-colors ${modoActual === 'selectivo' ? 'border-amber-300 bg-amber-50/50' : ''}">
+              
               <div class="text-center px-2">
                 <span class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Stock BD</span>
                 <span class="text-lg font-black text-slate-900 leading-none">${stockBD}</span>
               </div>
+
               <div class="h-8 w-px bg-slate-200"></div>
+
               ${modoActual === 'selectivo' ? `
                 <div class="flex items-center gap-2 flex-1 justify-end">
-                  <span class="text-[10px] font-black text-amber-600 uppercase tracking-wide">Conteo:</span>
                   <input type="text" inputmode="numeric" id="input-sel-${cod}" value="${selectivo}" placeholder="0" 
-                         class="w-16 px-2 py-1.5 bg-white border-2 border-amber-400 rounded-xl text-center font-black text-base text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 shadow-sm transition-all">
+                         class="w-16 px-2 py-1.5 bg-white border-2 border-amber-400 rounded-xl text-center font-black text-base text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 shadow-sm">
                   <button onclick="guardarSelectivo('${cod}')" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold w-9 h-9 rounded-xl transition-all shadow-md flex items-center justify-center">
                     <i class="fa-solid fa-check text-sm"></i>
                   </button>
                 </div>
               ` : `
-                <div class="text-center px-4">
-                  <span class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Selectivo</span>
-                  <span class="text-lg font-black text-bata-red leading-none">${valorSelectivoVisual}</span>
+                <div class="text-center px-4 flex items-center gap-3">
+                  <div>
+                    <span class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Selectivo</span>
+                    <span class="text-lg font-black text-bata-red leading-none">${valorSelectivoVisual}</span>
+                  </div>
                 </div>
               `}
             </div>
@@ -551,10 +692,25 @@
       else txtPos.innerText = `Artículo ${indiceActual + 1} de ${dbInventario.length}`;
     }
 
+    function toggleModoSelectivo() {
+      modoActual = (modoActual === 'consulta') ? 'selectivo' : 'consulta';
+      const btn = document.getElementById('btn-toggle-selectivo');
+      
+      if (modoActual === 'selectivo') {
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-100 text-amber-700 shadow-sm transition font-black";
+        btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> <span>Editando...</span>';
+      } else {
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition";
+        btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> <span>Modo Conteo</span>';
+      }
+      
+      renderizarCarrusel();
+    }
+
     function guardarSelectivo(codigo) {
       const input = document.getElementById(`input-sel-${codigo}`);
       const valorIngresado = input.value.trim();
-      if (!/^\d+$/.test(valorIngresado)) { mostrarToast("Solo números permitidos", "error"); return; }
+      if (!/^\d+$/.test(valorIngresado)) { mostrarToast("Solo números", "error"); return; }
 
       const btn = input.nextElementSibling;
       btn.disabled = true;
