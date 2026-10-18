@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Bata 1 (Control de Stock)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Bata 1 | Control de Stock</title>
 
   <!-- Google Fonts & Tailwind CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-  <!-- Escáner QR/Barcode Html5Qrcode -->
+  <!-- Escáner QR/Barcode -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <script>
@@ -21,7 +21,11 @@
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            bata: { red: '#D32F2F', dark: '#1E293B', light: '#F8FAFC' }
+            bata: { red: '#E31E24', dark: '#111827', gray: '#F3F4F6' }
+          },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+            'nav': '0 -4px 20px -2px rgba(0, 0, 0, 0.05)'
           }
         }
       }
@@ -34,119 +38,195 @@
     
     .carrusel-container {
       scroll-snap-type: x mandatory;
+      touch-action: pan-x;
     }
     .carrusel-card {
       scroll-snap-align: center;
       scroll-snap-stop: always;
     }
+    
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      overscroll-behavior: none;
+    }
 
-    .img-contain {
-      object-fit: contain;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));
+    /* Sistema de Vistas (Secciones ocultas) */
+    .app-section {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    .app-section.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
-<body class="bg-slate-900 font-sans h-screen w-screen overflow-hidden text-slate-800 flex flex-col justify-center items-center select-none antialiased">
+<body class="bg-slate-100 font-sans h-[100dvh] w-screen overflow-hidden text-slate-800 flex flex-col justify-center items-center antialiased">
 
-  <!-- MARCO PRINCIPAL MÓVIL / RESPONSIVE -->
-  <div class="w-full max-w-md h-full bg-slate-100 flex flex-col justify-between overflow-hidden relative shadow-2xl">
+  <!-- MARCO PRINCIPAL -->
+  <div class="w-full max-w-md h-full bg-slate-50 flex flex-col relative shadow-2xl overflow-hidden">
 
-    <!-- CABECERA SIMPLE -->
-    <header class="bg-white border-b border-slate-200 px-3 py-2.5 flex-shrink-0 z-40">
+    <!-- CABECERA (Oculta en algunas vistas si es necesario) -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/60 px-4 py-3 flex-shrink-0 z-40 sticky top-0">
       <div class="flex items-center justify-between gap-2">
-        
         <div>
-          <h1 class="font-black text-slate-900 text-sm leading-tight">
-            Bata 1 <span class="text-slate-400 font-medium text-xs">(Control de Stock)</span>
-          </h1>
+          <h1 id="header-title" class="font-black text-slate-900 text-base leading-tight tracking-tight">Bata 1</h1>
+          <p id="header-subtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Control de Stock</p>
         </div>
-
-        <div class="flex items-center gap-2">
-          <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-            <button id="btn-modo-consulta" onclick="cambiarModo('consulta')" class="px-2.5 py-1 rounded-md text-[10px] font-extrabold transition bg-white text-slate-800 shadow-xs">
-              <i class="fa-solid fa-magnifying-glass text-bata-red mr-1"></i> Consulta
-            </button>
-            <button id="btn-modo-selectivo" onclick="cambiarModo('selectivo')" class="px-2.5 py-1 rounded-md text-[10px] font-extrabold transition text-slate-500">
-              <i class="fa-solid fa-pen-to-square mr-1"></i> Selectivo
-            </button>
-          </div>
-
-          <button onclick="sincronizarDatos()" class="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 text-xs active:scale-95">
-            <i id="icon-sync" class="fa-solid fa-rotate"></i>
-          </button>
-        </div>
-
+        <button onclick="sincronizarDatos()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 active:scale-95 transition-transform">
+          <i id="icon-sync" class="fa-solid fa-rotate text-sm"></i>
+        </button>
       </div>
     </header>
 
-    <!-- CUERPO -->
-    <main class="w-full px-3 py-2 flex-1 flex flex-col justify-between overflow-hidden gap-2">
+    <!-- CONTENEDOR DE VISTAS -->
+    <main class="w-full flex-1 relative overflow-hidden pb-16"> <!-- pb-16 para dejar espacio al menú inferior -->
 
-      <!-- BÚSQUEDA Y HERRAMIENTAS -->
-      <div class="space-y-1.5 flex-shrink-0">
-        <div class="relative flex items-center">
-          <i class="fa-solid fa-search absolute left-3 text-slate-400 text-xs"></i>
-          
-          <input type="number" pattern="[0-9]*" id="input-busqueda" placeholder="Buscar por código (solo números)..." 
-                 class="w-full pl-8 pr-20 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-bata-red/20 focus:border-bata-red font-bold text-xs shadow-2xs"
-                 oninput="buscarYCentrarArticulo(false)">
-          
-          <div class="absolute right-2 flex items-center gap-1.5">
-            <button id="btn-limpiar" onclick="limpiarBusqueda()" class="hidden text-slate-400 hover:text-slate-600 mr-0.5">
-              <i class="fa-solid fa-circle-xmark text-xs"></i>
-            </button>
-            <button onclick="activarBusquedaVoz()" title="Búsqueda por voz (Sólo números)" class="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-xs transition active:scale-95">
-              <i id="icon-voz" class="fa-solid fa-microphone"></i>
-            </button>
-            <button onclick="abrirCamaraEscaner()" title="Escanear código de barras" class="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-xs transition active:scale-95">
-              <i class="fa-solid fa-barcode"></i>
-            </button>
+      <!-- ================= VISTA 1: INVENTARIO ================= -->
+      <section id="view-inventario" class="app-section active px-4 py-3 gap-3">
+        
+        <!-- Barra de búsqueda -->
+        <div class="space-y-2 flex-shrink-0 z-30">
+          <div class="relative flex items-center shadow-soft rounded-2xl">
+            <i class="fa-solid fa-search absolute left-4 text-slate-400 text-sm"></i>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="input-busqueda" placeholder="Buscar código..." 
+                   class="w-full pl-10 pr-24 py-3 rounded-2xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-bata-red/20 focus:border-bata-red font-bold text-sm transition-all"
+                   oninput="onBusquedaInput()">
+            <div class="absolute right-2 flex items-center gap-1">
+              <button id="btn-limpiar" onclick="limpiarBusqueda()" class="hidden w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 flex items-center justify-center">
+                <i class="fa-solid fa-circle-xmark"></i>
+              </button>
+              <button onclick="activarBusquedaVoz()" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition active:scale-95 border border-slate-100">
+                <i id="icon-voz" class="fa-solid fa-microphone text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] font-bold px-1">
+            <span id="txt-posicion" class="text-slate-500">Cargando...</span>
+            <span id="txt-modo-banner" class="text-bata-red bg-red-50 px-2.5 py-1 rounded-md border border-red-100">CONSULTA</span>
           </div>
         </div>
 
-        <div class="flex items-center justify-between text-[10px] text-slate-500 font-bold px-1">
-          <span id="txt-posicion" class="bg-slate-200/70 px-2 py-0.5 rounded text-slate-700">Conectando...</span>
-          <span id="txt-modo-banner" class="text-bata-red bg-red-50 px-2 py-0.5 rounded border border-red-100 font-black">
-            CONSULTA
-          </span>
-        </div>
-      </div>
-
-      <!-- SLIDER / CARRUSEL -->
-      <div class="relative flex-1 flex items-center min-h-0">
-        <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full h-full items-center gap-3">
-          <div class="carrusel-card min-w-full bg-white rounded-2xl p-6 border border-slate-200 text-center space-y-2 shadow-2xs my-auto">
-            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-bata-red"></i>
-            <p class="text-xs font-bold text-slate-600">Obteniendo datos de Google Sheets...</p>
+        <!-- Carrusel -->
+        <div class="relative flex-1 flex min-h-0 -mx-2 px-2">
+          <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full items-stretch gap-4 pb-2">
+            <!-- Skeleton de carga -->
+            <div class="carrusel-card min-w-full bg-white rounded-3xl p-6 border border-slate-200 text-center flex flex-col items-center justify-center shadow-soft">
+              <i class="fa-solid fa-circle-notch fa-spin text-2xl text-bata-red mb-2"></i>
+              <p class="text-sm font-bold text-slate-700">Sincronizando...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="text-center text-[9px] text-slate-400 font-semibold flex-shrink-0">
-        <i class="fa-solid fa-mobile-screen-button mr-1"></i> Agita el celular para escanear código de barras
-      </div>
+      <!-- ================= VISTA 2: HISTORIAL (Ejemplo) ================= -->
+      <section id="view-historial" class="app-section px-4 py-6">
+        <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
+          <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <h2 class="text-lg font-black text-slate-800">Historial de Escaneos</h2>
+          <p class="text-sm text-slate-500 max-w-[250px]">Aquí puedes colocar la tabla o lista de movimientos que traigas desde Google Sheets.</p>
+        </div>
+      </section>
+
+      <!-- ================= VISTA 3: REPORTES (Ejemplo) ================= -->
+      <section id="view-reportes" class="app-section px-4 py-6">
+        <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
+          <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+          <h2 class="text-lg font-black text-slate-800">Reportes y Métricas</h2>
+          <p class="text-sm text-slate-500 max-w-[250px]">Gráficos de ventas o stock bajo. Puedes usar Chart.js aquí.</p>
+        </div>
+      </section>
+
+      <!-- ================= VISTA 4: AJUSTES (Ejemplo) ================= -->
+      <section id="view-ajustes" class="app-section px-4 py-6">
+        <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
+          <div class="w-16 h-16 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-gear"></i>
+          </div>
+          <h2 class="text-lg font-black text-slate-800">Configuración</h2>
+          <p class="text-sm text-slate-500 max-w-[250px]">Opciones de cuenta, conexión de Sheets, etc.</p>
+        </div>
+      </section>
 
     </main>
 
-    <!-- MODAL ESCÁNER CÁMARA (Html5Qrcode) -->
-    <div id="modal-escaner" class="fixed inset-0 bg-slate-900/90 z-50 hidden flex-col items-center justify-center p-4">
-      <div class="w-full max-w-sm bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col">
-        <div class="bg-slate-900 text-white p-3 flex items-center justify-between">
-          <span class="text-xs font-black"><i class="fa-solid fa-barcode text-bata-red mr-1.5"></i> Escanear Código</span>
-          <button onclick="cerrarCamaraEscaner()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+    <!-- MENÚ INFERIOR (BOTTOM NAVIGATION) -->
+    <nav class="absolute bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 flex items-center justify-between z-40 shadow-nav rounded-t-2xl">
+      
+      <!-- Botón 1: Inventario -->
+      <button onclick="cambiarSeccion('view-inventario', this, 'Bata 1', 'Control de Stock')" 
+              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-bata-red">
+        <i class="fa-solid fa-boxes-stacked text-lg mb-1"></i>
+        <span class="text-[9px] font-bold">Stock</span>
+      </button>
+
+      <!-- Botón 2: Historial -->
+      <button onclick="cambiarSeccion('view-historial', this, 'Historial', 'Movimientos recientes')" 
+              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-clock-rotate-left text-lg mb-1"></i>
+        <span class="text-[9px] font-bold">Historial</span>
+      </button>
+
+      <!-- Botón 3: Escáner (Botón Central Flotante) -->
+      <div class="relative w-16 flex justify-center">
+        <button onclick="abrirCamaraEscaner()" 
+                class="absolute -top-6 w-14 h-14 bg-bata-red text-white rounded-full flex items-center justify-center shadow-lg shadow-bata-red/30 active:scale-95 transition-transform border-4 border-white">
+          <i class="fa-solid fa-barcode text-xl"></i>
+        </button>
+        <span class="text-[9px] font-bold text-slate-400 mt-8">Escanear</span>
+      </div>
+
+      <!-- Botón 4: Reportes -->
+      <button onclick="cambiarSeccion('view-reportes', this, 'Reportes', 'Análisis de datos')" 
+              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-chart-pie text-lg mb-1"></i>
+        <span class="text-[9px] font-bold">Reportes</span>
+      </button>
+
+      <!-- Botón 5: Ajustes -->
+      <button onclick="cambiarSeccion('view-ajustes', this, 'Ajustes', 'Configuración')" 
+              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-gear text-lg mb-1"></i>
+        <span class="text-[9px] font-bold">Ajustes</span>
+      </button>
+
+    </nav>
+
+    <!-- MODAL ESCÁNER -->
+    <div id="modal-escaner" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex-col items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div class="bg-white p-4 border-b border-slate-100 flex items-center justify-between">
+          <span class="text-sm font-black text-slate-800"><i class="fa-solid fa-barcode text-bata-red mr-2"></i> Escanear Artículo</span>
+          <button onclick="cerrarCamaraEscaner()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
         </div>
-        <div class="relative bg-black w-full h-64 flex items-center justify-center overflow-hidden">
+        <div class="relative bg-black w-full h-72 flex items-center justify-center overflow-hidden">
           <div id="reader" class="w-full h-full"></div>
         </div>
-        <div class="p-3 text-center bg-slate-50">
-          <p class="text-[10px] text-slate-500 font-bold">Coloca el código de barras frente a la cámara</p>
+        <div class="p-4 text-center bg-white">
+          <p class="text-xs text-slate-500 font-medium">Apunta al código de barras</p>
         </div>
       </div>
     </div>
 
-    <!-- TOAST NOTIFICACIÓN -->
-    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-4 py-2 rounded-xl shadow-xl flex items-center gap-2 text-xs z-50">
-      <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <!-- TOAST -->
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-bold z-[60]">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
       <span id="toast-msg">Mensaje</span>
     </div>
 
@@ -161,15 +241,16 @@
     let guardandoBloqueo = false;
     let html5QrCodeScanner = null;
     let ultimoShake = 0;
+    let tiempoDebounce;
 
     window.onload = function() {
+      solicitarPermisoSensoresYIniciar();
       sincronizarDatos();
-      inicializarSensorShake();
 
       const carrusel = document.getElementById('carrusel');
       carrusel.addEventListener('scroll', () => {
         if (guardandoBloqueo) return;
-        const width = carrusel.offsetWidth + 12;
+        const width = carrusel.offsetWidth + 16;
         const nuevoIndice = Math.round(carrusel.scrollLeft / width);
         if (nuevoIndice !== indiceActual && dbInventario[nuevoIndice]) {
           indiceActual = nuevoIndice;
@@ -178,69 +259,114 @@
       });
     };
 
-    // SENSOR PARA DETECTAR CUANDO SE AGITA EL CELULAR (SHAKE)
-    function inicializarSensorShake() {
-      if (window.DeviceMotionEvent) {
-        window.addEventListener('devicemotion', (e) => {
-          const ahora = Date.now();
-          if ((ahora - ultimoShake) < 2000) return; // Evita disparos seguidos
+    /* ================= NAVEGACIÓN ENTRE SECCIONES ================= */
+    function cambiarSeccion(viewId, btn, titulo, subtitulo) {
+      // 1. Ocultar todas las secciones
+      document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active'));
+      
+      // 2. Mostrar la seleccionada
+      document.getElementById(viewId).classList.add('active');
 
-          const acc = e.accelerationIncludingGravity;
-          if (!acc) return;
+      // 3. Actualizar el header
+      document.getElementById('header-title').innerText = titulo;
+      document.getElementById('header-subtitle').innerText = subtitulo;
 
-          const fuerza = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
-          if (fuerza > 28) { // Umbral de agitado
-            ultimoShake = ahora;
-            abrirCamaraEscaner();
-          }
-        }, false);
+      // 4. Actualizar colores del menú inferior
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('text-bata-red');
+        b.classList.add('text-slate-400');
+      });
+      if (btn) {
+        btn.classList.remove('text-slate-400');
+        btn.classList.add('text-bata-red');
+      }
+
+      // 5. Si volvemos a inventario, recalculamos el ancho del carrusel
+      if (viewId === 'view-inventario') {
+        setTimeout(() => irAlIndice(indiceActual, false), 50);
       }
     }
 
+    /* ================= SENSOR SHAKE ================= */
+    function solicitarPermisoSensoresYIniciar() {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        document.body.addEventListener('click', async function pedirPermiso() {
+          try {
+            if (await DeviceMotionEvent.requestPermission() === 'granted') {
+              window.addEventListener('devicemotion', detectarShake, false);
+            }
+          } catch (e) {}
+          document.body.removeEventListener('click', pedirPermiso);
+        }, { once: true });
+      } else if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', detectarShake, false);
+      }
+    }
+
+    function detectarShake(e) {
+      const ahora = Date.now();
+      if ((ahora - ultimoShake) < 4000) return; 
+      const acc = e.accelerationIncludingGravity;
+      if (!acc) return;
+      const fuerza = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+      if (fuerza > 45) { 
+        ultimoShake = ahora;
+        if (navigator.vibrate) navigator.vibrate(50);
+        abrirCamaraEscaner();
+      }
+    }
+
+    /* ================= DATOS ================= */
     function sincronizarDatos() {
       const iconSync = document.getElementById('icon-sync');
       iconSync.classList.add('fa-spin');
 
-      fetch(`${URL_APPS_SCRIPT}?action=obtenerInventario`)
+      fetch(`${URL_APPS_SCRIPT}?action=obtenerInventario&t=${Date.now()}`)
         .then(res => res.json())
         .then(data => {
           dbInventario = data;
           renderizarCarrusel();
-          mostrarToast("Base de datos cargada", "success");
+          mostrarToast("Inventario actualizado", "success");
         })
         .catch(err => {
-          console.error(err);
-          mostrarToast("Error de conexión con Sheets", "error");
+          mostrarToast("Error de conexión", "error");
         })
         .finally(() => {
           iconSync.classList.remove('fa-spin');
         });
     }
 
-    function buscarYCentrarArticulo(suave = false) {
-      const q = document.getElementById('input-busqueda').value.trim().toLowerCase();
+    function obtenerPropiedad(obj, llaves, valorDefecto = '') {
+      for (let k of llaves) {
+        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k];
+      }
+      return valorDefecto;
+    }
+
+    /* ================= BÚSQUEDA ================= */
+    function onBusquedaInput() {
+      const q = document.getElementById('input-busqueda').value.trim();
       document.getElementById('btn-limpiar').classList.toggle('hidden', q.length === 0);
 
-      if (q === "") return;
+      clearTimeout(tiempoDebounce);
+      tiempoDebounce = setTimeout(() => { buscarYCentrarArticulo(q); }, 200);
+    }
 
-      const indexEncontrado = dbInventario.findIndex(item => {
-        const cod = String(obtenerPropiedad(item, ['articulo', 'Articulo', 'ARTICULO']) || "").toLowerCase();
-        return cod.includes(q);
-      });
-
-      if (indexEncontrado !== -1) {
-        irAlIndice(indexEncontrado, suave);
-      }
+    function buscarYCentrarArticulo(q) {
+      if (!q) return;
+      const query = q.toLowerCase();
+      let idx = dbInventario.findIndex(item => String(obtenerPropiedad(item, ['articulo', 'Articulo', 'ARTICULO'])).toLowerCase() === query);
+      if (idx === -1) idx = dbInventario.findIndex(item => String(obtenerPropiedad(item, ['articulo', 'Articulo', 'ARTICULO'])).toLowerCase().startsWith(query));
+      
+      if (idx !== -1) irAlIndice(idx, true);
+      else mostrarToast(`Código "${q}" no encontrado`, "error");
     }
 
     function irAlIndice(index, suave = false) {
       const carrusel = document.getElementById('carrusel');
-      const width = carrusel.offsetWidth + 12;
+      const width = carrusel.offsetWidth + 16;
       indiceActual = index;
-      carrusel.scrollTo({ 
-        left: index * width, 
-        behavior: suave ? 'smooth' : 'auto' 
-      });
+      carrusel.scrollTo({ left: index * width, behavior: suave ? 'smooth' : 'auto' });
       actualizarContadorPosicion();
     }
 
@@ -249,76 +375,50 @@
       document.getElementById('btn-limpiar').classList.add('hidden');
     }
 
-    // BÚSQUEDA POR VOZ (FILTRADO SOLO NÚMEROS)
+    /* ================= VOZ ================= */
     function activarBusquedaVoz() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        mostrarToast("Tu navegador no soporta reconocimiento de voz", "error");
-        return;
-      }
-
+      if (!SpeechRecognition) { mostrarToast("Voz no soportada", "error"); return; }
       const recognition = new SpeechRecognition();
       recognition.lang = 'es-ES';
-      recognition.interimResults = false;
-
       const iconVoz = document.getElementById('icon-voz');
       iconVoz.className = "fa-solid fa-microphone-lines text-bata-red fa-bounce";
-      mostrarToast("Di el número del artículo...", "info");
-
+      mostrarToast("Escuchando...", "info");
       recognition.start();
-
       recognition.onresult = (event) => {
-        let texto = event.results[0][0].transcript;
-        // Reemplazar palabras numéricas comunes y limpiar texto
-        let soloNumeros = texto.replace(/\D/g, ''); 
-
+        let soloNumeros = event.results[0][0].transcript.replace(/\D/g, ''); 
         if (soloNumeros) {
           document.getElementById('input-busqueda').value = soloNumeros;
-          buscarYCentrarArticulo(false);
-          mostrarToast(`Buscando código: ${soloNumeros}`, "success");
-        } else {
-          mostrarToast("No se detectaron números en lo hablado", "error");
+          buscarYCentrarArticulo(soloNumeros);
         }
       };
-
-      recognition.onerror = () => {
-        mostrarToast("Error en reconocimiento de voz", "error");
-      };
-
-      recognition.onend = () => {
-        iconVoz.className = "fa-solid fa-microphone";
-      };
+      recognition.onend = () => { iconVoz.className = "fa-solid fa-microphone text-sm"; };
     }
 
-    // ESCÁNER MEDIANTE Html5Qrcode
+    /* ================= ESCÁNER ================= */
     function abrirCamaraEscaner() {
       document.getElementById('modal-escaner').classList.remove('hidden');
       document.getElementById('modal-escaner').classList.add('flex');
-
-      if (!html5QrCodeScanner) {
-        html5QrCodeScanner = new Html5Qrcode("reader");
-      }
-
-      const config = { fps: 15, qrbox: { width: 250, height: 150 } };
+      if (!html5QrCodeScanner) html5QrCodeScanner = new Html5Qrcode("reader");
 
       html5QrCodeScanner.start(
         { facingMode: "environment" }, 
-        config, 
+        { fps: 15, qrbox: { width: 250, height: 150 } }, 
         (decodedText) => {
           const soloNum = decodedText.replace(/\D/g, '');
           const codigoFinal = soloNum.length > 0 ? soloNum : decodedText;
           
+          // IMPORTANTE: Si escaneamos, volvemos a la vista de inventario automáticamente
+          cambiarSeccion('view-inventario', document.querySelector('.nav-btn'), 'Bata 1', 'Control de Stock');
+          
           document.getElementById('input-busqueda').value = codigoFinal;
-          buscarYCentrarArticulo(false);
+          buscarYCentrarArticulo(codigoFinal);
           cerrarCamaraEscaner();
           mostrarToast(`Escaneado: ${codigoFinal}`, "success");
         },
-        (errorMessage) => {
-          // Ignorar frames vacíos
-        }
+        () => {}
       ).catch(err => {
-        console.error(err);
-        mostrarToast("No se pudo iniciar la cámara", "error");
+        mostrarToast("Error de cámara", "error");
         cerrarCamaraEscaner();
       });
     }
@@ -328,34 +428,15 @@
         html5QrCodeScanner.stop().then(() => {
           document.getElementById('modal-escaner').classList.add('hidden');
           document.getElementById('modal-escaner').classList.remove('flex');
-        }).catch(err => {
-          document.getElementById('modal-escaner').classList.add('hidden');
-          document.getElementById('modal-escaner').classList.remove('flex');
-        });
-      } else {
-        document.getElementById('modal-escaner').classList.add('hidden');
-        document.getElementById('modal-escaner').classList.remove('flex');
+        }).catch(() => {});
       }
     }
 
-    function obtenerPropiedad(obj, llaves, valorDefecto = '') {
-      for (let k of llaves) {
-        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') {
-          return obj[k];
-        }
-      }
-      return valorDefecto;
-    }
-
-    function generarMatrizTallasElegante(cadenaTallas, stockTotal) {
-      if (!cadenaTallas) {
-        return `<div class="text-[10px] text-slate-400 italic text-center py-2 bg-slate-50 border border-slate-200 rounded-xl">Sin desglose de tallas</div>`;
-      }
-
+    /* ================= RENDERIZADO UI ================= */
+    function generarMatrizTallas(cadenaTallas, stockTotal) {
+      if (!cadenaTallas) return `<div class="text-[11px] text-slate-400 text-center py-3 bg-slate-50/50 border border-slate-100 rounded-xl">Sin desglose</div>`;
       const pares = [];
-      const items = String(cadenaTallas).split(/[,;]+/);
-
-      items.forEach(el => {
+      String(cadenaTallas).split(/[,;]+/).forEach(el => {
         const limpio = el.trim();
         if (limpio.includes('/')) {
           const [t, c] = limpio.split('/');
@@ -365,22 +446,19 @@
           if (t && c) pares.push({ talla: t.trim(), cant: c.trim() });
         }
       });
-
-      if (pares.length === 0) {
-        return `<div class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-center text-xs font-black text-slate-700">${cadenaTallas}</div>`;
-      }
+      if (pares.length === 0) return `<div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center text-sm font-black text-slate-700">${cadenaTallas}</div>`;
 
       return `
-        <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-2xs">
-          <div class="flex items-center justify-between bg-slate-100 border-b border-slate-200 px-2.5 py-1 text-[10px]">
-            <span class="font-extrabold text-slate-500 uppercase tracking-wider">Desglose de Tallas</span>
-            <span class="font-black text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200">Total: ${stockTotal || 0} pares</span>
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <div class="flex items-center justify-between bg-slate-50 border-b border-slate-200 px-3 py-2">
+            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Tallas</span>
+            <span class="text-[11px] font-black text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200">Total: ${stockTotal} pares</span>
           </div>
-          <div class="p-1.5 flex flex-wrap gap-1.5 justify-start max-h-[100px] overflow-y-auto no-scrollbar">
+          <div class="p-2 grid grid-cols-4 gap-2">
             ${pares.map(p => `
-              <div class="flex flex-col items-center justify-center bg-slate-50 border border-slate-200/80 rounded-lg px-2 py-1 min-w-[38px] flex-1">
-                <span class="text-[9px] font-extrabold text-slate-400 leading-none">T-${p.talla}</span>
-                <span class="text-xs font-black text-slate-900 mt-0.5 leading-none">${p.cant}</span>
+              <div class="flex flex-col items-center justify-center bg-slate-50/50 border border-slate-100 rounded-xl py-1.5 shadow-sm">
+                <span class="text-[10px] font-bold text-slate-400 mb-0.5">T-${p.talla}</span>
+                <span class="text-sm font-black text-slate-800">${p.cant}</span>
               </div>
             `).join('')}
           </div>
@@ -389,178 +467,116 @@
 
     function renderizarCarrusel() {
       const carrusel = document.getElementById('carrusel');
-      
-      if (dbInventario.length === 0) {
-        carrusel.innerHTML = `
-          <div class="carrusel-card min-w-full bg-white rounded-2xl p-6 border border-slate-200 text-center text-slate-400 space-y-1 shadow-2xs">
-            <i class="fa-solid fa-box-open text-3xl text-slate-300"></i>
-            <p class="text-xs font-bold text-slate-600">No se encontraron artículos</p>
-          </div>`;
-        actualizarContadorPosicion();
-        return;
-      }
+      if (dbInventario.length === 0) return;
 
       carrusel.innerHTML = dbInventario.map((item) => {
         const cod = String(obtenerPropiedad(item, ['articulo', 'Articulo', 'ARTICULO'])).trim();
         const stockBD = obtenerPropiedad(item, ['stock', 'Stock', 'STOCK'], '0');
-        const pPlanilla = obtenerPropiedad(item, ['pPlanilla', 'pplanilla', 'p_planilla', 'Planilla', 'PLANILLA'], '0.00');
-        const vtaAcc = obtenerPropiedad(item, ['vtaAcctalla', 'vtaAcc', 'vta_acc', 'VtaAcc', 'VentasAcumuladas'], '0');
-        const categoria = obtenerPropiedad(item, ['categoria', 'Categoria', 'CATEGORIA'], 'CALZADO');
-        const calidad = obtenerPropiedad(item, ['calidad', 'Calidad', 'CALIDAD'], '1');
-        const antiguedad = obtenerPropiedad(item, ['antiguedad', 'Antiguedad', 'ANTIGUEDAD', 'va', 'VA'], '');
-        const selectivo = obtenerPropiedad(item, ['selectivo', 'Selectivo', 'SELECTIVO'], '');
-        const tallaCantidadStr = obtenerPropiedad(item, ['tallaCantidad', 'tallacantidad', 'TallaCantidad', 'TALLACANTIDAD'], '');
+        const pPlanilla = obtenerPropiedad(item, ['pPlanilla', 'pplanilla', 'p_planilla'], '0.00');
+        const vtaAcc = obtenerPropiedad(item, ['vtaAcctalla', 'vtaAcc', 'VtaAcc'], '0');
+        const categoria = obtenerPropiedad(item, ['categoria', 'Categoria'], 'CALZADO');
+        const calidad = obtenerPropiedad(item, ['calidad', 'Calidad'], '1');
+        const antiguedad = obtenerPropiedad(item, ['antiguedad', 'Antiguedad'], '');
+        const selectivo = obtenerPropiedad(item, ['selectivo', 'Selectivo'], '');
+        const tallaCantidadStr = obtenerPropiedad(item, ['tallaCantidad', 'tallacantidad'], '');
 
         const urlImagen = `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cod}_1.JPG`;
-        const htmlTallas = generarMatrizTallasElegante(tallaCantidadStr, stockBD);
+        const htmlTallas = generarMatrizTallas(tallaCantidadStr, stockBD);
+        const valorSelectivoVisual = (selectivo !== '' && selectivo !== null && selectivo !== undefined) ? selectivo : '--';
 
         return `
-          <div class="carrusel-card min-w-full h-full bg-white rounded-2xl border border-slate-200 p-3 shadow-2xs flex flex-col justify-between gap-2 overflow-hidden">
-            
-            <!-- MARCO FOTO Y BADGES -->
-            <div class="relative w-full flex-1 min-h-[110px] max-h-[145px] bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-2 overflow-hidden">
-              <img src="${urlImagen}" 
-                   onerror="this.onerror=null; this.src='https://via.placeholder.com/220x220/f8fafc/94a3b8?text=SIN+IMAGEN';" 
-                   alt="${cod}" class="max-h-full max-w-full img-contain">
-              
-              <div class="absolute top-2 left-2 flex items-center gap-1">
-                <span class="bg-white/90 border border-slate-200 text-[9px] font-black px-2 py-0.5 rounded-md text-slate-700 shadow-2xs">
-                  Calidad: ${calidad}
-                </span>
-                ${antiguedad ? `
-                  <span class="bg-slate-900 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md shadow-2xs flex items-center gap-1">
-                    <i class="fa-regular fa-clock text-[8px]"></i> ${antiguedad}
-                  </span>
-                ` : ''}
+          <div class="carrusel-card min-w-full bg-white rounded-3xl border border-slate-200 p-4 shadow-soft flex flex-col gap-3 h-full">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex flex-wrap gap-1.5">
+                <span class="bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-lg">Calidad: ${calidad}</span>
+                ${antiguedad ? `<span class="bg-slate-800 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm"><i class="fa-regular fa-clock text-[9px] mr-1"></i>${antiguedad}</span>` : ''}
               </div>
-
-              <span class="absolute top-2 right-2 bg-bata-dark text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                ${categoria}
-              </span>
+              <span class="bg-bata-dark text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider shadow-sm">${categoria}</span>
             </div>
 
-            <!-- DETALLES Y VENTAS ACUMULADAS -->
-            <div class="space-y-1.5 flex-shrink-0">
-              <div class="flex items-end justify-between px-0.5">
-                <div>
-                  <span class="text-[9px] font-bold text-slate-400 uppercase leading-none block">Código Art.</span>
-                  <h2 class="text-xl font-black text-slate-900 tracking-tight leading-none mt-0.5">${cod}</h2>
-                </div>
-                
-                <div class="flex items-center gap-3 text-[11px]">
-                  <div class="text-right">
-                    <span class="text-[9px] font-bold text-slate-400 leading-none block">P. Planilla</span>
-                    <span class="font-black text-slate-800">S/ ${pPlanilla}</span>
-                  </div>
-                  <div class="text-right bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-lg">
-                    <span class="text-[8px] font-black text-blue-500 leading-none block uppercase">Vta. Acc.</span>
-                    <span class="font-black text-blue-900 text-xs">${vtaAcc}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Matriz de Tallas -->
-              ${htmlTallas}
+            <div class="relative w-full h-[160px] shrink-0 bg-slate-50 rounded-2xl border border-slate-100/50 flex items-center justify-center p-4">
+              <img src="${urlImagen}" onerror="this.src='https://via.placeholder.com/220x220/f8fafc/94a3b8?text=SIN+IMAGEN';" class="max-h-full max-w-full object-contain drop-shadow-md">
             </div>
 
-            <!-- STOCK Y SELECTIVO -->
-            <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center justify-between gap-2 flex-shrink-0">
-              
+            <div class="flex items-end justify-between px-1">
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Código</span>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight leading-none">${cod}</h2>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="text-right">
+                  <span class="text-[10px] font-bold text-slate-400 block mb-0.5">P. Planilla</span>
+                  <span class="font-black text-slate-800 text-sm">S/ ${pPlanilla}</span>
+                </div>
+                <div class="text-right bg-blue-50/80 border border-blue-100/80 px-2.5 py-1 rounded-xl">
+                  <span class="text-[9px] font-black text-blue-500 block uppercase tracking-wide">Vta. Acc.</span>
+                  <span class="font-black text-blue-900 text-sm leading-none">${vtaAcc}</span>
+                </div>
+              </div>
+            </div>
+
+            ${htmlTallas}
+
+            <div class="mt-auto bg-slate-50 p-2.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
               <div class="text-center px-2">
-                <span class="block text-[8px] font-extrabold uppercase text-slate-400 leading-none">Stock BD</span>
-                <span class="text-base font-black text-slate-900 leading-tight">${stockBD}</span>
+                <span class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Stock BD</span>
+                <span class="text-lg font-black text-slate-900 leading-none">${stockBD}</span>
               </div>
-
-              <div class="h-6 w-px bg-slate-200"></div>
-
+              <div class="h-8 w-px bg-slate-200"></div>
               ${modoActual === 'selectivo' ? `
-                <div class="flex items-center gap-1.5 bg-amber-500/10 p-1 rounded-xl border border-amber-500/20 flex-1 justify-end">
-                  <span class="text-[9px] font-black text-amber-900 uppercase">Conteo:</span>
-                  <input type="number" id="input-sel-${cod}" value="${selectivo}" placeholder="0" 
-                         class="w-14 px-2 py-1 bg-white border border-amber-300 rounded-lg text-center font-black text-xs text-amber-900 focus:outline-none">
-                  <button onclick="guardarSelectivo('${cod}')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 py-1 rounded-lg transition shadow-2xs">
-                    <i class="fa-solid fa-check text-xs"></i>
+                <div class="flex items-center gap-2 flex-1 justify-end">
+                  <span class="text-[10px] font-black text-amber-600 uppercase tracking-wide">Conteo:</span>
+                  <input type="text" inputmode="numeric" id="input-sel-${cod}" value="${selectivo}" placeholder="0" 
+                         class="w-16 px-2 py-1.5 bg-white border-2 border-amber-400 rounded-xl text-center font-black text-base text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 shadow-sm transition-all">
+                  <button onclick="guardarSelectivo('${cod}')" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold w-9 h-9 rounded-xl transition-all shadow-md flex items-center justify-center">
+                    <i class="fa-solid fa-check text-sm"></i>
                   </button>
                 </div>
               ` : `
-                <div class="text-center px-3">
-                  <span class="block text-[8px] font-extrabold uppercase text-slate-400 leading-none">Selectivo</span>
-                  <span class="text-base font-black text-bata-red leading-tight">${selectivo || '--'}</span>
+                <div class="text-center px-4">
+                  <span class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Selectivo</span>
+                  <span class="text-lg font-black text-bata-red leading-none">${valorSelectivoVisual}</span>
                 </div>
               `}
-
             </div>
-
           </div>
         `;
       }).join('');
-
-      setTimeout(() => {
-        const carrusel = document.getElementById('carrusel');
-        const width = carrusel.offsetWidth + 12;
-        carrusel.scrollLeft = indiceActual * width;
-        actualizarContadorPosicion();
-      }, 50);
+      setTimeout(() => irAlIndice(indiceActual, false), 50);
     }
 
     function actualizarContadorPosicion() {
       const txtPos = document.getElementById('txt-posicion');
-      if (dbInventario.length === 0) {
-        txtPos.innerText = `Sin datos`;
-      } else {
-        txtPos.innerText = `Artículo ${indiceActual + 1} de ${dbInventario.length}`;
-      }
-    }
-
-    function cambiarModo(modo) {
-      modoActual = modo;
-      const btnConsulta = document.getElementById('btn-modo-consulta');
-      const btnSelectivo = document.getElementById('btn-modo-selectivo');
-      const bannerModo = document.getElementById('txt-modo-banner');
-
-      if (modo === 'selectivo') {
-        btnSelectivo.className = "px-2.5 py-1 rounded-md text-[10px] font-extrabold transition bg-amber-500 text-white shadow-xs";
-        btnConsulta.className = "px-2.5 py-1 rounded-md text-[10px] font-extrabold transition text-slate-500";
-        bannerModo.innerText = "SELECTIVO";
-        bannerModo.className = "text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-black";
-      } else {
-        btnConsulta.className = "px-2.5 py-1 rounded-md text-[10px] font-extrabold transition bg-white text-slate-800 shadow-xs";
-        btnSelectivo.className = "px-2.5 py-1 rounded-md text-[10px] font-extrabold transition text-slate-500";
-        bannerModo.innerText = "CONSULTA";
-        bannerModo.className = "text-bata-red bg-red-50 px-2 py-0.5 rounded border border-red-100 font-black";
-      }
-
-      renderizarCarrusel();
+      if (dbInventario.length === 0) txtPos.innerText = `Sin datos`;
+      else txtPos.innerText = `Artículo ${indiceActual + 1} de ${dbInventario.length}`;
     }
 
     function guardarSelectivo(codigo) {
       const input = document.getElementById(`input-sel-${codigo}`);
       const valorIngresado = input.value.trim();
+      if (!/^\d+$/.test(valorIngresado)) { mostrarToast("Solo números permitidos", "error"); return; }
 
-      mostrarToast(`Guardando ${codigo}...`, "info");
+      const btn = input.nextElementSibling;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i>';
       guardandoBloqueo = true;
 
       fetch(URL_APPS_SCRIPT, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'actualizarSelectivo',
-          articulo: codigo,
-          selectivo: valorIngresado
-        })
+        body: JSON.stringify({ action: 'actualizarSelectivo', articulo: codigo, selectivo: valorIngresado })
       })
       .then(() => {
         const obj = dbInventario.find(i => String(obtenerPropiedad(i, ['articulo', 'Articulo'])).trim() === String(codigo).trim());
         if (obj) obj.selectivo = valorIngresado;
-        mostrarToast(`Selectivo (${valorIngresado}) guardado`, "success");
+        mostrarToast(`Guardado: ${valorIngresado}`, "success");
       })
-      .catch(err => {
-        console.error(err);
-        mostrarToast("Error al conectar con Sheets", "error");
-      })
+      .catch(() => mostrarToast("Error de red", "error"))
       .finally(() => {
         guardandoBloqueo = false;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check text-sm"></i>';
       });
     }
 
@@ -570,17 +586,16 @@
       const icon = document.getElementById('toast-icon');
 
       msg.innerText = mensaje;
+      if (tipo === "success") icon.className = "fa-solid fa-circle-check text-emerald-400 text-base";
+      else if (tipo === "error") icon.className = "fa-solid fa-circle-xmark text-rose-400 text-base";
+      else icon.className = "fa-solid fa-circle-info text-sky-400 text-base";
 
-      if (tipo === "success") icon.className = "fa-solid fa-circle-check text-emerald-400";
-      else if (tipo === "error") icon.className = "fa-solid fa-circle-xmark text-rose-400";
-      else icon.className = "fa-solid fa-circle-info text-sky-400";
-
-      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.remove('translate-y-24', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
 
       setTimeout(() => {
         toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-24', 'opacity-0');
       }, 2500);
     }
   </script>
