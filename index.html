@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Bata 1 | Control de Stock</title>
 
-  <!-- Fuentes y Tailwind -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -33,11 +32,9 @@
   </script>
 
   <style>
-    /* Ocultar scrolls */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* Carrusel Snap */
     .carrusel-container {
       scroll-snap-type: x mandatory;
       touch-action: pan-x;
@@ -47,30 +44,49 @@
       scroll-snap-stop: always;
     }
     
-    /* Safe Area */
     body {
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
       overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    /* Vistas SPA */
+    /* SPA OPTIMIZADO: Usamos opacity y z-index para no colapsar el navegador */
     .app-section {
-      display: none;
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-in-out;
+      display: flex;
       flex-direction: column;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      animation: fadeIn 0.2s ease-in-out;
+      padding-bottom: 65px; /* Espacio para el menú */
     }
-    .app-section.active { display: flex; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .app-section.active {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 10;
+    }
 
-    /* ====== ESTILOS DEL ESCÁNER ====== */
-    #reader { width: 100%; height: 100%; }
-    #reader video { object-fit: cover !important; }
-    
-    /* Overlay del escáner (Láser y esquinas) */
+    /* ====== ARREGLO VISUAL DEL ESCÁNER ====== */
+    /* Forzar que el video ocupe TODA la pantalla sin importar lo que diga la librería */
+    #reader { 
+      width: 100vw !important; 
+      height: 100vh !important; 
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    #reader video { 
+      width: 100vw !important; 
+      height: 100vh !important; 
+      object-fit: cover !important; 
+    }
+    #reader__scan_region { 
+      background: transparent !important; 
+    }
+
+    /* Overlay del escáner */
     .scanner-overlay {
       position: absolute;
       inset: 0;
@@ -79,58 +95,35 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: rgba(0,0,0,0.4); /* Oscurece el fondo */
+      z-index: 10;
     }
-    /* Ventana transparente en el medio */
     .scanner-window {
       width: 85%;
       max-width: 320px;
-      height: 180px; /* Ajustado para EAN-13 horizontales */
+      height: 180px;
       background: transparent;
-      box-shadow: 0 0 0 100vmax rgba(0,0,0,0.6); /* Efecto de foco */
+      box-shadow: 0 0 0 100vmax rgba(0,0,0,0.6);
       border-radius: 12px;
       position: relative;
       overflow: hidden;
     }
-    /* Esquinas */
-    .scanner-window::before, .scanner-window::after {
-      content: ''; position: absolute; width: 30px; height: 30px; border-color: #E31E24; border-style: solid;
-    }
-    .scanner-window::before { top: 0; left: 0; border-width: 4px 0 0 4px; border-top-left-radius: 12px; }
-    .scanner-window::after { bottom: 0; right: 0; border-width: 0 4px 4px 0; border-bottom-right-radius: 12px; }
-    /* Esquinas faltantes (usando div extra) */
-    .corner-tr, .corner-bl { position: absolute; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; }
-    .corner-tr { top: 0; right: 0; border-width: 4px 4px 0 0; border-top-right-radius: 12px; }
-    .corner-bl { bottom: 0; left: 0; border-width: 0 0 4px 4px; border-bottom-left-radius: 12px; }
+    /* Esquinas rojas del escáner */
+    .scanner-window::before { content: ''; position: absolute; top: 0; left: 0; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; border-width: 4px 0 0 4px; border-top-left-radius: 12px; }
+    .scanner-window::after { content: ''; position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; border-width: 0 4px 4px 0; border-bottom-right-radius: 12px; }
+    .corner-tr { position: absolute; top: 0; right: 0; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; border-width: 4px 4px 0 0; border-top-right-radius: 12px; }
+    .corner-bl { position: absolute; bottom: 0; left: 0; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; border-width: 0 0 4px 4px; border-bottom-left-radius: 12px; }
     
-    /* Láser animado */
+    /* Láser */
     .laser {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: #E31E24;
-      box-shadow: 0 0 10px #E31E24;
+      position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #E31E24; box-shadow: 0 0 10px #E31E24;
       animation: scan 2s infinite linear;
     }
-    @keyframes scan {
-      0% { transform: translateY(0); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translateY(180px); opacity: 0; }
-    }
+    @keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(180px); opacity: 0; } }
 
-    /* Botones flotantes del escáner */
     .scanner-btn {
-      pointer-events: auto;
-      width: 50px; height: 50px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(10px);
-      color: white;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-      border: 1px solid rgba(255,255,255,0.3);
-      transition: all 0.2s;
+      width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+      color: white; display: flex; align-items: center; justify-content: center; font-size: 20px;
+      border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s; pointer-events: auto;
     }
     .scanner-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.4); }
     .scanner-btn.active { background: #E31E24; border-color: #E31E24; box-shadow: 0 0 15px rgba(227,30,36,0.5); }
@@ -154,13 +147,13 @@
     </header>
 
     <!-- CONTENEDOR DE VISTAS -->
-    <main class="w-full flex-1 relative overflow-hidden pb-16">
+    <main class="w-full flex-1 relative overflow-hidden">
 
-      <!-- ================= VISTA 1: BUSCADOR / SELECTIVO ================= -->
+      <!-- ================= VISTA 1: BUSCADOR ================= -->
       <section id="view-buscar" class="app-section active px-4 py-3 gap-3">
         
-        <!-- Barra de Búsqueda Inteligente -->
-        <div class="flex-shrink-0 z-30 space-y-2">
+        <!-- Barra de Búsqueda -->
+        <div class="flex-shrink-0 z-30 space-y-2 mt-1">
           <div class="relative flex items-center bg-white rounded-2xl shadow-soft border border-slate-200 p-1">
             <i class="fa-solid fa-search text-slate-400 ml-3 text-sm"></i>
             <input type="text" inputmode="numeric" id="input-busqueda" placeholder="Tipea o dicta el código..." 
@@ -174,13 +167,13 @@
               <button onclick="activarBusquedaVoz()" id="btn-voz" class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-all border border-slate-100 relative overflow-hidden">
                 <i id="icon-voz" class="fa-solid fa-microphone text-base z-10"></i>
               </button>
+              <!-- Icono cambiado a código de barras como pediste -->
               <button onclick="abrirCamaraEscaner()" class="w-10 h-10 rounded-xl bg-bata-red text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
-                <i class="fa-solid fa-camera text-base"></i>
+                <i class="fa-solid fa-barcode text-lg"></i>
               </button>
             </div>
           </div>
 
-          <!-- Toggle Selectivo (Se activa aquí) -->
           <div class="flex items-center justify-between text-[11px] font-bold px-1">
             <span id="txt-posicion" class="text-slate-500">Cargando...</span>
             <button onclick="toggleModoSelectivo()" id="btn-toggle-selectivo" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition">
@@ -193,132 +186,92 @@
         <!-- Carrusel de Productos -->
         <div class="relative flex-1 flex min-h-0 -mx-2 px-2">
           <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full items-stretch gap-4 pb-2">
-            <div class="carrusel-card min-w-full bg-white rounded-3xl p-6 border border-slate-200 text-center flex flex-col items-center justify-center shadow-soft">
-              <i class="fa-solid fa-circle-notch fa-spin text-2xl text-bata-red mb-2"></i>
-              <p class="text-sm font-bold text-slate-700">Sincronizando...</p>
-            </div>
+            <!-- El contenido se inyecta vía JS -->
           </div>
         </div>
       </section>
 
-      <!-- ================= VISTA 2: MOVIMIENTOS ================= -->
+      <!-- ================= OTRAS VISTAS ================= -->
       <section id="view-movimientos" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
-          <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-boxes-packing"></i>
-          </div>
+          <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-boxes-packing"></i></div>
           <h2 class="text-lg font-black text-slate-800">Recepción / Salida</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Módulo para registrar ingreso de mercadería o bajas por venta.</p>
+          <p class="text-sm text-slate-500 max-w-[250px]">Módulo para registrar ingreso o bajas de mercadería.</p>
         </div>
       </section>
 
-      <!-- ================= VISTA 3: REPORTES ================= -->
       <section id="view-reportes" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
-          <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-chart-line"></i>
-          </div>
+          <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-chart-line"></i></div>
           <h2 class="text-lg font-black text-slate-800">Reportes</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Métricas de stock y movimientos.</p>
+          <p class="text-sm text-slate-500 max-w-[250px]">Métricas de stock y ventas.</p>
         </div>
       </section>
 
-      <!-- ================= VISTA 4: PLANILLA ================= -->
       <section id="view-planilla" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
-          <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-file-invoice-dollar"></i>
-          </div>
+          <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-file-invoice-dollar"></i></div>
           <h2 class="text-lg font-black text-slate-800">Planilla</h2>
           <p class="text-sm text-slate-500 max-w-[250px]">Consulta de precios y ventas acumuladas.</p>
         </div>
       </section>
 
-      <!-- ================= VISTA 5: HISTORIAL ================= -->
       <section id="view-historial" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
-          <div class="w-16 h-16 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-          </div>
+          <div class="w-16 h-16 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-clock-rotate-left"></i></div>
           <h2 class="text-lg font-black text-slate-800">Historial</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Registro de búsquedas y escaneos recientes.</p>
+          <p class="text-sm text-slate-500 max-w-[250px]">Registro de búsquedas recientes.</p>
         </div>
       </section>
 
     </main>
 
-    <!-- MENÚ INFERIOR (5 APARTADOS) -->
+    <!-- MENÚ INFERIOR -->
     <nav class="absolute bottom-0 w-full bg-white border-t border-slate-200 px-1 py-1.5 flex items-center justify-around z-40 shadow-nav rounded-t-2xl">
-      
-      <button onclick="cambiarSeccion('view-buscar', this, 'Buscador', 'Bata 1')" 
-              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-bata-red">
-        <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i>
-        <span class="text-[9px] font-bold">Buscar</span>
+      <button onclick="cambiarSeccion('view-buscar', this, 'Buscador', 'Bata 1')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-bata-red">
+        <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i><span class="text-[9px] font-bold">Buscar</span>
       </button>
-
-      <button onclick="cambiarSeccion('view-movimientos', this, 'Movimientos', 'Recepción / Salida')" 
-              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400">
-        <i class="fa-solid fa-boxes-packing text-lg mb-1"></i>
-        <span class="text-[9px] font-bold">Movs.</span>
+      <button onclick="cambiarSeccion('view-movimientos', this, 'Movimientos', 'Recepción / Salida')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-slate-400">
+        <i class="fa-solid fa-boxes-packing text-lg mb-1"></i><span class="text-[9px] font-bold">Movs.</span>
       </button>
-
-      <button onclick="cambiarSeccion('view-reportes', this, 'Reportes', 'Métricas y Análisis')" 
-              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400">
-        <i class="fa-solid fa-chart-line text-lg mb-1"></i>
-        <span class="text-[9px] font-bold">Reportes</span>
+      <button onclick="cambiarSeccion('view-reportes', this, 'Reportes', 'Métricas')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-slate-400">
+        <i class="fa-solid fa-chart-line text-lg mb-1"></i><span class="text-[9px] font-bold">Reportes</span>
       </button>
-
-      <button onclick="cambiarSeccion('view-planilla', this, 'Planilla', 'Precios y Ventas')" 
-              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400">
-        <i class="fa-solid fa-file-invoice-dollar text-lg mb-1"></i>
-        <span class="text-[9px] font-bold">Planilla</span>
+      <button onclick="cambiarSeccion('view-planilla', this, 'Planilla', 'Precios')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-slate-400">
+        <i class="fa-solid fa-file-invoice-dollar text-lg mb-1"></i><span class="text-[9px] font-bold">Planilla</span>
       </button>
-
-      <button onclick="cambiarSeccion('view-historial', this, 'Historial', 'Actividad Reciente')" 
-              class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all duration-200 text-slate-400">
-        <i class="fa-solid fa-clock-rotate-left text-lg mb-1"></i>
-        <span class="text-[9px] font-bold">Historial</span>
+      <button onclick="cambiarSeccion('view-historial', this, 'Historial', 'Actividad')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-slate-400">
+        <i class="fa-solid fa-clock-rotate-left text-lg mb-1"></i><span class="text-[9px] font-bold">Historial</span>
       </button>
-
     </nav>
 
-    <!-- MODAL ESCÁNER PRO -->
-    <div id="modal-escaner" class="fixed inset-0 bg-black z-50 hidden flex-col">
-      <!-- Controles Superiores -->
-      <div class="absolute top-0 left-0 right-0 p-4 pt-10 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent">
-        <button onclick="cerrarCamaraEscaner()" class="scanner-btn">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-        <span class="text-white font-black text-sm tracking-wide bg-black/40 px-3 py-1 rounded-full">ESCÁNER EAN-13 / QR</span>
-        <button onclick="toggleLinterna()" id="btn-linterna" class="scanner-btn">
-          <i class="fa-solid fa-bolt"></i>
-        </button>
-      </div>
-
-      <!-- Contenedor del Video -->
-      <div class="relative w-full h-full bg-black">
-        <div id="reader" class="w-full h-full"></div>
-        
-        <!-- Overlay del escáner -->
-        <div class="scanner-overlay">
-          <div class="scanner-window">
-            <div class="corner-tr"></div>
-            <div class="corner-bl"></div>
-            <div class="laser"></div>
-          </div>
-          <p class="text-white/80 text-xs font-bold mt-6 tracking-wide">Alinea el código dentro del marco</p>
+    <!-- MODAL ESCÁNER OPTIMIZADO -->
+    <div id="modal-escaner" class="fixed inset-0 bg-black z-50 hidden">
+      <div id="reader"></div>
+      
+      <!-- Overlay UI -->
+      <div class="scanner-overlay">
+        <!-- Botones Superiores -->
+        <div class="absolute top-0 left-0 right-0 p-4 pt-10 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+          <button onclick="cerrarCamaraEscaner()" class="scanner-btn"><i class="fa-solid fa-xmark"></i></button>
+          <span class="text-white font-black text-sm tracking-wide bg-black/40 px-3 py-1 rounded-full">ESCÁNER EAN-13</span>
+          <button onclick="toggleLinterna()" id="btn-linterna" class="scanner-btn"><i class="fa-solid fa-bolt"></i></button>
         </div>
-      </div>
 
-      <!-- Controles Inferiores (Zoom) -->
-      <div class="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-6 z-50">
-        <button onclick="ajustarZoom(-0.5)" class="scanner-btn">
-          <i class="fa-solid fa-minus"></i>
-        </button>
-        <div class="text-white font-black text-lg bg-black/40 px-4 py-2 rounded-full border border-white/20" id="txt-zoom">1.0x</div>
-        <button onclick="ajustarZoom(0.5)" class="scanner-btn">
-          <i class="fa-solid fa-plus"></i>
-        </button>
+        <!-- Ventana de Enfoque -->
+        <div class="scanner-window">
+          <div class="corner-tr"></div>
+          <div class="corner-bl"></div>
+          <div class="laser"></div>
+        </div>
+        <p class="text-white/80 text-xs font-bold mt-6 tracking-wide bg-black/40 px-4 py-1.5 rounded-full">Enfoca el código de barras</p>
+
+        <!-- Controles Zoom -->
+        <div class="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-6 z-50 pointer-events-none">
+          <button onclick="ajustarZoom(-0.5)" class="scanner-btn"><i class="fa-solid fa-minus"></i></button>
+          <div class="text-white font-black text-lg bg-black/40 px-4 py-2 rounded-full border border-white/20" id="txt-zoom">1.0x</div>
+          <button onclick="ajustarZoom(0.5)" class="scanner-btn"><i class="fa-solid fa-plus"></i></button>
+        </div>
       </div>
     </div>
 
@@ -339,13 +292,14 @@
     let guardandoBloqueo = false;
     let html5QrCodeScanner = null;
     let tiempoDebounce;
-
-    // Variables de Cámara
     let linternaEncendida = false;
     let zoomActual = 1.0;
+    
+    let ultimoShake = 0;
 
     window.onload = function() {
       sincronizarDatos();
+      solicitarPermisoSensoresYIniciar();
 
       const carrusel = document.getElementById('carrusel');
       carrusel.addEventListener('scroll', () => {
@@ -359,10 +313,47 @@
       });
     };
 
-    /* ================= NAVEGACIÓN ================= */
+    /* ================= SHAKE SENSOR (SACUDIDA) ================= */
+    function solicitarPermisoSensoresYIniciar() {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        document.body.addEventListener('click', async function pedirPermiso() {
+          try {
+            if (await DeviceMotionEvent.requestPermission() === 'granted') {
+              window.addEventListener('devicemotion', detectarShake, false);
+            }
+          } catch (e) {}
+          document.body.removeEventListener('click', pedirPermiso);
+        }, { once: true });
+      } else if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', detectarShake, false);
+      }
+    }
+
+    function detectarShake(e) {
+      // Evitar abrir el escáner si ya está abierto
+      if (!document.getElementById('modal-escaner').classList.contains('hidden')) return;
+
+      const ahora = Date.now();
+      // Cooldown de 3 segundos para no abrir mil veces
+      if ((ahora - ultimoShake) < 3000) return; 
+
+      const acc = e.accelerationIncludingGravity;
+      if (!acc) return;
+
+      // Sacudida fuerte (Fuerza > 35)
+      const fuerza = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+      if (fuerza > 35) { 
+        ultimoShake = ahora;
+        if (navigator.vibrate) navigator.vibrate(50);
+        abrirCamaraEscaner();
+      }
+    }
+
+    /* ================= NAVEGACIÓN RÁPIDA ================= */
     function cambiarSeccion(viewId, btn, titulo, subtitulo) {
       document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active'));
       document.getElementById(viewId).classList.add('active');
+      
       document.getElementById('header-title').innerText = titulo;
       document.getElementById('header-subtitle').innerText = subtitulo;
 
@@ -373,10 +364,6 @@
       if (btn) {
         btn.classList.remove('text-slate-400');
         btn.classList.add('text-bata-red');
-      }
-
-      if (viewId === 'view-buscar') {
-        setTimeout(() => irAlIndice(indiceActual, false), 50);
       }
     }
 
@@ -449,19 +436,14 @@
 
       recognition.onresult = (event) => {
         let texto = event.results[0][0].transcript.toLowerCase();
-        
-        // Mapeo de números hablados a dígitos (Bala de velocidad)
-        const mapa = {
-          'cero':'0','uno':'1','dos':'2','tres':'3','cuatro':'4','cinco':'5','seis':'6','siete':'7','ocho':'8','nueve':'9','diez':'10'
-        };
-        
+        const mapa = {'cero':'0','uno':'1','dos':'2','tres':'3','cuatro':'4','cinco':'5','seis':'6','siete':'7','ocho':'8','nueve':'9','diez':'10'};
         let soloNumeros = texto.split(' ').map(p => mapa[p] || p).join('').replace(/\D/g, '');
         
         if (soloNumeros) {
           document.getElementById('input-busqueda').value = soloNumeros;
           buscarYCentrarArticulo(soloNumeros);
         } else {
-          mostrarToast("No se detectaron números claros", "error");
+          mostrarToast("No se detectaron números", "error");
         }
       };
 
@@ -472,39 +454,35 @@
       };
     }
 
-    /* ================= LÓGICA DEL ESCÁNER HTML5 ================= */
+    /* ================= ESCÁNER ULTRA RÁPIDO ================= */
     function abrirCamaraEscaner() {
       document.getElementById('modal-escaner').classList.remove('hidden');
-      document.getElementById('modal-escaner').classList.add('flex');
-
+      
       if (!html5QrCodeScanner) {
         html5QrCodeScanner = new Html5Qrcode("reader");
       }
 
-      // Iniciar con resolución Full HD si es posible
-      const config = { 
-        fps: 15, 
-        // SIN qrbox, para que escanee toda la pantalla (ideal para EAN-13)
-        aspectRatio: 1.0
-      };
-
+      // Configuración optimizada: API nativa de barras y ancho calculado
+      const size = Math.min(window.innerWidth, window.innerHeight) * 0.7;
+      
       html5QrCodeScanner.start(
         { facingMode: "environment" }, 
-        config, 
+        { 
+          fps: 10, 
+          qrbox: { width: size, height: size * 0.6 }, // Enfoque rectangular para EAN-13
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true } // ACELERADOR NATIVO
+        }, 
         (decodedText) => {
           const codigoFinal = decodedText.replace(/\D/g, '');
-          
           cambiarSeccion('view-buscar', document.querySelector('.nav-btn'), 'Buscador', 'Bata 1');
           document.getElementById('input-busqueda').value = codigoFinal;
           buscarYCentrarArticulo(codigoFinal);
           cerrarCamaraEscaner();
-          
-          if (navigator.vibrate) navigator.vibrate([50, 50, 50]); // Vibración triple al escanear
+          if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
           mostrarToast(`Escaneado: ${codigoFinal}`, "success");
         },
-        () => {} // Ignorar errores de frames
+        () => {} 
       ).then(() => {
-        // Aplicar zoom inicial tras encender
         aplicarZoom();
       }).catch(err => {
         mostrarToast("Error al iniciar cámara", "error");
@@ -516,8 +494,6 @@
       if (html5QrCodeScanner) {
         html5QrCodeScanner.stop().then(() => {
           document.getElementById('modal-escaner').classList.add('hidden');
-          document.getElementById('modal-escaner').classList.remove('flex');
-          // Resetear estados de la cámara
           linternaEncendida = false;
           document.getElementById('btn-linterna').classList.remove('active');
           zoomActual = 1.0;
@@ -526,30 +502,27 @@
       }
     }
 
-    // LINTERNA
     function toggleLinterna() {
       linternaEncendida = !linternaEncendida;
       const btn = document.getElementById('btn-linterna');
-      
       if (html5QrCodeScanner) {
-        // Usar la API de MediaTrackConstraints para la linterna
-        const track = html5QrCodeScanner.getRunningTrackCameraCapabilities().torchFeature();
-        if (track) {
-          track.apply(linternaEncendida);
-          btn.classList.toggle('active', linternaEncendida);
-        } else {
-          mostrarToast("Linterna no soportada en este dispositivo", "error");
-          linternaEncendida = false;
-        }
+        try {
+          const track = html5QrCodeScanner.getRunningTrackCameraCapabilities().torchFeature();
+          if (track) {
+            track.apply(linternaEncendida);
+            btn.classList.toggle('active', linternaEncendida);
+          } else {
+            mostrarToast("Linterna no soportada", "error");
+            linternaEncendida = false;
+          }
+        } catch(e) {}
       }
     }
 
-    // ZOOM
     function ajustarZoom(cambio) {
       zoomActual += cambio;
       if (zoomActual < 1.0) zoomActual = 1.0;
-      if (zoomActual > 4.0) zoomActual = 4.0; // Límite de 4x
-      
+      if (zoomActual > 4.0) zoomActual = 4.0;
       document.getElementById('txt-zoom').innerText = zoomActual.toFixed(1) + "x";
       aplicarZoom();
     }
@@ -559,19 +532,14 @@
         try {
           const caps = html5QrCodeScanner.getRunningTrackCameraCapabilities();
           const zoomCap = caps.zoomFeature();
-          if (zoomCap) {
-            zoomCap.apply(zoomActual);
-          }
-        } catch(e) {
-          // Algunos navegadores no soportan zoom en la API
-        }
+          if (zoomCap) zoomCap.apply(zoomActual);
+        } catch(e) {}
       }
     }
 
-    /* ================= RENDERIZADO DE TARJETAS ================= */
+    /* ================= RENDERIZADO ================= */
     function generarMatrizTallas(cadenaTallas, stockTotal) {
       if (!cadenaTallas) return `<div class="text-[11px] text-slate-400 text-center py-3 bg-slate-50/50 border border-slate-100 rounded-xl">Sin desglose</div>`;
-      
       const pares = [];
       String(cadenaTallas).split(/[,;]+/).forEach(el => {
         const limpio = el.trim();
@@ -580,7 +548,6 @@
           if (t && c) pares.push({ talla: t.trim(), cant: c.trim() });
         }
       });
-      
       if (pares.length === 0) return `<div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center text-sm font-black text-slate-700">${cadenaTallas}</div>`;
 
       return `
@@ -614,14 +581,12 @@
         const antiguedad = obtenerPropiedad(item, ['antiguedad', 'Antiguedad'], '');
         const selectivo = obtenerPropiedad(item, ['selectivo', 'Selectivo'], '');
         const tallaCantidadStr = obtenerPropiedad(item, ['tallaCantidad', 'tallacantidad'], '');
-
         const urlImagen = `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cod}_1.JPG`;
-        const htmlTallas = generarMatrizTallas(tallaCantidadStr, stockBD);
+
         const valorSelectivoVisual = (selectivo !== '' && selectivo !== null && selectivo !== undefined) ? selectivo : '--';
 
         return `
           <div class="carrusel-card min-w-full bg-white rounded-3xl border border-slate-200 p-4 shadow-soft flex flex-col gap-3 h-full">
-            
             <div class="flex items-start justify-between gap-2">
               <div class="flex flex-wrap gap-1.5">
                 <span class="bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-lg">Calidad: ${calidad}</span>
@@ -629,11 +594,9 @@
               </div>
               <span class="bg-bata-dark text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider shadow-sm">${categoria}</span>
             </div>
-
             <div class="relative w-full h-[160px] shrink-0 bg-slate-50 rounded-2xl border border-slate-100/50 flex items-center justify-center p-4">
               <img src="${urlImagen}" onerror="this.src='https://via.placeholder.com/220x220/f8fafc/94a3b8?text=SIN+IMAGEN';" class="max-h-full max-w-full object-contain drop-shadow-md">
             </div>
-
             <div class="flex items-end justify-between px-1">
               <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Código</span>
@@ -650,26 +613,17 @@
                 </div>
               </div>
             </div>
-
-            ${htmlTallas}
-
-            <!-- Footer: Stock / Selectivo (con toggle interno) -->
-            <div class="mt-auto bg-slate-50 p-2.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3 transition-colors ${modoActual === 'selectivo' ? 'border-amber-300 bg-amber-50/50' : ''}">
-              
+            ${generarMatrizTallas(tallaCantidadStr, stockBD)}
+            <div class="mt-auto bg-slate-50 p-2.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3 ${modoActual === 'selectivo' ? 'border-amber-300 bg-amber-50/50' : ''}">
               <div class="text-center px-2">
                 <span class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Stock BD</span>
                 <span class="text-lg font-black text-slate-900 leading-none">${stockBD}</span>
               </div>
-
               <div class="h-8 w-px bg-slate-200"></div>
-
               ${modoActual === 'selectivo' ? `
                 <div class="flex items-center gap-2 flex-1 justify-end">
-                  <input type="text" inputmode="numeric" id="input-sel-${cod}" value="${selectivo}" placeholder="0" 
-                         class="w-16 px-2 py-1.5 bg-white border-2 border-amber-400 rounded-xl text-center font-black text-base text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 shadow-sm">
-                  <button onclick="guardarSelectivo('${cod}')" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold w-9 h-9 rounded-xl transition-all shadow-md flex items-center justify-center">
-                    <i class="fa-solid fa-check text-sm"></i>
-                  </button>
+                  <input type="text" inputmode="numeric" id="input-sel-${cod}" value="${selectivo}" placeholder="0" class="w-16 px-2 py-1.5 bg-white border-2 border-amber-400 rounded-xl text-center font-black text-base text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 shadow-sm">
+                  <button onclick="guardarSelectivo('${cod}')" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold w-9 h-9 rounded-xl transition-all shadow-md flex items-center justify-center"><i class="fa-solid fa-check text-sm"></i></button>
                 </div>
               ` : `
                 <div class="text-center px-4 flex items-center gap-3">
