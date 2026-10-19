@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Bata 1 | Control de Stock</title>
 
+  <!-- Fuentes y Tailwind -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   
-  <!-- Html5Qrcode Scanner -->
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- ZXING LIBRARY (Lector de códigos de barras rápido y sin interfaz fea) -->
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <script>
     tailwind.config = {
@@ -51,16 +52,16 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* SPA OPTIMIZADO: Usamos opacity y z-index para no colapsar el navegador */
+    /* SPA ULTRA RÁPIDO */
     .app-section {
       position: absolute;
       inset: 0;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s ease-in-out;
+      transition: opacity 0.15s ease-in-out;
       display: flex;
       flex-direction: column;
-      padding-bottom: 65px; /* Espacio para el menú */
+      padding-bottom: 65px; 
     }
     .app-section.active {
       opacity: 1;
@@ -68,25 +69,26 @@
       z-index: 10;
     }
 
-    /* ====== ARREGLO VISUAL DEL ESCÁNER ====== */
-    /* Forzar que el video ocupe TODA la pantalla sin importar lo que diga la librería */
-    #reader { 
-      width: 100vw !important; 
-      height: 100vh !important; 
-      position: absolute;
+    /* ====== ESCÁNER INMERSIVO (CERO LIBRERÍAS DE UI) ====== */
+    #video-container {
+      position: fixed;
       inset: 0;
-      z-index: 0;
+      background: #000;
+      z-index: 100;
+      display: none;
+      flex-direction: column;
     }
-    #reader video { 
-      width: 100vw !important; 
-      height: 100vh !important; 
-      object-fit: cover !important; 
+    #video-container.active {
+      display: flex;
     }
-    #reader__scan_region { 
-      background: transparent !important; 
+    
+    #scanner-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* Llena la pantalla sin deformar */
     }
 
-    /* Overlay del escáner */
+    /* Overlay que oscurece todo menos el centro */
     .scanner-overlay {
       position: absolute;
       inset: 0;
@@ -95,38 +97,46 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      z-index: 10;
     }
+    
     .scanner-window {
-      width: 85%;
-      max-width: 320px;
-      height: 180px;
+      width: 80%;
+      max-width: 300px;
+      height: 160px; /* Ideal para EAN-13 horizontal */
       background: transparent;
-      box-shadow: 0 0 0 100vmax rgba(0,0,0,0.6);
-      border-radius: 12px;
+      box-shadow: 0 0 0 100vmax rgba(0,0,0,0.65); /* Efecto foco */
+      border-radius: 16px;
       position: relative;
       overflow: hidden;
     }
-    /* Esquinas rojas del escáner */
-    .scanner-window::before { content: ''; position: absolute; top: 0; left: 0; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; border-width: 4px 0 0 4px; border-top-left-radius: 12px; }
-    .scanner-window::after { content: ''; position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; border-width: 0 4px 4px 0; border-bottom-right-radius: 12px; }
-    .corner-tr { position: absolute; top: 0; right: 0; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; border-width: 4px 4px 0 0; border-top-right-radius: 12px; }
-    .corner-bl { position: absolute; bottom: 0; left: 0; width: 30px; height: 30px; border-color: #E31E24; border-style: solid; border-width: 0 0 4px 4px; border-bottom-left-radius: 12px; }
+
+    /* Esquinas */
+    .scanner-window::before { content: ''; position: absolute; top: 0; left: 0; width: 35px; height: 35px; border-color: #E31E24; border-style: solid; border-width: 5px 0 0 5px; border-top-left-radius: 16px; }
+    .scanner-window::after { content: ''; position: absolute; bottom: 0; right: 0; width: 35px; height: 35px; border-color: #E31E24; border-style: solid; border-width: 0 5px 5px 0; border-bottom-right-radius: 16px; }
+    .corner-tr { position: absolute; top: 0; right: 0; width: 35px; height: 35px; border-color: #E31E24; border-style: solid; border-width: 5px 5px 0 0; border-top-right-radius: 16px; }
+    .corner-bl { position: absolute; bottom: 0; left: 0; width: 35px; height: 35px; border-color: #E31E24; border-style: solid; border-width: 0 0 5px 5px; border-bottom-left-radius: 16px; }
     
-    /* Láser */
+    /* Láser animado */
     .laser {
-      position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #E31E24; box-shadow: 0 0 10px #E31E24;
-      animation: scan 2s infinite linear;
+      position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #E31E24;
+      box-shadow: 0 0 15px 3px rgba(227,30,36,0.8);
+      animation: scan 2.5s infinite linear;
     }
-    @keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(180px); opacity: 0; } }
+    @keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(160px); opacity: 0; } }
 
     .scanner-btn {
-      width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+      width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
       color: white; display: flex; align-items: center; justify-content: center; font-size: 20px;
-      border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s; pointer-events: auto;
+      border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s; pointer-events: auto; cursor: pointer;
     }
-    .scanner-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.4); }
+    .scanner-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
     .scanner-btn.active { background: #E31E24; border-color: #E31E24; box-shadow: 0 0 15px rgba(227,30,36,0.5); }
+    
+    /* Adaptación para pantallas horizontales en el escáner */
+    @media (orientation: landscape) {
+      .scanner-window { width: 50%; max-width: 400px; height: 100px; }
+      @keyframes scan { 0% { transform: translateY(0); } 100% { transform: translateY(100px); } }
+    }
   </style>
 </head>
 <body class="bg-slate-100 font-sans h-[100dvh] w-screen overflow-hidden text-slate-800 flex flex-col justify-center items-center antialiased">
@@ -149,81 +159,62 @@
     <!-- CONTENEDOR DE VISTAS -->
     <main class="w-full flex-1 relative overflow-hidden">
 
-      <!-- ================= VISTA 1: BUSCADOR ================= -->
+      <!-- VISTA 1: BUSCADOR -->
       <section id="view-buscar" class="app-section active px-4 py-3 gap-3">
-        
-        <!-- Barra de Búsqueda -->
         <div class="flex-shrink-0 z-30 space-y-2 mt-1">
           <div class="relative flex items-center bg-white rounded-2xl shadow-soft border border-slate-200 p-1">
             <i class="fa-solid fa-search text-slate-400 ml-3 text-sm"></i>
             <input type="text" inputmode="numeric" id="input-busqueda" placeholder="Tipea o dicta el código..." 
                    class="flex-1 bg-transparent px-3 py-2.5 text-sm font-bold text-slate-900 focus:outline-none placeholder-slate-400"
                    oninput="onBusquedaInput()">
-            
             <div class="flex items-center gap-1 pr-1">
-              <button id="btn-limpiar" onclick="limpiarBusqueda()" class="hidden w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 flex items-center justify-center">
-                <i class="fa-solid fa-circle-xmark"></i>
-              </button>
+              <button id="btn-limpiar" onclick="limpiarBusqueda()" class="hidden w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-circle-xmark"></i></button>
               <button onclick="activarBusquedaVoz()" id="btn-voz" class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-all border border-slate-100 relative overflow-hidden">
                 <i id="icon-voz" class="fa-solid fa-microphone text-base z-10"></i>
               </button>
-              <!-- Icono cambiado a código de barras como pediste -->
-              <button onclick="abrirCamaraEscaner()" class="w-10 h-10 rounded-xl bg-bata-red text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
+              <button onclick="iniciarEscaner()" class="w-10 h-10 rounded-xl bg-bata-red text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
                 <i class="fa-solid fa-barcode text-lg"></i>
               </button>
             </div>
           </div>
-
           <div class="flex items-center justify-between text-[11px] font-bold px-1">
             <span id="txt-posicion" class="text-slate-500">Cargando...</span>
             <button onclick="toggleModoSelectivo()" id="btn-toggle-selectivo" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition">
-              <i class="fa-solid fa-pen-to-square"></i> 
-              <span>Modo Conteo</span>
+              <i class="fa-solid fa-pen-to-square"></i> <span>Modo Conteo</span>
             </button>
           </div>
         </div>
 
-        <!-- Carrusel de Productos -->
         <div class="relative flex-1 flex min-h-0 -mx-2 px-2">
-          <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full items-stretch gap-4 pb-2">
-            <!-- El contenido se inyecta vía JS -->
-          </div>
+          <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full items-stretch gap-4 pb-2"></div>
         </div>
       </section>
 
-      <!-- ================= OTRAS VISTAS ================= -->
+      <!-- VISTAS DE EJEMPLO -->
       <section id="view-movimientos" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
           <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-boxes-packing"></i></div>
-          <h2 class="text-lg font-black text-slate-800">Recepción / Salida</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Módulo para registrar ingreso o bajas de mercadería.</p>
+          <h2 class="text-lg font-black text-slate-800">Movimientos</h2>
         </div>
       </section>
-
       <section id="view-reportes" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
           <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-chart-line"></i></div>
           <h2 class="text-lg font-black text-slate-800">Reportes</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Métricas de stock y ventas.</p>
         </div>
       </section>
-
       <section id="view-planilla" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
           <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-file-invoice-dollar"></i></div>
           <h2 class="text-lg font-black text-slate-800">Planilla</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Consulta de precios y ventas acumuladas.</p>
         </div>
       </section>
-
       <section id="view-historial" class="app-section px-4 py-6">
         <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
           <div class="w-16 h-16 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-clock-rotate-left"></i></div>
           <h2 class="text-lg font-black text-slate-800">Historial</h2>
-          <p class="text-sm text-slate-500 max-w-[250px]">Registro de búsquedas recientes.</p>
         </div>
       </section>
-
     </main>
 
     <!-- MENÚ INFERIOR -->
@@ -245,38 +236,43 @@
       </button>
     </nav>
 
-    <!-- MODAL ESCÁNER OPTIMIZADO -->
-    <div id="modal-escaner" class="fixed inset-0 bg-black z-50 hidden">
-      <div id="reader"></div>
+    <!-- ================= MODAL ESCÁNER DEFINITIVO ================= -->
+    <div id="video-container">
+      <!-- El video nativo que llenará toda la pantalla -->
+      <video id="scanner-video" autoplay playsinline muted></video>
       
-      <!-- Overlay UI -->
+      <!-- UI Flotante sobre el video -->
       <div class="scanner-overlay">
+        
         <!-- Botones Superiores -->
         <div class="absolute top-0 left-0 right-0 p-4 pt-10 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-          <button onclick="cerrarCamaraEscaner()" class="scanner-btn"><i class="fa-solid fa-xmark"></i></button>
-          <span class="text-white font-black text-sm tracking-wide bg-black/40 px-3 py-1 rounded-full">ESCÁNER EAN-13</span>
+          <button onclick="detenerEscaner()" class="scanner-btn"><i class="fa-solid fa-xmark"></i></button>
+          <span class="text-white font-black text-sm tracking-wide bg-black/50 px-4 py-1.5 rounded-full border border-white/20">LECTOR EAN-13</span>
           <button onclick="toggleLinterna()" id="btn-linterna" class="scanner-btn"><i class="fa-solid fa-bolt"></i></button>
         </div>
 
-        <!-- Ventana de Enfoque -->
+        <!-- Ventana de Enfoque (Con Láser) -->
         <div class="scanner-window">
           <div class="corner-tr"></div>
           <div class="corner-bl"></div>
           <div class="laser"></div>
         </div>
-        <p class="text-white/80 text-xs font-bold mt-6 tracking-wide bg-black/40 px-4 py-1.5 rounded-full">Enfoca el código de barras</p>
+        
+        <p class="text-white/90 text-xs font-bold mt-8 tracking-wide bg-black/50 px-5 py-2 rounded-full border border-white/10 backdrop-blur-md">
+          Apunta al código de barras
+        </p>
 
         <!-- Controles Zoom -->
-        <div class="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-6 z-50 pointer-events-none">
+        <div class="absolute bottom-12 left-0 right-0 flex justify-center items-center gap-8 z-50 pointer-events-none">
           <button onclick="ajustarZoom(-0.5)" class="scanner-btn"><i class="fa-solid fa-minus"></i></button>
-          <div class="text-white font-black text-lg bg-black/40 px-4 py-2 rounded-full border border-white/20" id="txt-zoom">1.0x</div>
+          <div class="text-white font-black text-lg bg-black/50 px-5 py-2 rounded-full border border-white/20 backdrop-blur-md" id="txt-zoom">1.0x</div>
           <button onclick="ajustarZoom(0.5)" class="scanner-btn"><i class="fa-solid fa-plus"></i></button>
         </div>
       </div>
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-bold z-[60]">
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-bold z-[110]">
       <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
       <span id="toast-msg">Mensaje</span>
     </div>
@@ -290,12 +286,16 @@
     let modoActual = 'consulta'; 
     let indiceActual = 0;
     let guardandoBloqueo = false;
-    let html5QrCodeScanner = null;
     let tiempoDebounce;
+    let ultimoShake = 0;
+
+    /* ================= VARIABLES DEL ESCÁNER (ZXING) ================= */
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    let videoStreamActivo = null;
+    let videoTrack = null;
     let linternaEncendida = false;
     let zoomActual = 1.0;
-    
-    let ultimoShake = 0;
+    let escaneandoActivo = false;
 
     window.onload = function() {
       sincronizarDatos();
@@ -330,22 +330,16 @@
     }
 
     function detectarShake(e) {
-      // Evitar abrir el escáner si ya está abierto
-      if (!document.getElementById('modal-escaner').classList.contains('hidden')) return;
-
+      if (document.getElementById('video-container').classList.contains('active')) return;
       const ahora = Date.now();
-      // Cooldown de 3 segundos para no abrir mil veces
       if ((ahora - ultimoShake) < 3000) return; 
-
       const acc = e.accelerationIncludingGravity;
       if (!acc) return;
-
-      // Sacudida fuerte (Fuerza > 35)
       const fuerza = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
       if (fuerza > 35) { 
         ultimoShake = ahora;
         if (navigator.vibrate) navigator.vibrate(50);
-        abrirCamaraEscaner();
+        iniciarEscaner();
       }
     }
 
@@ -353,17 +347,13 @@
     function cambiarSeccion(viewId, btn, titulo, subtitulo) {
       document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active'));
       document.getElementById(viewId).classList.add('active');
-      
       document.getElementById('header-title').innerText = titulo;
       document.getElementById('header-subtitle').innerText = subtitulo;
-
       document.querySelectorAll('.nav-btn').forEach(b => {
-        b.classList.remove('text-bata-red');
-        b.classList.add('text-slate-400');
+        b.classList.remove('text-bata-red'); b.classList.add('text-slate-400');
       });
       if (btn) {
-        btn.classList.remove('text-slate-400');
-        btn.classList.add('text-bata-red');
+        btn.classList.remove('text-slate-400'); btn.classList.add('text-bata-red');
       }
     }
 
@@ -371,7 +361,6 @@
     function sincronizarDatos() {
       const iconSync = document.getElementById('icon-sync');
       iconSync.classList.add('fa-spin');
-
       fetch(`${URL_APPS_SCRIPT}?action=obtenerInventario&t=${Date.now()}`)
         .then(res => res.json())
         .then(data => {
@@ -421,16 +410,13 @@
     function activarBusquedaVoz() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) { mostrarToast("Voz no soportada", "error"); return; }
-      
       const recognition = new SpeechRecognition();
       recognition.lang = 'es-ES';
       recognition.interimResults = false;
-      
       const btnVoz = document.getElementById('btn-voz');
       btnVoz.classList.add('bg-red-100', 'border-red-300');
       btnVoz.classList.remove('bg-slate-50');
       document.getElementById('icon-voz').className = "fa-solid fa-microphone-lines text-bata-red text-base fa-bounce z-10";
-      
       mostrarToast("Escuchando...", "info");
       recognition.start();
 
@@ -438,7 +424,6 @@
         let texto = event.results[0][0].transcript.toLowerCase();
         const mapa = {'cero':'0','uno':'1','dos':'2','tres':'3','cuatro':'4','cinco':'5','seis':'6','siete':'7','ocho':'8','nueve':'9','diez':'10'};
         let soloNumeros = texto.split(' ').map(p => mapa[p] || p).join('').replace(/\D/g, '');
-        
         if (soloNumeros) {
           document.getElementById('input-busqueda').value = soloNumeros;
           buscarYCentrarArticulo(soloNumeros);
@@ -454,90 +439,114 @@
       };
     }
 
-    /* ================= ESCÁNER ULTRA RÁPIDO ================= */
-    function abrirCamaraEscaner() {
-      document.getElementById('modal-escaner').classList.remove('hidden');
+    /* ================= ZXING ESCÁNER NATIVO ================= */
+    async function iniciarEscaner() {
+      const container = document.getElementById('video-container');
+      const video = document.getElementById('scanner-video');
+      container.classList.add('active');
       
-      if (!html5QrCodeScanner) {
-        html5QrCodeScanner = new Html5Qrcode("reader");
-      }
+      // Resetear estados
+      linternaEncendida = false;
+      document.getElementById('btn-linterna').classList.remove('active');
+      zoomActual = 1.0;
+      document.getElementById('txt-zoom').innerText = "1.0x";
+      escaneandoActivo = true;
 
-      // Configuración optimizada: API nativa de barras y ancho calculado
-      const size = Math.min(window.innerWidth, window.innerHeight) * 0.7;
-      
-      html5QrCodeScanner.start(
-        { facingMode: "environment" }, 
-        { 
-          fps: 10, 
-          qrbox: { width: size, height: size * 0.6 }, // Enfoque rectangular para EAN-13
-          experimentalFeatures: { useBarCodeDetectorIfSupported: true } // ACELERADOR NATIVO
-        }, 
-        (decodedText) => {
-          const codigoFinal = decodedText.replace(/\D/g, '');
-          cambiarSeccion('view-buscar', document.querySelector('.nav-btn'), 'Buscador', 'Bata 1');
-          document.getElementById('input-busqueda').value = codigoFinal;
-          buscarYCentrarArticulo(codigoFinal);
-          cerrarCamaraEscaner();
-          if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-          mostrarToast(`Escaneado: ${codigoFinal}`, "success");
-        },
-        () => {} 
-      ).then(() => {
-        aplicarZoom();
-      }).catch(err => {
-        mostrarToast("Error al iniciar cámara", "error");
-        cerrarCamaraEscaner();
-      });
+      try {
+        // Pedir cámara trasera a máxima resolución
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
+        });
+        
+        videoStreamActivo = stream;
+        videoTrack = stream.getVideoTracks()[0];
+        video.srcObject = stream;
+        
+        // Iniciar lector ZXing sobre el video nativo
+        codeReader.decodeFromVideoDevice(null, video, (result, err) => {
+          if (!escaneandoActivo) return;
+          
+          if (result) {
+            const codigoFinal = result.text.replace(/\D/g, '');
+            if (codigoFinal.length > 3) {
+              escaneandoActivo = false; // Detener escaneos múltiples
+              if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+              
+              detenerEscaner();
+              cambiarSeccion('view-buscar', document.querySelector('.nav-btn'), 'Buscador', 'Bata 1');
+              document.getElementById('input-busqueda').value = codigoFinal;
+              buscarYCentrarArticulo(codigoFinal);
+              mostrarToast(`Escaneado: ${codigoFinal}`, "success");
+            }
+          }
+        });
+
+      } catch (err) {
+        console.error(err);
+        mostrarToast("Error al acceder a la cámara", "error");
+        detenerEscaner();
+      }
     }
 
-    function cerrarCamaraEscaner() {
-      if (html5QrCodeScanner) {
-        html5QrCodeScanner.stop().then(() => {
-          document.getElementById('modal-escaner').classList.add('hidden');
-          linternaEncendida = false;
-          document.getElementById('btn-linterna').classList.remove('active');
-          zoomActual = 1.0;
-          document.getElementById('txt-zoom').innerText = "1.0x";
-        }).catch(() => {});
+    function detenerEscaner() {
+      escaneandoActivo = false;
+      const container = document.getElementById('video-container');
+      container.classList.remove('active');
+      
+      codeReader.reset();
+
+      if (videoStreamActivo) {
+        videoStreamActivo.getTracks().forEach(track => track.stop());
+        videoStreamActivo = null;
+        videoTrack = null;
       }
     }
 
-    function toggleLinterna() {
+    async function toggleLinterna() {
+      if (!videoTrack) return;
       linternaEncendida = !linternaEncendida;
       const btn = document.getElementById('btn-linterna');
-      if (html5QrCodeScanner) {
-        try {
-          const track = html5QrCodeScanner.getRunningTrackCameraCapabilities().torchFeature();
-          if (track) {
-            track.apply(linternaEncendida);
-            btn.classList.toggle('active', linternaEncendida);
-          } else {
-            mostrarToast("Linterna no soportada", "error");
-            linternaEncendida = false;
-          }
-        } catch(e) {}
+      
+      try {
+        const capabilities = videoTrack.getCapabilities();
+        if (capabilities.torch) {
+          await videoTrack.applyConstraints({ advanced: [{ torch: linternaEncendida }] });
+          btn.classList.toggle('active', linternaEncendida);
+        } else {
+          mostrarToast("Linterna no soportada", "error");
+          linternaEncendida = false;
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    function ajustarZoom(cambio) {
+    async function ajustarZoom(cambio) {
+      if (!videoTrack) return;
       zoomActual += cambio;
-      if (zoomActual < 1.0) zoomActual = 1.0;
-      if (zoomActual > 4.0) zoomActual = 4.0;
-      document.getElementById('txt-zoom').innerText = zoomActual.toFixed(1) + "x";
-      aplicarZoom();
-    }
-
-    function aplicarZoom() {
-      if (html5QrCodeScanner) {
-        try {
-          const caps = html5QrCodeScanner.getRunningTrackCameraCapabilities();
-          const zoomCap = caps.zoomFeature();
-          if (zoomCap) zoomCap.apply(zoomActual);
-        } catch(e) {}
+      
+      try {
+        const capabilities = videoTrack.getCapabilities();
+        if (capabilities.zoom) {
+          const min = capabilities.zoom.min || 1;
+          const max = capabilities.zoom.max || 5;
+          
+          if (zoomActual < min) zoomActual = min;
+          if (zoomActual > max) zoomActual = max;
+          
+          document.getElementById('txt-zoom').innerText = zoomActual.toFixed(1) + "x";
+          await videoTrack.applyConstraints({ advanced: [{ zoom: zoomActual }] });
+        } else {
+          // Fallback para iOS que no soporta zoom por constraints
+          document.getElementById('scanner-video').style.transform = `scale(${zoomActual})`;
+          document.getElementById('txt-zoom').innerText = zoomActual.toFixed(1) + "x";
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    /* ================= RENDERIZADO ================= */
+    /* ================= RENDERIZADO DE TARJETAS ================= */
     function generarMatrizTallas(cadenaTallas, stockTotal) {
       if (!cadenaTallas) return `<div class="text-[11px] text-slate-400 text-center py-3 bg-slate-50/50 border border-slate-100 rounded-xl">Sin desglose</div>`;
       const pares = [];
@@ -657,7 +666,6 @@
         btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition";
         btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> <span>Modo Conteo</span>';
       }
-      
       renderizarCarrusel();
     }
 
@@ -694,7 +702,6 @@
       const toast = document.getElementById('toast');
       const msg = document.getElementById('toast-msg');
       const icon = document.getElementById('toast-icon');
-
       msg.innerText = mensaje;
       if (tipo === "success") icon.className = "fa-solid fa-circle-check text-emerald-400 text-base";
       else if (tipo === "error") icon.className = "fa-solid fa-circle-xmark text-rose-400 text-base";
