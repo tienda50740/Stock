@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Bata 1 | Control de Stock</title>
+  <title>Bata 1 | Stock</title>
 
-  <!-- Fuentes y Tailwind -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   
-  <!-- ZXING LIBRARY (Lector de códigos de barras rápido y sin interfaz fea) -->
+  <!-- ZXing para escaneo nativo rápido -->
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <script>
@@ -20,19 +19,14 @@
       theme: {
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            bata: { red: '#E31E24', dark: '#111827', gray: '#F3F4F6' }
-          },
-          boxShadow: {
-            'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-            'nav': '0 -4px 20px -2px rgba(0, 0, 0, 0.05)'
-          }
+          colors: { bata: { red: '#E31E24', dark: '#111827' } }
         }
       }
     }
   </script>
 
   <style>
+    /* Optimización de scroll */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
@@ -40,9 +34,13 @@
       scroll-snap-type: x mandatory;
       touch-action: pan-x;
     }
+    
+    /* TRUCO DE VELOCIDAD: El navegador ignora las tarjetas fuera de pantalla */
     .carrusel-card {
       scroll-snap-align: center;
       scroll-snap-stop: always;
+      content-visibility: auto;
+      contain-intrinsic-size: 300px 400px; 
     }
     
     body {
@@ -50,15 +48,28 @@
       padding-bottom: env(safe-area-inset-bottom);
       overscroll-behavior: none;
       -webkit-tap-highlight-color: transparent;
+      background-color: #0f172a; /* Fondo oscuro base */
     }
 
-    /* SPA ULTRA RÁPIDO */
+    /* ====== FONDO DINÁMICO (Efecto Cristal) ====== */
+    #dynamic-bg {
+      position: fixed;
+      inset: -10%;
+      z-index: -1;
+      background-size: cover;
+      background-position: center;
+      filter: blur(40px) brightness(0.4);
+      transition: background-image 0.5s ease-in-out;
+      opacity: 0.9;
+    }
+
+    /* SPA instantáneo */
     .app-section {
       position: absolute;
       inset: 0;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.15s ease-in-out;
+      transition: opacity 0.1s ease-in-out;
       display: flex;
       flex-direction: column;
       padding-bottom: 65px; 
@@ -69,26 +80,22 @@
       z-index: 10;
     }
 
-    /* ====== ESCÁNER INMERSIVO (CERO LIBRERÍAS DE UI) ====== */
-    #video-container {
+    /* ====== ESCÁNER MINIMALISTA ====== */
+    #scanner-container {
       position: fixed;
       inset: 0;
       background: #000;
       z-index: 100;
       display: none;
-      flex-direction: column;
     }
-    #video-container.active {
-      display: flex;
-    }
+    #scanner-container.active { display: block; }
     
     #scanner-video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* Llena la pantalla sin deformar */
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
     }
 
-    /* Overlay que oscurece todo menos el centro */
     .scanner-overlay {
       position: absolute;
       inset: 0;
@@ -99,181 +106,135 @@
       align-items: center;
     }
     
-    .scanner-window {
-      width: 80%;
-      max-width: 300px;
-      height: 160px; /* Ideal para EAN-13 horizontal */
-      background: transparent;
-      box-shadow: 0 0 0 100vmax rgba(0,0,0,0.65); /* Efecto foco */
-      border-radius: 16px;
+    /* Marco simple para EAN-13 */
+    .scanner-box {
+      width: 75%;
+      max-width: 280px;
+      height: 120px;
+      border: 2px solid rgba(255, 255, 255, 0.7);
+      border-radius: 12px;
+      box-shadow: 0 0 0 100vmax rgba(0,0,0,0.6);
       position: relative;
-      overflow: hidden;
     }
-
-    /* Esquinas */
-    .scanner-window::before { content: ''; position: absolute; top: 0; left: 0; width: 35px; height: 35px; border-color: #E31E24; border-style: solid; border-width: 5px 0 0 5px; border-top-left-radius: 16px; }
-    .scanner-window::after { content: ''; position: absolute; bottom: 0; right: 0; width: 35px; height: 35px; border-color: #E31E24; border-style: solid; border-width: 0 5px 5px 0; border-bottom-right-radius: 16px; }
-    .corner-tr { position: absolute; top: 0; right: 0; width: 35px; height: 35px; border-color: #E31E24; border-style: solid; border-width: 5px 5px 0 0; border-top-right-radius: 16px; }
-    .corner-bl { position: absolute; bottom: 0; left: 0; width: 35px; height: 35px; border-color: #E31E24; border-style: solid; border-width: 0 0 5px 5px; border-bottom-left-radius: 16px; }
     
-    /* Láser animado */
-    .laser {
-      position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #E31E24;
-      box-shadow: 0 0 15px 3px rgba(227,30,36,0.8);
-      animation: scan 2.5s infinite linear;
+    /* Láser simple */
+    .scanner-box::after {
+      content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px;
+      background: #E31E24; box-shadow: 0 0 8px #E31E24;
+      animation: scan 2s infinite alternate ease-in-out;
     }
-    @keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(160px); opacity: 0; } }
+    @keyframes scan { 0% { top: 10%; } 100% { top: 90%; } }
 
-    .scanner-btn {
-      width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+    .btn-float {
+      width: 50px; height: 50px; border-radius: 50%; background: rgba(0,0,0,0.5);
       color: white; display: flex; align-items: center; justify-content: center; font-size: 20px;
-      border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s; pointer-events: auto; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.2); transition: transform 0.1s; pointer-events: auto; cursor: pointer;
     }
-    .scanner-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
-    .scanner-btn.active { background: #E31E24; border-color: #E31E24; box-shadow: 0 0 15px rgba(227,30,36,0.5); }
-    
-    /* Adaptación para pantallas horizontales en el escáner */
-    @media (orientation: landscape) {
-      .scanner-window { width: 50%; max-width: 400px; height: 100px; }
-      @keyframes scan { 0% { transform: translateY(0); } 100% { transform: translateY(100px); } }
-    }
+    .btn-float:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+    .btn-float.active { background: #E31E24; border-color: #E31E24; }
   </style>
 </head>
-<body class="bg-slate-100 font-sans h-[100dvh] w-screen overflow-hidden text-slate-800 flex flex-col justify-center items-center antialiased">
+<body class="h-[100dvh] w-screen overflow-hidden text-white flex flex-col justify-center items-center antialiased">
 
-  <div class="w-full max-w-md h-full bg-slate-50 flex flex-col relative shadow-2xl overflow-hidden">
+  <!-- EL FONDO DINÁMICO (Se actualiza con la imagen del producto) -->
+  <div id="dynamic-bg"></div>
 
-    <!-- CABECERA -->
-    <header class="bg-white border-b border-slate-200 px-4 py-3 flex-shrink-0 z-40 sticky top-0">
-      <div class="flex items-center justify-between gap-2">
-        <div>
-          <h1 id="header-title" class="font-black text-slate-900 text-base leading-tight tracking-tight">Buscador</h1>
-          <p id="header-subtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bata 1</p>
-        </div>
-        <button onclick="sincronizarDatos()" class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 active:scale-95 transition-transform">
-          <i id="icon-sync" class="fa-solid fa-rotate text-sm"></i>
-        </button>
-      </div>
-    </header>
+  <div class="w-full max-w-md h-full flex flex-col relative overflow-hidden">
 
     <!-- CONTENEDOR DE VISTAS -->
     <main class="w-full flex-1 relative overflow-hidden">
 
-      <!-- VISTA 1: BUSCADOR -->
-      <section id="view-buscar" class="app-section active px-4 py-3 gap-3">
-        <div class="flex-shrink-0 z-30 space-y-2 mt-1">
-          <div class="relative flex items-center bg-white rounded-2xl shadow-soft border border-slate-200 p-1">
-            <i class="fa-solid fa-search text-slate-400 ml-3 text-sm"></i>
-            <input type="text" inputmode="numeric" id="input-busqueda" placeholder="Tipea o dicta el código..." 
-                   class="flex-1 bg-transparent px-3 py-2.5 text-sm font-bold text-slate-900 focus:outline-none placeholder-slate-400"
-                   oninput="onBusquedaInput()">
-            <div class="flex items-center gap-1 pr-1">
-              <button id="btn-limpiar" onclick="limpiarBusqueda()" class="hidden w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 flex items-center justify-center"><i class="fa-solid fa-circle-xmark"></i></button>
-              <button onclick="activarBusquedaVoz()" id="btn-voz" class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-all border border-slate-100 relative overflow-hidden">
-                <i id="icon-voz" class="fa-solid fa-microphone text-base z-10"></i>
-              </button>
-              <button onclick="iniciarEscaner()" class="w-10 h-10 rounded-xl bg-bata-red text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
-                <i class="fa-solid fa-barcode text-lg"></i>
-              </button>
+      <!-- VISTA PRINCIPAL: BUSCADOR -->
+      <section id="view-buscar" class="app-section active">
+        
+        <!-- Header Flotante -->
+        <div class="absolute top-0 left-0 w-full p-4 z-40 bg-gradient-to-b from-black/60 to-transparent">
+          <div class="flex items-center gap-3">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" inputmode="numeric" id="input-busqueda" placeholder="Buscar código..." 
+                     class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-slate-300 focus:outline-none focus:bg-white/20 font-bold text-sm transition-all"
+                     oninput="onBusquedaInput()">
             </div>
+            <button onclick="iniciarEscaner()" class="w-12 h-12 shrink-0 rounded-2xl bg-bata-red text-white flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+              <i class="fa-solid fa-barcode text-lg"></i>
+            </button>
           </div>
-          <div class="flex items-center justify-between text-[11px] font-bold px-1">
-            <span id="txt-posicion" class="text-slate-500">Cargando...</span>
-            <button onclick="toggleModoSelectivo()" id="btn-toggle-selectivo" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition">
-              <i class="fa-solid fa-pen-to-square"></i> <span>Modo Conteo</span>
+          
+          <div class="flex justify-between items-center mt-3 px-1 text-[11px] font-bold text-slate-300">
+            <span id="txt-posicion">Cargando...</span>
+            <button onclick="toggleModoSelectivo()" id="btn-toggle-selectivo" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 backdrop-blur-md">
+              <i class="fa-solid fa-pen"></i> <span>Conteo</span>
             </button>
           </div>
         </div>
 
-        <div class="relative flex-1 flex min-h-0 -mx-2 px-2">
-          <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full items-stretch gap-4 pb-2"></div>
+        <!-- Carrusel de Tarjetas -->
+        <div class="w-full h-full pt-28 pb-4">
+          <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full h-full items-center gap-4 px-4"></div>
         </div>
       </section>
 
-      <!-- VISTAS DE EJEMPLO -->
-      <section id="view-movimientos" class="app-section px-4 py-6">
-        <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
-          <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-boxes-packing"></i></div>
-          <h2 class="text-lg font-black text-slate-800">Movimientos</h2>
-        </div>
+      <!-- OTRAS VISTAS (De ejemplo) -->
+      <section id="view-movimientos" class="app-section p-6 bg-slate-900/80 backdrop-blur-xl">
+        <h2 class="text-2xl font-black mt-10">Movimientos</h2>
       </section>
-      <section id="view-reportes" class="app-section px-4 py-6">
-        <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
-          <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-chart-line"></i></div>
-          <h2 class="text-lg font-black text-slate-800">Reportes</h2>
-        </div>
+      <section id="view-reportes" class="app-section p-6 bg-slate-900/80 backdrop-blur-xl">
+        <h2 class="text-2xl font-black mt-10">Reportes</h2>
       </section>
-      <section id="view-planilla" class="app-section px-4 py-6">
-        <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
-          <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-          <h2 class="text-lg font-black text-slate-800">Planilla</h2>
-        </div>
+      <section id="view-planilla" class="app-section p-6 bg-slate-900/80 backdrop-blur-xl">
+        <h2 class="text-2xl font-black mt-10">Planilla</h2>
       </section>
-      <section id="view-historial" class="app-section px-4 py-6">
-        <div class="flex flex-col items-center justify-center h-full text-center space-y-3">
-          <div class="w-16 h-16 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-clock-rotate-left"></i></div>
-          <h2 class="text-lg font-black text-slate-800">Historial</h2>
-        </div>
+      <section id="view-historial" class="app-section p-6 bg-slate-900/80 backdrop-blur-xl">
+        <h2 class="text-2xl font-black mt-10">Historial</h2>
       </section>
     </main>
 
-    <!-- MENÚ INFERIOR -->
-    <nav class="absolute bottom-0 w-full bg-white border-t border-slate-200 px-1 py-1.5 flex items-center justify-around z-40 shadow-nav rounded-t-2xl">
-      <button onclick="cambiarSeccion('view-buscar', this, 'Buscador', 'Bata 1')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-bata-red">
+    <!-- MENÚ INFERIOR (Cristal) -->
+    <nav class="absolute bottom-0 w-full bg-slate-900/80 backdrop-blur-lg border-t border-white/10 px-2 py-2 flex items-center justify-around z-40 rounded-t-3xl">
+      <button onclick="cambiarSeccion('view-buscar', this, 'Buscar')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-bata-red">
         <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i><span class="text-[9px] font-bold">Buscar</span>
       </button>
-      <button onclick="cambiarSeccion('view-movimientos', this, 'Movimientos', 'Recepción / Salida')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-slate-400">
+      <button onclick="cambiarSeccion('view-movimientos', this, 'Movs')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-slate-400">
         <i class="fa-solid fa-boxes-packing text-lg mb-1"></i><span class="text-[9px] font-bold">Movs.</span>
       </button>
-      <button onclick="cambiarSeccion('view-reportes', this, 'Reportes', 'Métricas')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-slate-400">
+      <button onclick="cambiarSeccion('view-reportes', this, 'Reportes')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-slate-400">
         <i class="fa-solid fa-chart-line text-lg mb-1"></i><span class="text-[9px] font-bold">Reportes</span>
       </button>
-      <button onclick="cambiarSeccion('view-planilla', this, 'Planilla', 'Precios')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-slate-400">
+      <button onclick="cambiarSeccion('view-planilla', this, 'Planilla')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-slate-400">
         <i class="fa-solid fa-file-invoice-dollar text-lg mb-1"></i><span class="text-[9px] font-bold">Planilla</span>
       </button>
-      <button onclick="cambiarSeccion('view-historial', this, 'Historial', 'Actividad')" class="nav-btn flex flex-col items-center justify-center w-16 h-12 rounded-xl text-slate-400">
+      <button onclick="cambiarSeccion('view-historial', this, 'Historial')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-slate-400">
         <i class="fa-solid fa-clock-rotate-left text-lg mb-1"></i><span class="text-[9px] font-bold">Historial</span>
       </button>
     </nav>
 
-    <!-- ================= MODAL ESCÁNER DEFINITIVO ================= -->
-    <div id="video-container">
-      <!-- El video nativo que llenará toda la pantalla -->
+    <!-- ================= ESCÁNER MINIMALISTA ================= -->
+    <div id="scanner-container">
       <video id="scanner-video" autoplay playsinline muted></video>
       
-      <!-- UI Flotante sobre el video -->
       <div class="scanner-overlay">
-        
-        <!-- Botones Superiores -->
-        <div class="absolute top-0 left-0 right-0 p-4 pt-10 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-          <button onclick="detenerEscaner()" class="scanner-btn"><i class="fa-solid fa-xmark"></i></button>
-          <span class="text-white font-black text-sm tracking-wide bg-black/50 px-4 py-1.5 rounded-full border border-white/20">LECTOR EAN-13</span>
-          <button onclick="toggleLinterna()" id="btn-linterna" class="scanner-btn"><i class="fa-solid fa-bolt"></i></button>
-        </div>
+        <!-- Botón Cerrar -->
+        <button onclick="detenerEscaner()" class="btn-float absolute top-10 left-6"><i class="fa-solid fa-xmark"></i></button>
+        <!-- Botón Linterna -->
+        <button onclick="toggleLinterna()" id="btn-linterna" class="btn-float absolute top-10 right-6"><i class="fa-solid fa-bolt"></i></button>
 
-        <!-- Ventana de Enfoque (Con Láser) -->
-        <div class="scanner-window">
-          <div class="corner-tr"></div>
-          <div class="corner-bl"></div>
-          <div class="laser"></div>
-        </div>
-        
-        <p class="text-white/90 text-xs font-bold mt-8 tracking-wide bg-black/50 px-5 py-2 rounded-full border border-white/10 backdrop-blur-md">
-          Apunta al código de barras
-        </p>
+        <!-- Marco de Escaneo -->
+        <div class="scanner-box"></div>
+        <p class="text-white/80 text-xs font-bold mt-6 tracking-wide">Apunta al código de barras</p>
 
-        <!-- Controles Zoom -->
-        <div class="absolute bottom-12 left-0 right-0 flex justify-center items-center gap-8 z-50 pointer-events-none">
-          <button onclick="ajustarZoom(-0.5)" class="scanner-btn"><i class="fa-solid fa-minus"></i></button>
-          <div class="text-white font-black text-lg bg-black/50 px-5 py-2 rounded-full border border-white/20 backdrop-blur-md" id="txt-zoom">1.0x</div>
-          <button onclick="ajustarZoom(0.5)" class="scanner-btn"><i class="fa-solid fa-plus"></i></button>
+        <!-- Zoom -->
+        <div class="absolute bottom-12 flex items-center gap-6 pointer-events-none">
+          <button onclick="ajustarZoom(-0.5)" class="btn-float"><i class="fa-solid fa-minus"></i></button>
+          <div class="text-white font-black text-sm bg-black/60 px-4 py-2 rounded-full" id="txt-zoom">1.0x</div>
+          <button onclick="ajustarZoom(0.5)" class="btn-float"><i class="fa-solid fa-plus"></i></button>
         </div>
       </div>
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-bold z-[110]">
-      <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 transform -translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-white text-slate-900 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-bold z-[110]">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
       <span id="toast-msg">Mensaje</span>
     </div>
 
@@ -287,9 +248,8 @@
     let indiceActual = 0;
     let guardandoBloqueo = false;
     let tiempoDebounce;
-    let ultimoShake = 0;
 
-    /* ================= VARIABLES DEL ESCÁNER (ZXING) ================= */
+    /* ================= VARIABLES DEL ESCÁNER ================= */
     const codeReader = new ZXing.BrowserMultiFormatReader();
     let videoStreamActivo = null;
     let videoTrack = null;
@@ -299,56 +259,29 @@
 
     window.onload = function() {
       sincronizarDatos();
-      solicitarPermisoSensoresYIniciar();
-
       const carrusel = document.getElementById('carrusel');
       carrusel.addEventListener('scroll', () => {
         if (guardandoBloqueo) return;
         const width = carrusel.offsetWidth + 16;
         const nuevoIndice = Math.round(carrusel.scrollLeft / width);
+        
         if (nuevoIndice !== indiceActual && dbInventario[nuevoIndice]) {
           indiceActual = nuevoIndice;
           actualizarContadorPosicion();
+          
+          // ACTUALIZAR FONDO DINÁMICO CON LA IMAGEN DEL PRODUCTO
+          const cod = String(obtenerPropiedad(dbInventario[nuevoIndice], ['articulo', 'Articulo'])).trim();
+          const urlImagen = `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cod}_1.JPG`;
+          document.getElementById('dynamic-bg').style.backgroundImage = `url('${urlImagen}')`;
         }
       });
     };
 
-    /* ================= SHAKE SENSOR (SACUDIDA) ================= */
-    function solicitarPermisoSensoresYIniciar() {
-      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-        document.body.addEventListener('click', async function pedirPermiso() {
-          try {
-            if (await DeviceMotionEvent.requestPermission() === 'granted') {
-              window.addEventListener('devicemotion', detectarShake, false);
-            }
-          } catch (e) {}
-          document.body.removeEventListener('click', pedirPermiso);
-        }, { once: true });
-      } else if (window.DeviceMotionEvent) {
-        window.addEventListener('devicemotion', detectarShake, false);
-      }
-    }
-
-    function detectarShake(e) {
-      if (document.getElementById('video-container').classList.contains('active')) return;
-      const ahora = Date.now();
-      if ((ahora - ultimoShake) < 3000) return; 
-      const acc = e.accelerationIncludingGravity;
-      if (!acc) return;
-      const fuerza = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
-      if (fuerza > 35) { 
-        ultimoShake = ahora;
-        if (navigator.vibrate) navigator.vibrate(50);
-        iniciarEscaner();
-      }
-    }
-
-    /* ================= NAVEGACIÓN RÁPIDA ================= */
-    function cambiarSeccion(viewId, btn, titulo, subtitulo) {
+    /* ================= NAVEGACIÓN ================= */
+    function cambiarSeccion(viewId, btn, titulo) {
       document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active'));
       document.getElementById(viewId).classList.add('active');
-      document.getElementById('header-title').innerText = titulo;
-      document.getElementById('header-subtitle').innerText = subtitulo;
+      
       document.querySelectorAll('.nav-btn').forEach(b => {
         b.classList.remove('text-bata-red'); b.classList.add('text-slate-400');
       });
@@ -359,16 +292,14 @@
 
     /* ================= DATOS ================= */
     function sincronizarDatos() {
-      const iconSync = document.getElementById('icon-sync');
-      iconSync.classList.add('fa-spin');
+      // Si tuvieras un icono de sync, lo girarías aquí
       fetch(`${URL_APPS_SCRIPT}?action=obtenerInventario&t=${Date.now()}`)
         .then(res => res.json())
         .then(data => {
           dbInventario = data;
           renderizarCarrusel();
         })
-        .catch(err => mostrarToast("Error de conexión", "error"))
-        .finally(() => iconSync.classList.remove('fa-spin'));
+        .catch(err => mostrarToast("Error de conexión", "error"));
     }
 
     function obtenerPropiedad(obj, llaves, valorDefecto = '') {
@@ -378,10 +309,9 @@
       return valorDefecto;
     }
 
-    /* ================= BÚSQUEDA Y VOZ ================= */
+    /* ================= BÚSQUEDA ================= */
     function onBusquedaInput() {
       const q = document.getElementById('input-busqueda').value.trim();
-      document.getElementById('btn-limpiar').classList.toggle('hidden', q.length === 0);
       clearTimeout(tiempoDebounce);
       tiempoDebounce = setTimeout(() => buscarYCentrarArticulo(q), 200);
     }
@@ -391,7 +321,7 @@
       const query = q.toLowerCase();
       let idx = dbInventario.findIndex(item => String(obtenerPropiedad(item, ['articulo', 'Articulo'])).toLowerCase().includes(query));
       if (idx !== -1) irAlIndice(idx, true);
-      else mostrarToast(`Código "${q}" no encontrado`, "error");
+      else mostrarToast(`No encontrado`, "error");
     }
 
     function irAlIndice(index, suave = false) {
@@ -400,52 +330,17 @@
       indiceActual = index;
       carrusel.scrollTo({ left: index * width, behavior: suave ? 'smooth' : 'auto' });
       actualizarContadorPosicion();
+      
+      const cod = String(obtenerPropiedad(dbInventario[index], ['articulo', 'Articulo'])).trim();
+      document.getElementById('dynamic-bg').style.backgroundImage = `url('https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cod}_1.JPG')`;
     }
 
-    function limpiarBusqueda() {
-      document.getElementById('input-busqueda').value = '';
-      document.getElementById('btn-limpiar').classList.add('hidden');
-    }
-
-    function activarBusquedaVoz() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) { mostrarToast("Voz no soportada", "error"); return; }
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'es-ES';
-      recognition.interimResults = false;
-      const btnVoz = document.getElementById('btn-voz');
-      btnVoz.classList.add('bg-red-100', 'border-red-300');
-      btnVoz.classList.remove('bg-slate-50');
-      document.getElementById('icon-voz').className = "fa-solid fa-microphone-lines text-bata-red text-base fa-bounce z-10";
-      mostrarToast("Escuchando...", "info");
-      recognition.start();
-
-      recognition.onresult = (event) => {
-        let texto = event.results[0][0].transcript.toLowerCase();
-        const mapa = {'cero':'0','uno':'1','dos':'2','tres':'3','cuatro':'4','cinco':'5','seis':'6','siete':'7','ocho':'8','nueve':'9','diez':'10'};
-        let soloNumeros = texto.split(' ').map(p => mapa[p] || p).join('').replace(/\D/g, '');
-        if (soloNumeros) {
-          document.getElementById('input-busqueda').value = soloNumeros;
-          buscarYCentrarArticulo(soloNumeros);
-        } else {
-          mostrarToast("No se detectaron números", "error");
-        }
-      };
-
-      recognition.onend = () => {
-        btnVoz.classList.remove('bg-red-100', 'border-red-300');
-        btnVoz.classList.add('bg-slate-50');
-        document.getElementById('icon-voz').className = "fa-solid fa-microphone text-base z-10";
-      };
-    }
-
-    /* ================= ZXING ESCÁNER NATIVO ================= */
+    /* ================= ZXING ESCÁNER (Mínimo y Rápido) ================= */
     async function iniciarEscaner() {
-      const container = document.getElementById('video-container');
+      const container = document.getElementById('scanner-container');
       const video = document.getElementById('scanner-video');
       container.classList.add('active');
       
-      // Resetear estados
       linternaEncendida = false;
       document.getElementById('btn-linterna').classList.remove('active');
       zoomActual = 1.0;
@@ -453,7 +348,6 @@
       escaneandoActivo = true;
 
       try {
-        // Pedir cámara trasera a máxima resolución
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
         });
@@ -462,43 +356,35 @@
         videoTrack = stream.getVideoTracks()[0];
         video.srcObject = stream;
         
-        // Iniciar lector ZXing sobre el video nativo
         codeReader.decodeFromVideoDevice(null, video, (result, err) => {
           if (!escaneandoActivo) return;
-          
           if (result) {
             const codigoFinal = result.text.replace(/\D/g, '');
             if (codigoFinal.length > 3) {
-              escaneandoActivo = false; // Detener escaneos múltiples
+              escaneandoActivo = false;
               if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
               
               detenerEscaner();
-              cambiarSeccion('view-buscar', document.querySelector('.nav-btn'), 'Buscador', 'Bata 1');
+              cambiarSeccion('view-buscar', document.querySelector('.nav-btn'), 'Buscar');
               document.getElementById('input-busqueda').value = codigoFinal;
               buscarYCentrarArticulo(codigoFinal);
-              mostrarToast(`Escaneado: ${codigoFinal}`, "success");
+              mostrarToast(`Escaneado`, "success");
             }
           }
         });
-
       } catch (err) {
-        console.error(err);
-        mostrarToast("Error al acceder a la cámara", "error");
+        mostrarToast("Error de cámara", "error");
         detenerEscaner();
       }
     }
 
     function detenerEscaner() {
       escaneandoActivo = false;
-      const container = document.getElementById('video-container');
-      container.classList.remove('active');
-      
+      document.getElementById('scanner-container').classList.remove('active');
       codeReader.reset();
-
       if (videoStreamActivo) {
         videoStreamActivo.getTracks().forEach(track => track.stop());
         videoStreamActivo = null;
-        videoTrack = null;
       }
     }
 
@@ -506,7 +392,6 @@
       if (!videoTrack) return;
       linternaEncendida = !linternaEncendida;
       const btn = document.getElementById('btn-linterna');
-      
       try {
         const capabilities = videoTrack.getCapabilities();
         if (capabilities.torch) {
@@ -514,205 +399,150 @@
           btn.classList.toggle('active', linternaEncendida);
         } else {
           mostrarToast("Linterna no soportada", "error");
-          linternaEncendida = false;
         }
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) {}
     }
 
     async function ajustarZoom(cambio) {
       if (!videoTrack) return;
       zoomActual += cambio;
-      
       try {
         const capabilities = videoTrack.getCapabilities();
         if (capabilities.zoom) {
           const min = capabilities.zoom.min || 1;
           const max = capabilities.zoom.max || 5;
-          
           if (zoomActual < min) zoomActual = min;
           if (zoomActual > max) zoomActual = max;
-          
           document.getElementById('txt-zoom').innerText = zoomActual.toFixed(1) + "x";
           await videoTrack.applyConstraints({ advanced: [{ zoom: zoomActual }] });
-        } else {
-          // Fallback para iOS que no soporta zoom por constraints
-          document.getElementById('scanner-video').style.transform = `scale(${zoomActual})`;
-          document.getElementById('txt-zoom').innerText = zoomActual.toFixed(1) + "x";
         }
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) {}
     }
 
-    /* ================= RENDERIZADO DE TARJETAS ================= */
-    function generarMatrizTallas(cadenaTallas, stockTotal) {
-      if (!cadenaTallas) return `<div class="text-[11px] text-slate-400 text-center py-3 bg-slate-50/50 border border-slate-100 rounded-xl">Sin desglose</div>`;
-      const pares = [];
-      String(cadenaTallas).split(/[,;]+/).forEach(el => {
-        const limpio = el.trim();
-        if (limpio.includes('/')) {
-          const [t, c] = limpio.split('/');
-          if (t && c) pares.push({ talla: t.trim(), cant: c.trim() });
-        }
-      });
-      if (pares.length === 0) return `<div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center text-sm font-black text-slate-700">${cadenaTallas}</div>`;
-
-      return `
-        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-          <div class="flex items-center justify-between bg-slate-50 border-b border-slate-200 px-3 py-2">
-            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Tallas</span>
-            <span class="text-[11px] font-black text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200">Total: ${stockTotal} pares</span>
-          </div>
-          <div class="p-2 grid grid-cols-4 gap-2">
-            ${pares.map(p => `
-              <div class="flex flex-col items-center justify-center bg-slate-50/50 border border-slate-100 rounded-xl py-1.5 shadow-sm">
-                <span class="text-[10px] font-bold text-slate-400 mb-0.5">T-${p.talla}</span>
-                <span class="text-sm font-black text-slate-800">${p.cant}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>`;
-    }
-
+    /* ================= RENDERIZADO (Súper Ligero) ================= */
     function renderizarCarrusel() {
       const carrusel = document.getElementById('carrusel');
       if (dbInventario.length === 0) return;
 
+      // HTML Mucho más ligero para que el celular no colapse
       carrusel.innerHTML = dbInventario.map((item) => {
         const cod = String(obtenerPropiedad(item, ['articulo', 'Articulo'])).trim();
         const stockBD = obtenerPropiedad(item, ['stock', 'Stock'], '0');
         const pPlanilla = obtenerPropiedad(item, ['pPlanilla', 'pplanilla'], '0.00');
-        const vtaAcc = obtenerPropiedad(item, ['vtaAcctalla', 'vtaAcc'], '0');
-        const categoria = obtenerPropiedad(item, ['categoria', 'Categoria'], 'CALZADO');
-        const calidad = obtenerPropiedad(item, ['calidad', 'Calidad'], '1');
-        const antiguedad = obtenerPropiedad(item, ['antiguedad', 'Antiguedad'], '');
         const selectivo = obtenerPropiedad(item, ['selectivo', 'Selectivo'], '');
         const tallaCantidadStr = obtenerPropiedad(item, ['tallaCantidad', 'tallacantidad'], '');
+        
         const urlImagen = `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cod}_1.JPG`;
+        const valorSelectivoVisual = (selectivo !== '' && selectivo !== null) ? selectivo : '--';
 
-        const valorSelectivoVisual = (selectivo !== '' && selectivo !== null && selectivo !== undefined) ? selectivo : '--';
+        // Formatear tallas
+        let tallasHTML = '<div class="text-xs text-slate-400 text-center py-2">Sin tallas</div>';
+        if (tallaCantidadStr) {
+          let items = [];
+          String(tallaCantidadStr).split(/[,;]+/).forEach(el => {
+            if (el.includes('/')) {
+              const [t, c] = el.split('/');
+              items.push(`<div class="bg-slate-100 rounded-lg p-1 text-center flex-1"><div class="text-[9px] font-bold text-slate-500">T-${t.trim()}</div><div class="font-black text-slate-800">${c.trim()}</div></div>`);
+            }
+          });
+          if (items.length > 0) tallasHTML = `<div class="flex gap-1 mt-2 overflow-x-auto no-scrollbar">${items.join('')}</div>`;
+        }
 
         return `
-          <div class="carrusel-card min-w-full bg-white rounded-3xl border border-slate-200 p-4 shadow-soft flex flex-col gap-3 h-full">
-            <div class="flex items-start justify-between gap-2">
-              <div class="flex flex-wrap gap-1.5">
-                <span class="bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-lg">Calidad: ${calidad}</span>
-                ${antiguedad ? `<span class="bg-slate-800 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm"><i class="fa-regular fa-clock text-[9px] mr-1"></i>${antiguedad}</span>` : ''}
+          <div class="carrusel-card min-w-full h-[85%] bg-white rounded-3xl p-5 shadow-2xl flex flex-col justify-between">
+            
+            <!-- Imagen y Código -->
+            <div class="flex flex-col items-center">
+              <div class="w-full h-40 bg-slate-50 rounded-2xl flex items-center justify-center p-2 mb-3">
+                <img src="${urlImagen}" onerror="this.src='https://via.placeholder.com/150?text=No+Img'" class="max-h-full max-w-full object-contain drop-shadow-md">
               </div>
-              <span class="bg-bata-dark text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider shadow-sm">${categoria}</span>
+              <h2 class="text-3xl font-black text-slate-900 tracking-tighter">${cod}</h2>
             </div>
-            <div class="relative w-full h-[160px] shrink-0 bg-slate-50 rounded-2xl border border-slate-100/50 flex items-center justify-center p-4">
-              <img src="${urlImagen}" onerror="this.src='https://via.placeholder.com/220x220/f8fafc/94a3b8?text=SIN+IMAGEN';" class="max-h-full max-w-full object-contain drop-shadow-md">
-            </div>
-            <div class="flex items-end justify-between px-1">
-              <div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Código</span>
-                <h2 class="text-2xl font-black text-slate-900 tracking-tight leading-none">${cod}</h2>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="text-right">
-                  <span class="text-[10px] font-bold text-slate-400 block mb-0.5">P. Planilla</span>
-                  <span class="font-black text-slate-800 text-sm">S/ ${pPlanilla}</span>
+
+            <!-- Detalles -->
+            <div class="mt-2">
+              <div class="flex justify-between items-center bg-slate-50 rounded-xl p-2 mb-2">
+                <div class="text-center flex-1">
+                  <div class="text-[9px] font-bold text-slate-400 uppercase">Stock</div>
+                  <div class="font-black text-lg text-slate-800">${stockBD}</div>
                 </div>
-                <div class="text-right bg-blue-50/80 border border-blue-100/80 px-2.5 py-1 rounded-xl">
-                  <span class="text-[9px] font-black text-blue-500 block uppercase tracking-wide">Vta. Acc.</span>
-                  <span class="font-black text-blue-900 text-sm leading-none">${vtaAcc}</span>
+                <div class="w-px h-6 bg-slate-200"></div>
+                <div class="text-center flex-1">
+                  <div class="text-[9px] font-bold text-slate-400 uppercase">Planilla</div>
+                  <div class="font-black text-lg text-slate-800">S/ ${pPlanilla}</div>
                 </div>
               </div>
+              ${tallasHTML}
             </div>
-            ${generarMatrizTallas(tallaCantidadStr, stockBD)}
-            <div class="mt-auto bg-slate-50 p-2.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3 ${modoActual === 'selectivo' ? 'border-amber-300 bg-amber-50/50' : ''}">
-              <div class="text-center px-2">
-                <span class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Stock BD</span>
-                <span class="text-lg font-black text-slate-900 leading-none">${stockBD}</span>
-              </div>
-              <div class="h-8 w-px bg-slate-200"></div>
+
+            <!-- Selectivo -->
+            <div class="mt-2 bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center justify-between">
+              <div class="text-xs font-black text-slate-500 uppercase">Conteo</div>
               ${modoActual === 'selectivo' ? `
-                <div class="flex items-center gap-2 flex-1 justify-end">
-                  <input type="text" inputmode="numeric" id="input-sel-${cod}" value="${selectivo}" placeholder="0" class="w-16 px-2 py-1.5 bg-white border-2 border-amber-400 rounded-xl text-center font-black text-base text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 shadow-sm">
-                  <button onclick="guardarSelectivo('${cod}')" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold w-9 h-9 rounded-xl transition-all shadow-md flex items-center justify-center"><i class="fa-solid fa-check text-sm"></i></button>
+                <div class="flex gap-1">
+                  <input type="text" inputmode="numeric" id="input-sel-${cod}" value="${selectivo}" placeholder="0" class="w-16 px-2 py-1 bg-white border border-amber-400 rounded-lg text-center font-black text-amber-900">
+                  <button onclick="guardarSelectivo('${cod}')" class="bg-amber-500 text-white w-8 h-8 rounded-lg flex items-center justify-center"><i class="fa-solid fa-check text-xs"></i></button>
                 </div>
               ` : `
-                <div class="text-center px-4 flex items-center gap-3">
-                  <div>
-                    <span class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Selectivo</span>
-                    <span class="text-lg font-black text-bata-red leading-none">${valorSelectivoVisual}</span>
-                  </div>
-                </div>
+                <div class="text-xl font-black text-bata-red">${valorSelectivoVisual}</div>
               `}
             </div>
           </div>
         `;
       }).join('');
+      
       setTimeout(() => irAlIndice(indiceActual, false), 50);
     }
 
     function actualizarContadorPosicion() {
-      const txtPos = document.getElementById('txt-posicion');
-      if (dbInventario.length === 0) txtPos.innerText = `Sin datos`;
-      else txtPos.innerText = `Artículo ${indiceActual + 1} de ${dbInventario.length}`;
+      document.getElementById('txt-posicion').innerText = `${indiceActual + 1} de ${dbInventario.length}`;
     }
 
     function toggleModoSelectivo() {
       modoActual = (modoActual === 'consulta') ? 'selectivo' : 'consulta';
       const btn = document.getElementById('btn-toggle-selectivo');
-      
       if (modoActual === 'selectivo') {
-        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-100 text-amber-700 shadow-sm transition font-black";
-        btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> <span>Editando...</span>';
+        btn.classList.add('text-amber-400', 'bg-amber-500/20', 'border-amber-500');
       } else {
-        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition";
-        btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> <span>Modo Conteo</span>';
+        btn.classList.remove('text-amber-400', 'bg-amber-500/20', 'border-amber-500');
       }
       renderizarCarrusel();
     }
 
     function guardarSelectivo(codigo) {
       const input = document.getElementById(`input-sel-${codigo}`);
-      const valorIngresado = input.value.trim();
-      if (!/^\d+$/.test(valorIngresado)) { mostrarToast("Solo números", "error"); return; }
-
-      const btn = input.nextElementSibling;
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i>';
+      const valor = input.value.trim();
+      if (!/^\d+$/.test(valor)) { mostrarToast("Solo números", "error"); return; }
+      
       guardandoBloqueo = true;
+      const btn = input.nextElementSibling;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i>';
 
       fetch(URL_APPS_SCRIPT, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'actualizarSelectivo', articulo: codigo, selectivo: valorIngresado })
-      })
-      .then(() => {
+        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'actualizarSelectivo', articulo: codigo, selectivo: valor })
+      }).then(() => {
         const obj = dbInventario.find(i => String(obtenerPropiedad(i, ['articulo', 'Articulo'])).trim() === String(codigo).trim());
-        if (obj) obj.selectivo = valorIngresado;
-        mostrarToast(`Guardado: ${valorIngresado}`, "success");
-      })
-      .catch(() => mostrarToast("Error de red", "error"))
-      .finally(() => {
+        if (obj) obj.selectivo = valor;
+        mostrarToast(`Guardado`, "success");
+      }).finally(() => {
         guardandoBloqueo = false;
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-check text-sm"></i>';
+        btn.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
       });
     }
 
-    function mostrarToast(mensaje, tipo = "success") {
+    function mostrarToast(mensaje, tipo) {
       const toast = document.getElementById('toast');
-      const msg = document.getElementById('toast-msg');
       const icon = document.getElementById('toast-icon');
-      msg.innerText = mensaje;
-      if (tipo === "success") icon.className = "fa-solid fa-circle-check text-emerald-400 text-base";
-      else if (tipo === "error") icon.className = "fa-solid fa-circle-xmark text-rose-400 text-base";
-      else icon.className = "fa-solid fa-circle-info text-sky-400 text-base";
-
-      toast.classList.remove('translate-y-24', 'opacity-0');
+      document.getElementById('toast-msg').innerText = mensaje;
+      
+      icon.className = tipo === 'error' ? "fa-solid fa-circle-xmark text-red-500" : "fa-solid fa-circle-check text-emerald-500";
+      
+      toast.classList.remove('-translate-y-20', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
-
       setTimeout(() => {
         toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-24', 'opacity-0');
+        toast.classList.add('-translate-y-20', 'opacity-0');
       }, 2500);
     }
   </script>
