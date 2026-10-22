@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bata - Búsqueda de Inventario Ultra Rápida</title>
+    <title>Bata - Consulta Ultra Rápida de Inventario</title>
 
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- HTML5 QR Code Reader -->
+    <!-- HTML5 QR Code Reader Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <script>
@@ -25,8 +25,8 @@
                         bata: {
                             red: '#E31E24',
                             darkRed: '#B81318',
-                            dark: '#1E293B',
-                            slate: '#0F172A',
+                            dark: '#111827',
+                            slate: '#1E293B',
                             light: '#F8FAFC'
                         }
                     },
@@ -39,91 +39,92 @@
     </script>
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #F1F5F9;
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #F1F5F9; 
         }
 
-        /* Pulse animation for voice recording */
+        /* Pulse Animations for recording state */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(227, 30, 36, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(227, 30, 36, 0); }
+            70% { box-shadow: 0 0 0 12px rgba(227, 30, 36, 0); }
             100% { box-shadow: 0 0 0 0 rgba(227, 30, 36, 0); }
         }
-
         .pulse-recording {
             animation: pulse-red 1.5s infinite;
             background-color: #E31E24 !important;
             color: white !important;
         }
 
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #F1F5F9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #CBD5E1;
-            border-radius: 4px;
-        }
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #F1F5F9; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
-        #reader video {
-            object-fit: cover !important;
-            border-radius: 0.75rem;
+        /* Scanner Modal Video Overlay Adjustments */
+        #reader video { 
+            object-fit: cover !important; 
+            border-radius: 0.75rem; 
+            width: 100% !important;
         }
     </style>
 </head>
-<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+<body class="min-h-screen text-slate-800 flex flex-col justify-between selection:bg-red-500 selection:text-white">
 
-    <!-- TOP HEADER -->
-    <header class="bg-bata-slate text-white sticky top-0 z-30 shadow-md">
+    <!-- HEADER / TOPBAR -->
+    <header class="bg-bata-dark text-white sticky top-0 z-30 shadow-lg border-b border-slate-800">
         <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <!-- Brand Logo & Title -->
             <div class="flex items-center gap-3">
-                <div class="bg-bata-red text-white font-extrabold px-3 py-1 text-xl rounded tracking-wider shadow">
+                <div class="bg-bata-red text-white font-black px-3.5 py-1 text-2xl tracking-tighter rounded shadow-md uppercase italic">
                     Bata
                 </div>
                 <div>
-                    <h1 class="text-base font-bold leading-tight">Consulta Ultra Rápida</h1>
-                    <p class="text-xs text-slate-400 hidden sm:block">Control de Stock en Tienda</p>
+                    <h1 class="text-base sm:text-lg font-bold leading-tight">Consulta Ultra Rápida</h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Control de Stock en Tienda y Almacén</p>
                 </div>
             </div>
 
+            <!-- Connection Status Badge -->
             <div class="flex items-center gap-2">
-                <!-- Status Badge -->
-                <div id="statusBadge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    <span id="statusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span id="statusText">Cargando inventario...</span>
+                <div id="statusBadge" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all">
+                    <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="statusText">Conectando...</span>
                 </div>
+                <button id="refreshDataBtn" title="Sincronizar Inventario" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- MAIN CONTAINER -->
+    <!-- MAIN APP BODY -->
     <main class="max-w-4xl w-full mx-auto px-4 py-4 sm:py-6 flex-1 flex flex-col gap-5">
 
         <!-- SEARCH CONTAINER ("LA BALA") -->
-        <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-200">
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                Escanear Barcode, Hablar o Digitar Código / SKU / Nombre:
+        <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-xl border border-slate-200">
+            <label for="searchInput" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                <span>Escanear, Hablar o Buscar ("La Bala")</span>
+                <span id="totalItemsCount" class="text-slate-400 font-normal lowercase">0 artículos cargados</span>
             </label>
 
             <div class="relative flex items-center">
+                <!-- Search Icon -->
                 <div class="absolute left-4 text-slate-400 text-lg pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </div>
 
+                <!-- Input Box -->
                 <input type="text" id="searchInput" 
-                    placeholder="Ej. Código, SKU, Modelo..." 
+                    placeholder="Escribe SKU, código, nombre o categoría..." 
                     autocomplete="off" 
                     autofocus
-                    class="w-full pl-11 pr-28 py-3.5 sm:py-4 text-lg font-semibold bg-slate-50 border-2 border-slate-200 focus:border-bata-red focus:bg-white rounded-xl outline-none transition-all duration-200 text-slate-800 placeholder-slate-400 shadow-inner">
+                    class="w-full pl-11 pr-32 py-3.5 sm:py-4 text-base sm:text-lg font-semibold bg-slate-50 border-2 border-slate-200 focus:border-bata-red focus:bg-white rounded-xl outline-none transition-all duration-200 text-slate-800 placeholder-slate-400 shadow-inner">
 
-                <!-- Action icons inside input -->
+                <!-- Action Controls inside Input -->
                 <div class="absolute right-2 flex items-center gap-1">
-                    <button id="clearBtn" class="hidden p-2 text-slate-400 hover:text-slate-600 rounded-lg" title="Limpiar texto">
+                    <button id="clearBtn" class="hidden p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors" title="Limpiar texto">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
 
@@ -137,76 +138,81 @@
                 </div>
             </div>
 
-            <!-- Voice Status Message -->
+            <!-- Voice Status Alert -->
             <div id="voiceStatus" class="hidden mt-2 text-xs font-semibold text-bata-red flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-bata-red animate-ping"></span>
-                <span id="voiceText">Escuchando... Di el código o nombre</span>
+                <span id="voiceText">Escuchando... Di el código o producto</span>
             </div>
         </section>
 
-        <!-- SEARCH RESULTS LIST -->
-        <section id="suggestionsContainer" class="hidden bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+        <!-- INSTANT AUTOCOMPLETE MATCHES LIST -->
+        <section id="suggestionsContainer" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
             <div class="px-4 py-2.5 bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-600 flex justify-between items-center">
-                <span>Resultados Coincidentes (<span id="resultsCount">0</span>)</span>
-                <span class="text-slate-400 font-normal">Haz clic para seleccionar</span>
+                <span>Resultados Encontrados (<span id="resultsCount">0</span>)</span>
+                <span class="text-slate-400 font-normal">Toca para seleccionar</span>
             </div>
-            <ul id="suggestionsList" class="divide-y divide-slate-100 max-h-60 overflow-y-auto"></ul>
+            <ul id="suggestionsList" class="divide-y divide-slate-100 max-h-64 overflow-y-auto"></ul>
         </section>
 
-        <!-- MAIN PRODUCT DETAIL CARD -->
-        <section id="productCardContainer">
-            <!-- Empty state default view -->
-            <div id="emptyState" class="bg-white rounded-2xl p-8 text-center border-2 border-dashed border-slate-200 shadow-sm my-auto">
-                <div class="w-16 h-16 bg-red-50 text-bata-red rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i class="fa-solid fa-barcode text-2xl"></i>
+        <!-- MAIN PRODUCT DISPLAY / EMPTY STATE CARD -->
+        <section id="productCardContainer" class="flex-1">
+            
+            <!-- EMPTY STATE -->
+            <div id="emptyState" class="bg-white rounded-2xl p-8 sm:p-12 text-center border-2 border-dashed border-slate-200 shadow-sm my-auto">
+                <div class="w-16 h-16 bg-red-50 text-bata-red rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                    <i class="fa-solid fa-shoe-prints text-2xl"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-700">Listo para Buscar</h3>
+                <h3 class="text-lg font-bold text-slate-800">Listo para Buscar Productos</h3>
                 <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
-                    Escanea con la cámara, usa el micrófono o escribe la referencia para ver stock, tallas y ubicación de inmediato.
+                    Usa el buscador "La Bala", presiona el botón de micrófono para hablar o escanea el código de barras de un calzado con la cámara.
                 </p>
             </div>
 
-            <!-- Product Card View -->
+            <!-- PRODUCT DETAIL CARD -->
             <div id="productCard" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
                 
-                <!-- Product Header -->
-                <div class="bg-slate-900 text-white p-5 sm:p-6 relative overflow-hidden">
+                <!-- Card Header -->
+                <div class="bg-bata-dark text-white p-5 sm:p-6 relative overflow-hidden">
                     <div class="absolute -right-8 -bottom-8 opacity-10 text-white pointer-events-none">
-                        <i class="fa-solid fa-shoe-prints text-9xl"></i>
+                        <i class="fa-solid fa-boxes-stacked text-9xl"></i>
                     </div>
 
                     <div class="flex flex-wrap items-start justify-between gap-3 relative z-10">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <span id="cardCategory" class="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase bg-bata-red text-white tracking-wider">
                                     CALZADO
                                 </span>
                                 <span id="cardCode" class="text-xs font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
                                     SKU: -
                                 </span>
+                                <span id="cardGender" class="text-xs font-bold text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded">
+                                    -
+                                </span>
                             </div>
-                            <h2 id="cardTitle" class="text-2xl sm:text-3xl font-black text-white leading-tight">-</h2>
-                            <p id="cardSubtext" class="text-slate-400 text-sm mt-0.5">
-                                Color: <span id="cardColor" class="text-slate-200 font-semibold">-</span> | Ref: <span id="cardRef" class="text-slate-200 font-semibold">-</span>
+                            <h2 id="cardTitle" class="text-2xl sm:text-3xl font-black text-white leading-tight mt-1">-</h2>
+                            <p id="cardLocation" class="text-xs text-slate-400 flex items-center gap-1">
+                                <i class="fa-solid fa-location-dot text-bata-red"></i> <span id="cardLocationText">Ubicación no especificada</span>
                             </p>
                         </div>
 
+                        <!-- Price & Stock Badge -->
                         <div class="text-right flex flex-col items-end">
                             <div id="stockBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-emerald-500 text-slate-950 shadow">
                                 <i class="fa-solid fa-circle-check"></i> EN STOCK
                             </div>
-                            <div class="mt-2">
-                                <span class="text-xs text-slate-400 block">Precio Publicado</span>
-                                <span id="cardPrice" class="text-2xl font-black text-white">-</span>
+                            <div class="mt-3">
+                                <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Precio Venta</span>
+                                <span id="cardPrice" class="text-2xl sm:text-3xl font-black text-white tracking-tight">-</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Metrics Dashboard Grid -->
+                <!-- Fast Info Grid -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 border-b border-slate-200">
                     <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                        <span class="text-xs font-bold text-slate-400 block uppercase">Stock Total</span>
+                        <span class="text-[10px] font-bold text-slate-400 block uppercase">Total Pares</span>
                         <div class="flex items-baseline gap-1 mt-0.5">
                             <span id="totalPairs" class="text-2xl font-black text-slate-800">0</span>
                             <span class="text-xs font-semibold text-slate-500">pares</span>
@@ -214,162 +220,230 @@
                     </div>
 
                     <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                        <span class="text-xs font-bold text-slate-400 block uppercase">Antigüedad</span>
-                        <div id="ageingTag" class="mt-1 inline-block px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-700">
+                        <span class="text-[10px] font-bold text-slate-400 block uppercase">Color</span>
+                        <span id="cardColor" class="text-sm font-bold text-slate-700 mt-1 block truncate">-</span>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] font-bold text-slate-400 block uppercase">Antigüedad</span>
+                        <div id="ageingTag" class="mt-1 inline-block px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700">
                             -
                         </div>
                     </div>
 
                     <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                        <span class="text-xs font-bold text-slate-400 block uppercase">Ubicación</span>
-                        <span id="cardLocation" class="text-sm font-bold text-slate-700 mt-0.5 block">-</span>
-                    </div>
-
-                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                        <span class="text-xs font-bold text-slate-400 block uppercase">Sección</span>
-                        <span id="cardGender" class="text-sm font-bold text-slate-700 mt-0.5 block">-</span>
+                        <span class="text-[10px] font-bold text-slate-400 block uppercase">EAN / Cód. Barras</span>
+                        <span id="cardEan" class="text-xs font-mono font-bold text-slate-700 mt-1 block truncate">-</span>
                     </div>
                 </div>
 
-                <!-- Sizes Breakdown Grid -->
+                <!-- Sizes Grid Breakdown Section -->
                 <div class="p-4 sm:p-6">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center justify-between">
-                        <span>Disponibilidad por Talla</span>
-                        <span class="text-slate-400 font-normal">Sincronizado con Sheets</span>
-                    </h4>
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-ruler-horizontal text-bata-red"></i>
+                            <span>Disponibilidad de Tallas en Almacén</span>
+                        </h4>
+                        <span class="text-xs font-semibold text-slate-400">Verifique pares físicos</span>
+                    </div>
 
-                    <div id="sizeGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2.5"></div>
+                    <!-- Size Boxes Grid -->
+                    <div id="sizeGrid" class="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2.5"></div>
                 </div>
 
-                <!-- Footer Quick Actions -->
+                <!-- Card Footer Action Controls -->
                 <div class="bg-slate-50 px-4 py-3 sm:px-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
                     <div class="flex items-center gap-2">
-                        <button id="speakStockBtn" class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition-all shadow-sm">
-                            <i class="fa-solid fa-volume-high"></i> Leer Stock
+                        <button id="speakStockBtn" class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95">
+                            <i class="fa-solid fa-volume-high text-bata-red"></i> Leer Stock
                         </button>
-
-                        <button id="copyCodeBtn" class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold transition-all">
+                        <button id="copyCodeBtn" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-all active:scale-95">
                             <i class="fa-solid fa-copy"></i> Copiar Código
                         </button>
                     </div>
 
-                    <button id="newSearchBtn" class="px-4 py-2 bg-bata-red hover:bg-bata-darkRed text-white rounded-lg text-xs font-extrabold transition-all shadow-sm">
-                        Nueva Búsqueda
+                    <button id="newSearchBtn" class="px-4 py-2 bg-bata-red hover:bg-bata-darkRed text-white rounded-xl text-xs font-extrabold transition-all shadow-md active:scale-95 flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Nueva Búsqueda
                     </button>
                 </div>
-
             </div>
         </section>
-
     </main>
 
-    <!-- CAMERA SCANNER MODAL -->
-    <div id="scannerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative flex flex-col">
-            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-3 px-4 text-center text-xs text-slate-400 mt-6">
+        <p>© Bata Perú - Sistema Interno de Inventario Ultra Rápido</p>
+    </footer>
+
+    <!-- BARCODE SCANNER MODAL -->
+    <div id="scannerModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in duration-200">
+            <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-camera text-bata-red"></i>
-                    <h3 class="font-bold text-sm">Escáner de Código de Barras</h3>
+                    <i class="fa-solid fa-camera text-bata-red text-lg"></i>
+                    <h3 class="font-bold text-slate-800 text-base">Escáner de Código de Barras</h3>
                 </div>
-                <button id="closeScannerBtn" class="text-slate-400 hover:text-white p-1">
-                    <i class="fa-solid fa-xmark text-xl"></i>
+                <button id="closeScannerBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <div class="p-4 bg-black flex-1 flex items-center justify-center min-h-[300px]">
+
+            <!-- Video Camera Display Container -->
+            <div class="overflow-hidden rounded-xl bg-slate-900 border border-slate-800 relative min-h-[260px] flex items-center justify-center">
                 <div id="reader" class="w-full"></div>
             </div>
-            <div class="p-3 bg-slate-100 text-center">
-                <p class="text-xs text-slate-600">Apunta la cámara al código de barras del producto</p>
-            </div>
+
+            <p class="text-xs text-center text-slate-500 mt-3">
+                Apunta la cámara de tu dispositivo hacia el código de barras o QR del calzado.
+            </p>
         </div>
     </div>
 
-    <!-- APPLICATION LOGIC JS -->
-    <script>
-        // ==========================================
-        // FIXED DATA SOURCE ENDPOINT
-        // ==========================================
-        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbx-pUdg1wOtaxE_V27ZO6-zLAh7lkge8GHKfURNDF_HPim4WGSktwfz4jKyHIEGa81P0A/exec";
+    <!-- NOTIFICATION TOAST FEEDBACK -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none border border-slate-800">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage" class="text-xs font-semibold">Notificación</span>
+    </div>
 
+    <!-- AUDIO BEEP FOR SUCCESSFUL BARCODE SCAN -->
+    <script>
+        // Synthesize audio beep using Web Audio API to prevent external audio dependency
+        function playBeepSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 1000; // 1kHz beep
+                gainNode.gain.value = 0.15; // Volume
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                    audioCtx.close();
+                }, 120);
+            } catch(e) {
+                console.log("Audio Context play error:", e);
+            }
+        }
+    </script>
+
+    <!-- CORE LOGIC & API INTEGRATION SCRIPT -->
+    <script>
+        // Primary API Endpoint Provided
+        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwHM-MDygSLP26vJnzsfbC7VxRCtFX6lwH4U8OrEfGlYIdi-BlnteO0z_MkawvfvTi3Vw/exec";
+
+        // Application State
         let currentDatabase = [];
         let html5QrcodeScanner = null;
         let isRecordingVoice = false;
         let currentMatchedProduct = null;
+        let speechRecognitionObj = null;
 
-        // DOM Elements
+        // DOM Elements References
         const searchInput = document.getElementById('searchInput');
         const clearBtn = document.getElementById('clearBtn');
         const voiceBtn = document.getElementById('voiceBtn');
         const voiceStatus = document.getElementById('voiceStatus');
+        const voiceText = document.getElementById('voiceText');
         const scanBtn = document.getElementById('scanBtn');
         const suggestionsContainer = document.getElementById('suggestionsContainer');
         const suggestionsList = document.getElementById('suggestionsList');
         const resultsCount = document.getElementById('resultsCount');
+        const totalItemsCount = document.getElementById('totalItemsCount');
 
         const emptyState = document.getElementById('emptyState');
         const productCard = document.getElementById('productCard');
 
-        // Card Elements
         const cardCategory = document.getElementById('cardCategory');
         const cardCode = document.getElementById('cardCode');
+        const cardGender = document.getElementById('cardGender');
         const cardTitle = document.getElementById('cardTitle');
-        const cardColor = document.getElementById('cardColor');
-        const cardRef = document.getElementById('cardRef');
+        const cardLocationText = document.getElementById('cardLocationText');
         const cardPrice = document.getElementById('cardPrice');
         const stockBadge = document.getElementById('stockBadge');
         const totalPairs = document.getElementById('totalPairs');
+        const cardColor = document.getElementById('cardColor');
         const ageingTag = document.getElementById('ageingTag');
-        const cardLocation = document.getElementById('cardLocation');
-        const cardGender = document.getElementById('cardGender');
+        const cardEan = document.getElementById('cardEan');
         const sizeGrid = document.getElementById('sizeGrid');
 
         const statusBadge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
         const statusDot = document.getElementById('statusDot');
+        const refreshDataBtn = document.getElementById('refreshDataBtn');
 
-        // Load Data on Startup
+        const scannerModal = document.getElementById('scannerModal');
+        const closeScannerBtn = document.getElementById('closeScannerBtn');
+        const speakStockBtn = document.getElementById('speakStockBtn');
+        const copyCodeBtn = document.getElementById('copyCodeBtn');
+        const newSearchBtn = document.getElementById('newSearchBtn');
+
+        // Initialize App on DOM Ready
         window.addEventListener('DOMContentLoaded', () => {
             fetchLiveInventoryData();
+            setupVoiceRecognition();
             searchInput.focus();
         });
 
-        // ==========================================
-        // FETCH DATA FROM GOOGLE SHEETS VIA SCRIPT
-        // ==========================================
+        // 1. FETCH INVENTORY DATA FROM APPS SCRIPT API
         async function fetchLiveInventoryData() {
+            updateStatusBadge('loading', "Conectando...");
             try {
-                const response = await fetch(URL_APPS_SCRIPT);
+                const response = await fetch(URL_APPS_SCRIPT, { method: 'GET' });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP Error status: ${response.status}`);
+                }
+
                 const data = await response.json();
 
-                if (Array.isArray(data)) {
+                if (Array.isArray(data) && data.length > 0) {
                     currentDatabase = data;
-                    updateStatusBadge(true, `Inventario Conectado (${data.length} ítems)`);
+                    totalItemsCount.textContent = `${data.length} artículos cargados`;
+                    updateStatusBadge('online', `Conectado (${data.length})`);
+                    showToast(`Inventario cargado exitosamente (${data.length} productos)`, 'success');
+                } else if (Array.isArray(data) && data.length === 0) {
+                    updateStatusBadge('online', "Base de datos vacía");
+                    totalItemsCount.textContent = "0 artículos";
+                } else if (data.error) {
+                    throw new Error(data.error);
                 } else {
-                    updateStatusBadge(false, "Error en formato de datos");
+                    throw new Error("Formato de respuesta JSON no válido");
                 }
             } catch(e) {
-                console.error("Error al conectar con la base de datos:", e);
-                updateStatusBadge(false, "Error de conexión");
+                console.error("Error al conectar con la API:", e);
+                updateStatusBadge('offline', "Error de conexión");
+                showToast("Error de conexión con la base de datos de Bata", "error");
             }
         }
 
-        function updateStatusBadge(isOnline, text) {
+        // Update top bar connection status styling
+        function updateStatusBadge(state, text) {
             statusText.textContent = text;
-            if (isOnline) {
-                statusBadge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-                statusDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+            if (state === 'online') {
+                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+            } else if (state === 'loading') {
+                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
             } else {
-                statusBadge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30";
-                statusDot.className = "w-2 h-2 rounded-full bg-red-400";
+                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30";
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-400";
             }
         }
 
-        // ==========================================
-        // SEARCH ENGINE LOGIC
-        // ==========================================
+        refreshDataBtn.addEventListener('click', () => {
+            fetchLiveInventoryData();
+        });
+
+        // 2. SEARCH & INSTANT AUTOCOMPLETE FILTER ("LA BALA")
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.trim().toLowerCase();
-
             if (query.length > 0) {
                 clearBtn.classList.remove('hidden');
             } else {
@@ -378,7 +452,6 @@
                 showEmptyState();
                 return;
             }
-
             performSearch(query);
         });
 
@@ -393,12 +466,14 @@
         function performSearch(query) {
             if (!query || currentDatabase.length === 0) return;
 
+            // Search matches in SKU, EAN, Title, Category, Color
             const matches = currentDatabase.filter(item => {
                 const skuMatch = item.sku && String(item.sku).toLowerCase().includes(query);
                 const eanMatch = item.ean && String(item.ean).toLowerCase().includes(query);
                 const titleMatch = item.title && String(item.title).toLowerCase().includes(query);
+                const catMatch = item.category && String(item.category).toLowerCase().includes(query);
                 const colorMatch = item.color && String(item.color).toLowerCase().includes(query);
-                return skuMatch || eanMatch || titleMatch || colorMatch;
+                return skuMatch || eanMatch || titleMatch || catMatch || colorMatch;
             });
 
             if (matches.length === 1) {
@@ -406,7 +481,7 @@
                 hideSuggestions();
             } else if (matches.length > 1) {
                 renderSuggestions(matches);
-                renderProductCard(matches[0]);
+                renderProductCard(matches[0]); // Preview first match
             } else {
                 hideSuggestions();
                 showNotFoundState(query);
@@ -417,26 +492,36 @@
             suggestionsList.innerHTML = '';
             resultsCount.textContent = matches.length;
 
-            matches.forEach(item => {
-                const totalStock = item.sizes ? Object.values(item.sizes).reduce((a, b) => a + Number(b), 0) : 0;
+            matches.slice(0, 15).forEach(item => {
                 const li = document.createElement('li');
                 li.className = "p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors";
+                
+                const isAvailable = item.totalStock > 0;
+                
                 li.innerHTML = `
-                    <div>
-                        <div class="text-sm font-bold text-slate-800">${item.title || 'Sin Título'}</div>
-                        <div class="text-xs text-slate-500">SKU: ${item.sku || '-'} | Ref: ${item.ean || '-'} | Color: ${item.color || '-'}</div>
+                    <div class="flex flex-col">
+                        <div class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span>${item.title || 'Artículo ' + item.sku}</span>
+                            <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border">SKU: ${item.sku}</span>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-0.5">
+                            ${item.category || 'Calzado'} • ${item.gender || 'Unisex'} • ${item.color || 'Estándar'}
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <span class="text-xs font-bold px-2 py-0.5 rounded ${totalStock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
-                            ${totalStock > 0 ? `${totalStock} pares` : 'Agotado'}
+                    <div class="text-right flex flex-col items-end">
+                        <span class="text-xs font-extrabold px-2 py-0.5 rounded-full ${isAvailable ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                            ${isAvailable ? `${item.totalStock} pares` : 'Agotado'}
                         </span>
-                        <div class="text-xs font-bold text-slate-700 mt-0.5">${item.price || ''}</div>
+                        <div class="text-xs font-black text-slate-800 mt-1">${item.price || 'S/ 0.00'}</div>
                     </div>
                 `;
+
                 li.addEventListener('click', () => {
                     renderProductCard(item);
+                    searchInput.value = item.sku;
                     hideSuggestions();
                 });
+
                 suggestionsList.appendChild(li);
             });
 
@@ -447,30 +532,29 @@
             suggestionsContainer.classList.add('hidden');
         }
 
-        // ==========================================
-        // RENDER PRODUCT DETAILS CARD
-        // ==========================================
+        // 3. RENDER PRODUCT DETAIL CARD & SIZES GRID
         function renderProductCard(product) {
             currentMatchedProduct = product;
             emptyState.classList.add('hidden');
             productCard.classList.remove('hidden');
 
             cardCategory.textContent = product.category || 'CALZADO';
-            cardCode.textContent = `SKU: ${product.sku || '-'}`;
-            cardTitle.textContent = product.title || 'Artículo Sin Nombre';
-            cardColor.textContent = product.color || '-';
-            cardRef.textContent = product.ean || '-';
-            cardPrice.textContent = product.price || '-';
-            cardLocation.textContent = product.location || 'Almacén Central';
-            cardGender.textContent = product.gender || 'General';
+            cardCode.textContent = `SKU: ${product.sku}`;
+            cardGender.textContent = product.gender || 'GENERAL';
+            cardTitle.textContent = product.title || `Artículo ${product.sku}`;
+            cardLocationText.textContent = product.location || 'Almacén Central / Tienda';
+            cardPrice.textContent = product.price || 'S/ 0.00';
+            totalPairs.textContent = product.totalStock ?? 0;
+            cardColor.textContent = product.color || 'Estándar';
+            cardEan.textContent = product.ean || product.sku;
+            ageingTag.textContent = product.ageingDays ? `Antigüedad: ${product.ageingDays}` : 'Q Actual';
 
-            const totalStock = product.sizes ? Object.values(product.sizes).reduce((a, b) => a + Number(b), 0) : 0;
-            totalPairs.textContent = totalStock;
-
-            if (totalStock === 0) {
+            // Configure Stock Badge Status
+            const totalStock = Number(product.totalStock) || 0;
+            if (totalStock <= 0) {
                 stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-red-500 text-white shadow";
                 stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> AGOTADO`;
-            } else if (totalStock < 5) {
+            } else if (totalStock < 3) {
                 stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-amber-500 text-slate-950 shadow";
                 stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> STOCK BAJO`;
             } else {
@@ -478,127 +562,266 @@
                 stockBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> EN STOCK`;
             }
 
-            const days = product.ageingDays || 0;
-            if (days <= 30) {
-                ageingTag.className = "mt-1 inline-block px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800";
-                ageingTag.textContent = `${days} días (Nuevo)`;
-            } else if (days <= 90) {
-                ageingTag.className = "mt-1 inline-block px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800";
-                ageingTag.textContent = `${days} días (Regular)`;
-            } else {
-                ageingTag.className = "mt-1 inline-block px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-900";
-                ageingTag.textContent = `${days} días (>90 días)`;
-            }
-
+            // Render Dynamic Sizes Grid
             sizeGrid.innerHTML = '';
-            if (product.sizes) {
-                Object.entries(product.sizes).forEach(([size, count]) => {
+            if (product.sizes && typeof product.sizes === 'object' && Object.keys(product.sizes).length > 0) {
+                
+                // Sort size keys numerically if possible
+                const sortedSizes = Object.keys(product.sizes).sort((a, b) => {
+                    const numA = parseFloat(a);
+                    const numB = parseFloat(b);
+                    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                    return a.localeCompare(b);
+                });
+
+                sortedSizes.forEach(size => {
+                    const count = Number(product.sizes[size]) || 0;
                     const sizeBox = document.createElement('div');
-                    const numCount = Number(count);
-                    let bgClass = "bg-white text-slate-800 border-slate-200";
+                    
+                    let bgClass = "bg-white text-slate-800 border-slate-200 shadow-sm hover:border-slate-300";
                     let badgeClass = "bg-emerald-100 text-emerald-800";
 
-                    if (numCount === 0) {
+                    if (count <= 0) {
                         bgClass = "bg-slate-100 text-slate-400 border-slate-200 opacity-60";
                         badgeClass = "bg-slate-200 text-slate-500";
-                    } else if (numCount < 2) {
+                    } else if (count === 1) {
                         badgeClass = "bg-amber-100 text-amber-800";
                     }
 
                     sizeBox.className = `p-2.5 rounded-xl border text-center font-bold flex flex-col justify-between transition-all ${bgClass}`;
                     sizeBox.innerHTML = `
-                        <span class="text-xs text-slate-400 font-semibold block">Talla</span>
-                        <span class="text-lg font-black my-0.5">${size}</span>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Talla</span>
+                        <span class="text-xl font-black my-0.5">${size}</span>
                         <span class="text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${badgeClass}">
-                            ${numCount} ${numCount === 1 ? 'par' : 'pares'}
+                            ${count} ${count === 1 ? 'par' : 'pares'}
                         </span>
                     `;
                     sizeGrid.appendChild(sizeBox);
                 });
+            } else {
+                sizeGrid.innerHTML = '<p class="text-xs text-slate-400 col-span-full py-2">Sin desglose por tallas registrado para este producto.</p>';
             }
         }
 
         function showEmptyState() {
             emptyState.classList.remove('hidden');
             productCard.classList.add('hidden');
+            currentMatchedProduct = null;
         }
 
         function showNotFoundState(query) {
             emptyState.classList.remove('hidden');
             productCard.classList.add('hidden');
-
+            currentMatchedProduct = null;
+            
             emptyState.innerHTML = `
                 <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-3">
                     <i class="fa-solid fa-magnifying-glass-minus text-2xl"></i>
                 </div>
                 <h3 class="text-lg font-bold text-slate-800">Producto No Encontrado</h3>
                 <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
-                    No se encontró ningún artículo coincidente con "<span class="font-bold text-slate-700">${query}</span>".
+                    No encontramos ningún calzado coincidente con "<span class="font-bold text-slate-700">${query}</span>" en el inventario activo.
                 </p>
             `;
         }
 
-        // ==========================================
-        // VOICE SEARCH & SPEECH
-        // ==========================================
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'es-ES';
+        // 4. BARCODE & QR CAMERA SCANNER INTEGRATION
+        scanBtn.addEventListener('click', () => {
+            openScanner();
+        });
 
-            voiceBtn.addEventListener('click', () => {
-                if (isRecordingVoice) {
-                    recognition.stop();
-                } else {
-                    recognition.start();
-                }
+        closeScannerBtn.addEventListener('click', () => {
+            closeScanner();
+        });
+
+        function openScanner() {
+            scannerModal.classList.remove('hidden');
+            
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5Qrcode("reader");
+            }
+
+            const config = { 
+                fps: 10, 
+                qrbox: { width: 250, height: 180 },
+                aspectRatio: 1.0
+            };
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" }, 
+                config, 
+                onScanSuccess, 
+                onScanFailure
+            ).catch(err => {
+                console.error("Error al iniciar cámara:", err);
+                showToast("No se pudo acceder a la cámara", "error");
+                closeScanner();
             });
-
-            recognition.onstart = () => {
-                isRecordingVoice = true;
-                voiceBtn.classList.add('pulse-recording');
-                voiceStatus.classList.remove('hidden');
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript.replace(/\./g, '');
-                searchInput.value = transcript;
-                clearBtn.classList.remove('hidden');
-                performSearch(transcript.trim().toLowerCase());
-            };
-
-            recognition.onend = () => {
-                isRecordingVoice = false;
-                voiceBtn.classList.remove('pulse-recording');
-                voiceStatus.classList.add('hidden');
-            };
-        } else {
-            voiceBtn.style.display = 'none';
         }
 
-        document.getElementById('speakStockBtn').addEventListener('click', () => {
+        function onScanSuccess(decodedText) {
+            playBeepSound(); // Trigger Audio Beep
+            closeScanner();
+            
+            const scannedCode = decodedText.trim();
+            searchInput.value = scannedCode;
+            clearBtn.classList.remove('hidden');
+            
+            showToast(`Código escaneado: ${scannedCode}`, 'success');
+            performSearch(scannedCode.toLowerCase());
+        }
+
+        function onScanFailure(error) {
+            // Silence normal frame decoding failures
+        }
+
+        function closeScanner() {
+            if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+                html5QrcodeScanner.stop().then(() => {
+                    scannerModal.classList.add('hidden');
+                }).catch(err => {
+                    console.error("Error deteniendo escáner:", err);
+                    scannerModal.classList.add('hidden');
+                });
+            } else {
+                scannerModal.classList.add('hidden');
+            }
+        }
+
+        // 5. WEB SPEECH API (VOICE SEARCH & SPEECH SYNTHESIS)
+        function setupVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                speechRecognitionObj = new SpeechRecognition();
+                speechRecognitionObj.lang = 'es-PE';
+                speechRecognitionObj.continuous = false;
+                speechRecognitionObj.interimResults = false;
+
+                speechRecognitionObj.onstart = () => {
+                    isRecordingVoice = true;
+                    voiceBtn.classList.add('pulse-recording');
+                    voiceStatus.classList.remove('hidden');
+                    voiceText.textContent = "Escuchando... Habla el código o producto";
+                };
+
+                speechRecognitionObj.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript.trim();
+                    // Strip trailing punctuation from speech
+                    const cleanTranscript = transcript.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+                    
+                    searchInput.value = cleanTranscript;
+                    clearBtn.classList.remove('hidden');
+                    stopVoiceRecording();
+                    
+                    showToast(`Voz reconocida: "${cleanTranscript}"`, 'info');
+                    performSearch(cleanTranscript.toLowerCase());
+                };
+
+                speechRecognitionObj.onerror = (event) => {
+                    console.error("Speech Recognition Error:", event.error);
+                    stopVoiceRecording();
+                    showToast("No se logró entender el audio", "error");
+                };
+
+                speechRecognitionObj.onend = () => {
+                    stopVoiceRecording();
+                };
+
+                voiceBtn.addEventListener('click', () => {
+                    if (isRecordingVoice) {
+                        speechRecognitionObj.stop();
+                    } else {
+                        try {
+                            speechRecognitionObj.start();
+                        } catch(e) {
+                            console.error("Start speech error:", e);
+                        }
+                    }
+                });
+            } else {
+                voiceBtn.title = "Búsqueda por voz no soportada en este navegador";
+                voiceBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function stopVoiceRecording() {
+            isRecordingVoice = false;
+            voiceBtn.classList.remove('pulse-recording');
+            voiceStatus.classList.add('hidden');
+        }
+
+        // READ STOCK ALOUD (TEXT-TO-SPEECH)
+        speakStockBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
-            const totalStock = currentMatchedProduct.sizes ? Object.values(currentMatchedProduct.sizes).reduce((a, b) => a + Number(b), 0) : 0;
-            const textToSpeak = `Artículo ${currentMatchedProduct.title}, color ${currentMatchedProduct.color}. Tiene un total de ${totalStock} pares en stock.`;
 
             if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop ongoing speech
+
+                let textToSpeak = `Artículo ${currentMatchedProduct.sku}. `;
+                textToSpeak += `Precio ${currentMatchedProduct.price}. `;
+                
+                const total = Number(currentMatchedProduct.totalStock) || 0;
+                textToSpeak += `Stock total ${total} pares. `;
+
+                if (currentMatchedProduct.sizes && Object.keys(currentMatchedProduct.sizes).length > 0) {
+                    textToSpeak += "Tallas disponibles: ";
+                    const availableSizes = [];
+                    Object.entries(currentMatchedProduct.sizes).forEach(([sz, qty]) => {
+                        if (Number(qty) > 0) {
+                            availableSizes.push(`Talla ${sz}, ${qty} ${qty === 1 ? 'par' : 'pares'}`);
+                        }
+                    });
+                    if (availableSizes.length > 0) {
+                        textToSpeak += availableSizes.join(". ");
+                    } else {
+                        textToSpeak += "Sin tallas disponibles en este momento.";
+                    }
+                }
+
                 const utterance = new SpeechSynthesisUtterance(textToSpeak);
-                utterance.lang = 'es-ES';
+                utterance.lang = 'es-PE';
+                utterance.rate = 1.0;
                 window.speechSynthesis.speak(utterance);
+
+                showToast("Leyendo información de stock en voz alta...", "info");
+            } else {
+                showToast("Tu navegador no soporta síntesis de voz", "error");
             }
         });
 
-        document.getElementById('copyCodeBtn').addEventListener('click', () => {
+        // 6. HELPER BUTTONS (COPY CODE & NEW SEARCH)
+        copyCodeBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
-            navigator.clipboard.writeText(currentMatchedProduct.sku || '');
-            const btn = document.getElementById('copyCodeBtn');
-            btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> ¡Copiado!`;
-            setTimeout(() => {
-                btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copiar Código`;
-            }, 2000);
+            const textToCopy = currentMatchedProduct.sku;
+
+            // Secure fall-back clipboard copy execution
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showToast(`SKU ${textToCopy} copiado al portapapeles`, 'success');
+                }).catch(() => fallbackCopyTextToClipboard(textToCopy));
+            } else {
+                fallbackCopyTextToClipboard(textToCopy);
+            }
         });
 
-        document.getElementById('newSearchBtn').addEventListener('click', () => {
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast(`SKU ${text} copiado al portapapeles`, 'success');
+            } catch (err) {
+                showToast("No se pudo copiar el código", 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        newSearchBtn.addEventListener('click', () => {
             searchInput.value = '';
             clearBtn.classList.add('hidden');
             hideSuggestions();
@@ -606,48 +829,28 @@
             searchInput.focus();
         });
 
-        // ==========================================
-        // CAMERA SCANNER
-        // ==========================================
-        scanBtn.addEventListener('click', () => {
-            document.getElementById('scannerModal').classList.remove('hidden');
-            startCameraScanner();
-        });
+        // TOAST NOTIFICATION DISPLAYER
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
 
-        document.getElementById('closeScannerBtn').addEventListener('click', stopCameraScanner);
+            toastMessage.textContent = message;
 
-        function startCameraScanner() {
-            if (html5QrcodeScanner) return;
-            html5QrcodeScanner = new Html5Qrcode("reader");
-            html5QrcodeScanner.start(
-                { facingMode: "environment" }, 
-                { fps: 15, qrbox: { width: 250, height: 180 } }, 
-                (decodedText) => {
-                    stopCameraScanner();
-                    searchInput.value = decodedText;
-                    clearBtn.classList.remove('hidden');
-                    performSearch(decodedText.trim().toLowerCase());
-                }
-            ).catch(err => {
-                alert("No se pudo acceder a la cámara.");
-                stopCameraScanner();
-            });
-        }
-
-        function stopCameraScanner() {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => {
-                    html5QrcodeScanner.clear();
-                    html5QrcodeScanner = null;
-                    document.getElementById('scannerModal').classList.add('hidden');
-                }).catch(() => {
-                    document.getElementById('scannerModal').classList.add('hidden');
-                    html5QrcodeScanner = null;
-                });
+            if (type === 'success') {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+            } else if (type === 'error') {
+                toastIcon.className = "fa-solid fa-circle-xmark text-red-400";
             } else {
-                document.getElementById('scannerModal').classList.add('hidden');
+                toastIcon.className = "fa-solid fa-circle-info text-sky-400";
             }
-        }
+
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-eventls-none');
+            }, 3000);
+        }l
     </script>
 </body>
 </html>
