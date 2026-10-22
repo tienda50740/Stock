@@ -1,550 +1,843 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Bata 1 | Stock</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bata - Búsqueda de Inventario Ultra Rápida</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  
-  <!-- ZXing para escaneo nativo rápido -->
-  <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: { bata: { red: '#E31E24', dark: '#111827' } }
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- HTML5 QR Code Reader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bata: {
+                            red: '#E31E24',
+                            darkRed: '#B81318',
+                            dark: '#1E293B',
+                            slate: '#0F172A',
+                            light: '#F8FAFC'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
+    </script>
 
-  <style>
-    /* Optimización de scroll */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    .carrusel-container {
-      scroll-snap-type: x mandatory;
-      touch-action: pan-x;
-    }
-    
-    /* TRUCO DE VELOCIDAD: El navegador ignora las tarjetas fuera de pantalla */
-    .carrusel-card {
-      scroll-snap-align: center;
-      scroll-snap-stop: always;
-      content-visibility: auto;
-      contain-intrinsic-size: 300px 400px; 
-    }
-    
-    body {
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-      overscroll-behavior: none;
-      -webkit-tap-highlight-color: transparent;
-      background-color: #0f172a; /* Fondo oscuro base */
-    }
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F1F5F9;
+        }
 
-    /* ====== FONDO DINÁMICO (Efecto Cristal) ====== */
-    #dynamic-bg {
-      position: fixed;
-      inset: -10%;
-      z-index: -1;
-      background-size: cover;
-      background-position: center;
-      filter: blur(40px) brightness(0.4);
-      transition: background-image 0.5s ease-in-out;
-      opacity: 0.9;
-    }
+        /* Pulse animation for voice recording */
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(227, 30, 36, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(227, 30, 36, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(227, 30, 36, 0); }
+        }
 
-    /* SPA instantáneo */
-    .app-section {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.1s ease-in-out;
-      display: flex;
-      flex-direction: column;
-      padding-bottom: 65px; 
-    }
-    .app-section.active {
-      opacity: 1;
-      pointer-events: auto;
-      z-index: 10;
-    }
+        .pulse-recording {
+            animation: pulse-red 1.5s infinite;
+            background-color: #E31E24 !important;
+            color: white !important;
+        }
 
-    /* ====== ESCÁNER MINIMALISTA ====== */
-    #scanner-container {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      z-index: 100;
-      display: none;
-    }
-    #scanner-container.active { display: block; }
-    
-    #scanner-video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-    }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
 
-    .scanner-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    
-    /* Marco simple para EAN-13 */
-    .scanner-box {
-      width: 75%;
-      max-width: 280px;
-      height: 120px;
-      border: 2px solid rgba(255, 255, 255, 0.7);
-      border-radius: 12px;
-      box-shadow: 0 0 0 100vmax rgba(0,0,0,0.6);
-      position: relative;
-    }
-    
-    /* Láser simple */
-    .scanner-box::after {
-      content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px;
-      background: #E31E24; box-shadow: 0 0 8px #E31E24;
-      animation: scan 2s infinite alternate ease-in-out;
-    }
-    @keyframes scan { 0% { top: 10%; } 100% { top: 90%; } }
-
-    .btn-float {
-      width: 50px; height: 50px; border-radius: 50%; background: rgba(0,0,0,0.5);
-      color: white; display: flex; align-items: center; justify-content: center; font-size: 20px;
-      border: 1px solid rgba(255,255,255,0.2); transition: transform 0.1s; pointer-events: auto; cursor: pointer;
-    }
-    .btn-float:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
-    .btn-float.active { background: #E31E24; border-color: #E31E24; }
-  </style>
+        #reader video {
+            object-fit: cover !important;
+            border-radius: 0.75rem;
+        }
+    </style>
 </head>
-<body class="h-[100dvh] w-screen overflow-hidden text-white flex flex-col justify-center items-center antialiased">
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
 
-  <!-- EL FONDO DINÁMICO (Se actualiza con la imagen del producto) -->
-  <div id="dynamic-bg"></div>
-
-  <div class="w-full max-w-md h-full flex flex-col relative overflow-hidden">
-
-    <!-- CONTENEDOR DE VISTAS -->
-    <main class="w-full flex-1 relative overflow-hidden">
-
-      <!-- VISTA PRINCIPAL: BUSCADOR -->
-      <section id="view-buscar" class="app-section active">
-        
-        <!-- Header Flotante -->
-        <div class="absolute top-0 left-0 w-full p-4 z-40 bg-gradient-to-b from-black/60 to-transparent">
-          <div class="flex items-center gap-3">
-            <div class="relative flex-1">
-              <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-              <input type="text" inputmode="numeric" id="input-busqueda" placeholder="Buscar código..." 
-                     class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-slate-300 focus:outline-none focus:bg-white/20 font-bold text-sm transition-all"
-                     oninput="onBusquedaInput()">
+    <!-- TOP HEADER -->
+    <header class="bg-bata-slate text-white sticky top-0 z-30 shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- Bata Logo Badge -->
+                <div class="bg-bata-red text-white font-extrabold px-3 py-1 text-xl rounded tracking-wider shadow">
+                    Bata
+                </div>
+                <div>
+                    <h1 class="text-base font-bold leading-tight">Consulta Ultra Rápida</h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Control de Stock en Tienda</p>
+                </div>
             </div>
-            <button onclick="iniciarEscaner()" class="w-12 h-12 shrink-0 rounded-2xl bg-bata-red text-white flex items-center justify-center shadow-lg active:scale-95 transition-transform">
-              <i class="fa-solid fa-barcode text-lg"></i>
-            </button>
-          </div>
-          
-          <div class="flex justify-between items-center mt-3 px-1 text-[11px] font-bold text-slate-300">
-            <span id="txt-posicion">Cargando...</span>
-            <button onclick="toggleModoSelectivo()" id="btn-toggle-selectivo" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 backdrop-blur-md">
-              <i class="fa-solid fa-pen"></i> <span>Conteo</span>
-            </button>
-          </div>
-        </div>
 
-        <!-- Carrusel de Tarjetas -->
-        <div class="w-full h-full pt-28 pb-4">
-          <div id="carrusel" class="carrusel-container flex overflow-x-auto no-scrollbar w-full h-full items-center gap-4 px-4"></div>
-        </div>
-      </section>
+            <div class="flex items-center gap-2">
+                <!-- Status Badge -->
+                <div id="statusBadge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="statusText">Google Script API Conectado</span>
+                </div>
 
-      <!-- OTRAS VISTAS (De ejemplo) -->
-      <section id="view-movimientos" class="app-section p-6 bg-slate-900/80 backdrop-blur-xl">
-        <h2 class="text-2xl font-black mt-10">Movimientos</h2>
-      </section>
-      <section id="view-reportes" class="app-section p-6 bg-slate-900/80 backdrop-blur-xl">
-        <h2 class="text-2xl font-black mt-10">Reportes</h2>
-      </section>
-      <section id="view-planilla" class="app-section p-6 bg-slate-900/80 backdrop-blur-xl">
-        <h2 class="text-2xl font-black mt-10">Planilla</h2>
-      </section>
-      <section id="view-historial" class="app-section p-6 bg-slate-900/80 backdrop-blur-xl">
-        <h2 class="text-2xl font-black mt-10">Historial</h2>
-      </section>
+                <!-- Settings Button -->
+                <button id="openConfigBtn" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" title="Configurar Google Apps Script API">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-4xl w-full mx-auto px-4 py-4 sm:py-6 flex-1 flex flex-col gap-5">
+
+        <!-- SEARCH CONTAINER ("LA BALA") -->
+        <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-200">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Escanear Barcode, Hablar o Digitar Código / SKU / Nombre:
+            </label>
+
+            <div class="relative flex items-center">
+                <div class="absolute left-4 text-slate-400 text-lg pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+
+                <input type="text" id="searchInput" 
+                    placeholder="Ej. 881-6020, 77012345, North Star..." 
+                    autocomplete="off" 
+                    autofocus
+                    class="w-full pl-11 pr-28 py-3.5 sm:py-4 text-lg font-semibold bg-slate-50 border-2 border-slate-200 focus:border-bata-red focus:bg-white rounded-xl outline-none transition-all duration-200 text-slate-800 placeholder-slate-400 shadow-inner">
+
+                <!-- Action icons right inside/adjacent to input -->
+                <div class="absolute right-2 flex items-center gap-1">
+                    <!-- Clear Button -->
+                    <button id="clearBtn" class="hidden p-2 text-slate-400 hover:text-slate-600 rounded-lg" title="Limpiar texto">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+
+                    <!-- Voice Search Button -->
+                    <button id="voiceBtn" class="p-2.5 text-slate-600 hover:text-bata-red hover:bg-red-50 rounded-xl transition-all" title="Búsqueda por Voz">
+                        <i class="fa-solid fa-microphone text-lg"></i>
+                    </button>
+
+                    <!-- Camera Barcode Scanner Button -->
+                    <button id="scanBtn" class="p-2.5 bg-bata-red hover:bg-bata-darkRed text-white rounded-xl shadow-md transition-all active:scale-95" title="Escanear Código de Barras / QR">
+                        <i class="fa-solid fa-barcode text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Voice Status Message -->
+            <div id="voiceStatus" class="hidden mt-2 text-xs font-semibold text-bata-red flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-bata-red animate-ping"></span>
+                <span id="voiceText">Escuchando... Di el código de artículo</span>
+            </div>
+        </section>
+
+        <!-- SEARCH RESULTS & LIVE PREVIEW (MATCHES LIST) -->
+        <section id="suggestionsContainer" class="hidden bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+            <div class="px-4 py-2.5 bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-600 flex justify-between items-center">
+                <span>Resultados Coincidentes (<span id="resultsCount">0</span>)</span>
+                <span class="text-slate-400 font-normal">Haz clic para seleccionar</span>
+            </div>
+            <ul id="suggestionsList" class="divide-y divide-slate-100 max-h-60 overflow-y-auto">
+                <!-- Suggestions inserted dynamically -->
+            </ul>
+        </section>
+
+        <!-- MAIN PRODUCT DETAIL CARD ("FICHA DEL ARTÍCULO") -->
+        <section id="productCardContainer">
+            <!-- Empty state default view -->
+            <div id="emptyState" class="bg-white rounded-2xl p-8 text-center border-2 border-dashed border-slate-200 shadow-sm my-auto">
+                <div class="w-16 h-16 bg-red-50 text-bata-red rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fa-solid fa-barcode text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700">Listo para Buscar</h3>
+                <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
+                    Escanea con la cámara, usa el micrófono o escribe la referencia para ver stock, tallas y ubicación de inmediato.
+                </p>
+            </div>
+
+            <!-- Product Card View (Hidden by default) -->
+            <div id="productCard" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
+                
+                <!-- Product Header -->
+                <div class="bg-slate-900 text-white p-5 sm:p-6 relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 opacity-10 text-white pointer-events-none">
+                        <i class="fa-solid fa-shoe-prints text-9xl"></i>
+                    </div>
+
+                    <div class="flex flex-wrap items-start justify-between gap-3 relative z-10">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span id="cardCategory" class="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase bg-bata-red text-white tracking-wider">
+                                    CALZADO
+                                </span>
+                                <span id="cardCode" class="text-xs font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
+                                    SKU: 881-6020
+                                </span>
+                            </div>
+                            <h2 id="cardTitle" class="text-2xl sm:text-3xl font-black text-white leading-tight">
+                                North Star Sneaker Classic
+                            </h2>
+                            <p id="cardSubtext" class="text-slate-400 text-sm mt-0.5">
+                                Color: <span id="cardColor" class="text-slate-200 font-semibold">Negro / Blanco</span> | Ref: <span id="cardRef" class="text-slate-200 font-semibold">77012345</span>
+                            </p>
+                        </div>
+
+                        <div class="text-right flex flex-col items-end">
+                            <div id="stockBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-emerald-500 text-slate-950 shadow">
+                                <i class="fa-solid fa-circle-check"></i> EN STOCK
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-xs text-slate-400 block">Precio Publicado</span>
+                                <span id="cardPrice" class="text-2xl font-black text-white">S/ 149.90</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics Dashboard Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 border-b border-slate-200">
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-xs font-bold text-slate-400 block uppercase">Stock Total</span>
+                        <div class="flex items-baseline gap-1 mt-0.5">
+                            <span id="totalPairs" class="text-2xl font-black text-slate-800">18</span>
+                            <span class="text-xs font-semibold text-slate-500">pares</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-xs font-bold text-slate-400 block uppercase">Antigüedad</span>
+                        <div id="ageingTag" class="mt-1 inline-block px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-700">
+                            0 - 30 días
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-xs font-bold text-slate-400 block uppercase">Ubicación</span>
+                        <span id="cardLocation" class="text-sm font-bold text-slate-700 mt-0.5 block">Pasillo A3 / Estante 2</span>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-xs font-bold text-slate-400 block uppercase">Sección</span>
+                        <span id="cardGender" class="text-sm font-bold text-slate-700 mt-0.5 block">Caballeros</span>
+                    </div>
+                </div>
+
+                <!-- Sizes Breakdown Grid -->
+                <div class="p-4 sm:p-6">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center justify-between">
+                        <span>Disponibilidad por Talla</span>
+                        <span class="text-slate-400 font-normal">Actualizado hace un momento</span>
+                    </h4>
+
+                    <div id="sizeGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2.5">
+                        <!-- Size cards populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Footer Quick Actions -->
+                <div class="bg-slate-50 px-4 py-3 sm:px-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <!-- Audio Speech Button -->
+                        <button id="speakStockBtn" class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition-all shadow-sm">
+                            <i class="fa-solid fa-volume-high"></i> Leer Stock en Voz Alta
+                        </button>
+
+                        <!-- Copy Code Button -->
+                        <button id="copyCodeBtn" class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold transition-all">
+                            <i class="fa-solid fa-copy"></i> Copiar Código
+                        </button>
+                    </div>
+
+                    <button id="newSearchBtn" class="px-4 py-2 bg-bata-red hover:bg-bata-darkRed text-white rounded-lg text-xs font-extrabold transition-all shadow-sm">
+                        Nueva Búsqueda
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
     </main>
 
-    <!-- MENÚ INFERIOR (Cristal) -->
-    <nav class="absolute bottom-0 w-full bg-slate-900/80 backdrop-blur-lg border-t border-white/10 px-2 py-2 flex items-center justify-around z-40 rounded-t-3xl">
-      <button onclick="cambiarSeccion('view-buscar', this, 'Buscar')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-bata-red">
-        <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i><span class="text-[9px] font-bold">Buscar</span>
-      </button>
-      <button onclick="cambiarSeccion('view-movimientos', this, 'Movs')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-slate-400">
-        <i class="fa-solid fa-boxes-packing text-lg mb-1"></i><span class="text-[9px] font-bold">Movs.</span>
-      </button>
-      <button onclick="cambiarSeccion('view-reportes', this, 'Reportes')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-slate-400">
-        <i class="fa-solid fa-chart-line text-lg mb-1"></i><span class="text-[9px] font-bold">Reportes</span>
-      </button>
-      <button onclick="cambiarSeccion('view-planilla', this, 'Planilla')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-slate-400">
-        <i class="fa-solid fa-file-invoice-dollar text-lg mb-1"></i><span class="text-[9px] font-bold">Planilla</span>
-      </button>
-      <button onclick="cambiarSeccion('view-historial', this, 'Historial')" class="nav-btn flex flex-col items-center w-14 h-12 rounded-xl text-slate-400">
-        <i class="fa-solid fa-clock-rotate-left text-lg mb-1"></i><span class="text-[9px] font-bold">Historial</span>
-      </button>
-    </nav>
-
-    <!-- ================= ESCÁNER MINIMALISTA ================= -->
-    <div id="scanner-container">
-      <video id="scanner-video" autoplay playsinline muted></video>
-      
-      <div class="scanner-overlay">
-        <!-- Botón Cerrar -->
-        <button onclick="detenerEscaner()" class="btn-float absolute top-10 left-6"><i class="fa-solid fa-xmark"></i></button>
-        <!-- Botón Linterna -->
-        <button onclick="toggleLinterna()" id="btn-linterna" class="btn-float absolute top-10 right-6"><i class="fa-solid fa-bolt"></i></button>
-
-        <!-- Marco de Escaneo -->
-        <div class="scanner-box"></div>
-        <p class="text-white/80 text-xs font-bold mt-6 tracking-wide">Apunta al código de barras</p>
-
-        <!-- Zoom -->
-        <div class="absolute bottom-12 flex items-center gap-6 pointer-events-none">
-          <button onclick="ajustarZoom(-0.5)" class="btn-float"><i class="fa-solid fa-minus"></i></button>
-          <div class="text-white font-black text-sm bg-black/60 px-4 py-2 rounded-full" id="txt-zoom">1.0x</div>
-          <button onclick="ajustarZoom(0.5)" class="btn-float"><i class="fa-solid fa-plus"></i></button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TOAST -->
-    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 transform -translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-white text-slate-900 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-bold z-[110]">
-      <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
-      <span id="toast-msg">Mensaje</span>
-    </div>
-
-  </div>
-
-  <script>
-    const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbx-pUdg1wOtaxE_V27ZO6-zLAh7lkge8GHKfURNDF_HPim4WGSktwfz4jKyHIEGa81P0A/exec";
-
-    let dbInventario = [];
-    let modoActual = 'consulta'; 
-    let indiceActual = 0;
-    let guardandoBloqueo = false;
-    let tiempoDebounce;
-
-    /* ================= VARIABLES DEL ESCÁNER ================= */
-    const codeReader = new ZXing.BrowserMultiFormatReader();
-    let videoStreamActivo = null;
-    let videoTrack = null;
-    let linternaEncendida = false;
-    let zoomActual = 1.0;
-    let escaneandoActivo = false;
-
-    window.onload = function() {
-      sincronizarDatos();
-      const carrusel = document.getElementById('carrusel');
-      carrusel.addEventListener('scroll', () => {
-        if (guardandoBloqueo) return;
-        const width = carrusel.offsetWidth + 16;
-        const nuevoIndice = Math.round(carrusel.scrollLeft / width);
-        
-        if (nuevoIndice !== indiceActual && dbInventario[nuevoIndice]) {
-          indiceActual = nuevoIndice;
-          actualizarContadorPosicion();
-          
-          // ACTUALIZAR FONDO DINÁMICO CON LA IMAGEN DEL PRODUCTO
-          const cod = String(obtenerPropiedad(dbInventario[nuevoIndice], ['articulo', 'Articulo'])).trim();
-          const urlImagen = `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cod}_1.JPG`;
-          document.getElementById('dynamic-bg').style.backgroundImage = `url('${urlImagen}')`;
-        }
-      });
-    };
-
-    /* ================= NAVEGACIÓN ================= */
-    function cambiarSeccion(viewId, btn, titulo) {
-      document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active'));
-      document.getElementById(viewId).classList.add('active');
-      
-      document.querySelectorAll('.nav-btn').forEach(b => {
-        b.classList.remove('text-bata-red'); b.classList.add('text-slate-400');
-      });
-      if (btn) {
-        btn.classList.remove('text-slate-400'); btn.classList.add('text-bata-red');
-      }
-    }
-
-    /* ================= DATOS ================= */
-    function sincronizarDatos() {
-      // Si tuvieras un icono de sync, lo girarías aquí
-      fetch(`${URL_APPS_SCRIPT}?action=obtenerInventario&t=${Date.now()}`)
-        .then(res => res.json())
-        .then(data => {
-          dbInventario = data;
-          renderizarCarrusel();
-        })
-        .catch(err => mostrarToast("Error de conexión", "error"));
-    }
-
-    function obtenerPropiedad(obj, llaves, valorDefecto = '') {
-      for (let k of llaves) {
-        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k];
-      }
-      return valorDefecto;
-    }
-
-    /* ================= BÚSQUEDA ================= */
-    function onBusquedaInput() {
-      const q = document.getElementById('input-busqueda').value.trim();
-      clearTimeout(tiempoDebounce);
-      tiempoDebounce = setTimeout(() => buscarYCentrarArticulo(q), 200);
-    }
-
-    function buscarYCentrarArticulo(q) {
-      if (!q) return;
-      const query = q.toLowerCase();
-      let idx = dbInventario.findIndex(item => String(obtenerPropiedad(item, ['articulo', 'Articulo'])).toLowerCase().includes(query));
-      if (idx !== -1) irAlIndice(idx, true);
-      else mostrarToast(`No encontrado`, "error");
-    }
-
-    function irAlIndice(index, suave = false) {
-      const carrusel = document.getElementById('carrusel');
-      const width = carrusel.offsetWidth + 16;
-      indiceActual = index;
-      carrusel.scrollTo({ left: index * width, behavior: suave ? 'smooth' : 'auto' });
-      actualizarContadorPosicion();
-      
-      const cod = String(obtenerPropiedad(dbInventario[index], ['articulo', 'Articulo'])).trim();
-      document.getElementById('dynamic-bg').style.backgroundImage = `url('https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cod}_1.JPG')`;
-    }
-
-    /* ================= ZXING ESCÁNER (Mínimo y Rápido) ================= */
-    async function iniciarEscaner() {
-      const container = document.getElementById('scanner-container');
-      const video = document.getElementById('scanner-video');
-      container.classList.add('active');
-      
-      linternaEncendida = false;
-      document.getElementById('btn-linterna').classList.remove('active');
-      zoomActual = 1.0;
-      document.getElementById('txt-zoom').innerText = "1.0x";
-      escaneandoActivo = true;
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
-        });
-        
-        videoStreamActivo = stream;
-        videoTrack = stream.getVideoTracks()[0];
-        video.srcObject = stream;
-        
-        codeReader.decodeFromVideoDevice(null, video, (result, err) => {
-          if (!escaneandoActivo) return;
-          if (result) {
-            const codigoFinal = result.text.replace(/\D/g, '');
-            if (codigoFinal.length > 3) {
-              escaneandoActivo = false;
-              if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-              
-              detenerEscaner();
-              cambiarSeccion('view-buscar', document.querySelector('.nav-btn'), 'Buscar');
-              document.getElementById('input-busqueda').value = codigoFinal;
-              buscarYCentrarArticulo(codigoFinal);
-              mostrarToast(`Escaneado`, "success");
-            }
-          }
-        });
-      } catch (err) {
-        mostrarToast("Error de cámara", "error");
-        detenerEscaner();
-      }
-    }
-
-    function detenerEscaner() {
-      escaneandoActivo = false;
-      document.getElementById('scanner-container').classList.remove('active');
-      codeReader.reset();
-      if (videoStreamActivo) {
-        videoStreamActivo.getTracks().forEach(track => track.stop());
-        videoStreamActivo = null;
-      }
-    }
-
-    async function toggleLinterna() {
-      if (!videoTrack) return;
-      linternaEncendida = !linternaEncendida;
-      const btn = document.getElementById('btn-linterna');
-      try {
-        const capabilities = videoTrack.getCapabilities();
-        if (capabilities.torch) {
-          await videoTrack.applyConstraints({ advanced: [{ torch: linternaEncendida }] });
-          btn.classList.toggle('active', linternaEncendida);
-        } else {
-          mostrarToast("Linterna no soportada", "error");
-        }
-      } catch (e) {}
-    }
-
-    async function ajustarZoom(cambio) {
-      if (!videoTrack) return;
-      zoomActual += cambio;
-      try {
-        const capabilities = videoTrack.getCapabilities();
-        if (capabilities.zoom) {
-          const min = capabilities.zoom.min || 1;
-          const max = capabilities.zoom.max || 5;
-          if (zoomActual < min) zoomActual = min;
-          if (zoomActual > max) zoomActual = max;
-          document.getElementById('txt-zoom').innerText = zoomActual.toFixed(1) + "x";
-          await videoTrack.applyConstraints({ advanced: [{ zoom: zoomActual }] });
-        }
-      } catch (e) {}
-    }
-
-    /* ================= RENDERIZADO (Súper Ligero) ================= */
-    function renderizarCarrusel() {
-      const carrusel = document.getElementById('carrusel');
-      if (dbInventario.length === 0) return;
-
-      // HTML Mucho más ligero para que el celular no colapse
-      carrusel.innerHTML = dbInventario.map((item) => {
-        const cod = String(obtenerPropiedad(item, ['articulo', 'Articulo'])).trim();
-        const stockBD = obtenerPropiedad(item, ['stock', 'Stock'], '0');
-        const pPlanilla = obtenerPropiedad(item, ['pPlanilla', 'pplanilla'], '0.00');
-        const selectivo = obtenerPropiedad(item, ['selectivo', 'Selectivo'], '');
-        const tallaCantidadStr = obtenerPropiedad(item, ['tallaCantidad', 'tallacantidad'], '');
-        
-        const urlImagen = `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cod}_1.JPG`;
-        const valorSelectivoVisual = (selectivo !== '' && selectivo !== null) ? selectivo : '--';
-
-        // Formatear tallas
-        let tallasHTML = '<div class="text-xs text-slate-400 text-center py-2">Sin tallas</div>';
-        if (tallaCantidadStr) {
-          let items = [];
-          String(tallaCantidadStr).split(/[,;]+/).forEach(el => {
-            if (el.includes('/')) {
-              const [t, c] = el.split('/');
-              items.push(`<div class="bg-slate-100 rounded-lg p-1 text-center flex-1"><div class="text-[9px] font-bold text-slate-500">T-${t.trim()}</div><div class="font-black text-slate-800">${c.trim()}</div></div>`);
-            }
-          });
-          if (items.length > 0) tallasHTML = `<div class="flex gap-1 mt-2 overflow-x-auto no-scrollbar">${items.join('')}</div>`;
-        }
-
-        return `
-          <div class="carrusel-card min-w-full h-[85%] bg-white rounded-3xl p-5 shadow-2xl flex flex-col justify-between">
+    <!-- CAMERA SCANNER MODAL OVERLAY -->
+    <div id="scannerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative flex flex-col">
             
-            <!-- Imagen y Código -->
-            <div class="flex flex-col items-center">
-              <div class="w-full h-40 bg-slate-50 rounded-2xl flex items-center justify-center p-2 mb-3">
-                <img src="${urlImagen}" onerror="this.src='https://via.placeholder.com/150?text=No+Img'" class="max-h-full max-w-full object-contain drop-shadow-md">
-              </div>
-              <h2 class="text-3xl font-black text-slate-900 tracking-tighter">${cod}</h2>
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-bata-red"></i>
+                    <h3 class="font-bold text-sm">Escáner de Código de Barras</h3>
+                </div>
+                <button id="closeScannerBtn" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
 
-            <!-- Detalles -->
-            <div class="mt-2">
-              <div class="flex justify-between items-center bg-slate-50 rounded-xl p-2 mb-2">
-                <div class="text-center flex-1">
-                  <div class="text-[9px] font-bold text-slate-400 uppercase">Stock</div>
-                  <div class="font-black text-lg text-slate-800">${stockBD}</div>
-                </div>
-                <div class="w-px h-6 bg-slate-200"></div>
-                <div class="text-center flex-1">
-                  <div class="text-[9px] font-bold text-slate-400 uppercase">Planilla</div>
-                  <div class="font-black text-lg text-slate-800">S/ ${pPlanilla}</div>
-                </div>
-              </div>
-              ${tallasHTML}
+            <!-- Camera Display Area -->
+            <div class="p-4 bg-black flex-1 flex items-center justify-center min-h-[300px]">
+                <div id="reader" class="w-full"></div>
             </div>
 
-            <!-- Selectivo -->
-            <div class="mt-2 bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center justify-between">
-              <div class="text-xs font-black text-slate-500 uppercase">Conteo</div>
-              ${modoActual === 'selectivo' ? `
-                <div class="flex gap-1">
-                  <input type="text" inputmode="numeric" id="input-sel-${cod}" value="${selectivo}" placeholder="0" class="w-16 px-2 py-1 bg-white border border-amber-400 rounded-lg text-center font-black text-amber-900">
-                  <button onclick="guardarSelectivo('${cod}')" class="bg-amber-500 text-white w-8 h-8 rounded-lg flex items-center justify-center"><i class="fa-solid fa-check text-xs"></i></button>
-                </div>
-              ` : `
-                <div class="text-xl font-black text-bata-red">${valorSelectivoVisual}</div>
-              `}
+            <div class="p-3 bg-slate-100 text-center">
+                <p class="text-xs text-slate-600">Apunta la cámara al código de barras o QR del producto</p>
             </div>
-          </div>
-        `;
-      }).join('');
-      
-      setTimeout(() => irAlIndice(indiceActual, false), 50);
-    }
+        </div>
+    </div>
 
-    function actualizarContadorPosicion() {
-      document.getElementById('txt-posicion').innerText = `${indiceActual + 1} de ${dbInventario.length}`;
-    }
+    <!-- SETTINGS MODAL (GOOGLE APPS SCRIPT CONFIG) -->
+    <div id="configModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-bata-red"></i>
+                    <h3 class="font-bold text-base">Conexión con Google Apps Script</h3>
+                </div>
+                <button id="closeConfigBtn" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
 
-    function toggleModoSelectivo() {
-      modoActual = (modoActual === 'consulta') ? 'selectivo' : 'consulta';
-      const btn = document.getElementById('btn-toggle-selectivo');
-      if (modoActual === 'selectivo') {
-        btn.classList.add('text-amber-400', 'bg-amber-500/20', 'border-amber-500');
-      } else {
-        btn.classList.remove('text-amber-400', 'bg-amber-500/20', 'border-amber-500');
-      }
-      renderizarCarrusel();
-    }
+            <div class="p-5 space-y-4">
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    URL actual conectada de Google Apps Script Web App (`doGet`). Si deseas cambiarla, ingresa la nueva URL aquí.
+                </p>
 
-    function guardarSelectivo(codigo) {
-      const input = document.getElementById(`input-sel-${codigo}`);
-      const valor = input.value.trim();
-      if (!/^\d+$/.test(valor)) { mostrarToast("Solo números", "error"); return; }
-      
-      guardandoBloqueo = true;
-      const btn = input.nextElementSibling;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i>';
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        URL de Google Apps Script Web App:
+                    </label>
+                    <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec"
+                        class="w-full px-3 py-2.5 text-xs border border-slate-300 rounded-lg focus:border-bata-red outline-none font-mono">
+                </div>
 
-      fetch(URL_APPS_SCRIPT, {
-        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'actualizarSelectivo', articulo: codigo, selectivo: valor })
-      }).then(() => {
-        const obj = dbInventario.find(i => String(obtenerPropiedad(i, ['articulo', 'Articulo'])).trim() === String(codigo).trim());
-        if (obj) obj.selectivo = valor;
-        mostrarToast(`Guardado`, "success");
-      }).finally(() => {
-        guardandoBloqueo = false;
-        btn.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
-      });
-    }
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div>
+                        <span class="text-xs font-bold text-slate-700 block">Modo de Operación</span>
+                        <span id="currentModeLabel" class="text-xs text-slate-500">Google Apps Script Conectado</span>
+                    </div>
+                    <button id="toggleDemoBtn" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-md">
+                        Usar Demo Local
+                    </button>
+                </div>
+            </div>
 
-    function mostrarToast(mensaje, tipo) {
-      const toast = document.getElementById('toast');
-      const icon = document.getElementById('toast-icon');
-      document.getElementById('toast-msg').innerText = mensaje;
-      
-      icon.className = tipo === 'error' ? "fa-solid fa-circle-xmark text-red-500" : "fa-solid fa-circle-check text-emerald-500";
-      
-      toast.classList.remove('-translate-y-20', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-      setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('-translate-y-20', 'opacity-0');
-      }, 2500);
-    }
-  </script>
+            <div class="bg-slate-100 p-4 flex justify-end gap-2">
+                <button id="saveConfigBtn" class="px-4 py-2 bg-bata-red hover:bg-bata-darkRed text-white rounded-lg text-xs font-bold shadow">
+                    Guardar Configuración
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-3 text-center text-xs">
+        Bata Shoes Inventory Fast Lookup &bull; Optimizado para Tiendas
+    </footer>
+
+    <!-- APPLICATION LOGIC JS -->
+    <script>
+        // ==========================================
+        // 1. CONFIGURATION & SAMPLE DATABASE
+        // ==========================================
+        const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbx-pUdg1wOtaxE_V27ZO6-zLAh7lkge8GHKfURNDF_HPim4WGSktwfz4jKyHIEGa81P0A/exec";
+
+        const SAMPLE_DATABASE = [
+            {
+                sku: "881-6020",
+                ean: "7701234560201",
+                title: "North Star Sneaker Classic",
+                category: "Zapatillas",
+                gender: "Caballero",
+                color: "Negro / Blanco",
+                price: "S/ 149.90",
+                location: "Pasillo A3 / Estante 2",
+                ageingDays: 15,
+                sizes: { "38": 2, "39": 4, "40": 5, "41": 4, "42": 3, "43": 0 }
+            },
+            {
+                sku: "551-4011",
+                ean: "7701234540112",
+                title: "Bata Comfit Walk Soft",
+                category: "Confort",
+                gender: "Dama",
+                color: "Beige / Beige Calido",
+                price: "S/ 129.90",
+                location: "Pasillo B1 / Estante 1",
+                ageingDays: 45,
+                sizes: { "35": 1, "36": 3, "37": 2, "38": 0, "39": 1 }
+            }
+        ];
+
+        // ==========================================
+        // 2. STATE & INITIALIZATION
+        // ==========================================
+        let currentDatabase = [...SAMPLE_DATABASE];
+        let gasEndpointUrl = localStorage.getItem('bata_gas_url') || DEFAULT_GAS_URL;
+        let html5QrcodeScanner = null;
+        let isRecordingVoice = false;
+        let currentMatchedProduct = null;
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const scanBtn = document.getElementById('scanBtn');
+        const suggestionsContainer = document.getElementById('suggestionsContainer');
+        const suggestionsList = document.getElementById('suggestionsList');
+        const resultsCount = document.getElementById('resultsCount');
+
+        const emptyState = document.getElementById('emptyState');
+        const productCard = document.getElementById('productCard');
+
+        // Card DOM Elements
+        const cardCategory = document.getElementById('cardCategory');
+        const cardCode = document.getElementById('cardCode');
+        const cardTitle = document.getElementById('cardTitle');
+        const cardColor = document.getElementById('cardColor');
+        const cardRef = document.getElementById('cardRef');
+        const cardPrice = document.getElementById('cardPrice');
+        const stockBadge = document.getElementById('stockBadge');
+        const totalPairs = document.getElementById('totalPairs');
+        const ageingTag = document.getElementById('ageingTag');
+        const cardLocation = document.getElementById('cardLocation');
+        const cardGender = document.getElementById('cardGender');
+        const sizeGrid = document.getElementById('sizeGrid');
+
+        // Modals & Buttons
+        const configModal = document.getElementById('configModal');
+        const scannerModal = document.getElementById('scannerModal');
+        const gasUrlInput = document.getElementById('gasUrlInput');
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            if (gasEndpointUrl) {
+                gasUrlInput.value = gasEndpointUrl;
+                updateStatusBadge(true, "Google Script API Conectado");
+                fetchLiveGasData();
+            } else {
+                updateStatusBadge(false, "Modo Demo Local");
+            }
+
+            searchInput.focus();
+        });
+
+        // ==========================================
+        // 3. SEARCH ENGINE LOGIC ("LA BALA")
+        // ==========================================
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toLowerCase();
+
+            if (query.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+                hideSuggestions();
+                showEmptyState();
+                return;
+            }
+
+            performSearch(query);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.classList.add('hidden');
+            hideSuggestions();
+            showEmptyState();
+            searchInput.focus();
+        });
+
+        function performSearch(query) {
+            if (!query) return;
+
+            const matches = currentDatabase.filter(item => {
+                const skuMatch = item.sku && item.sku.toLowerCase().includes(query);
+                const eanMatch = item.ean && item.ean.toLowerCase().includes(query);
+                const titleMatch = item.title && item.title.toLowerCase().includes(query);
+                const colorMatch = item.color && item.color.toLowerCase().includes(query);
+                return skuMatch || eanMatch || titleMatch || colorMatch;
+            });
+
+            if (matches.length === 1) {
+                renderProductCard(matches[0]);
+                hideSuggestions();
+            } else if (matches.length > 1) {
+                renderSuggestions(matches);
+                renderProductCard(matches[0]);
+            } else {
+                hideSuggestions();
+                showNotFoundState(query);
+            }
+        }
+
+        function renderSuggestions(matches) {
+            suggestionsList.innerHTML = '';
+            resultsCount.textContent = matches.length;
+
+            matches.forEach(item => {
+                const totalStock = item.sizes ? Object.values(item.sizes).reduce((a, b) => a + Number(b), 0) : 0;
+                const li = document.createElement('li');
+                li.className = "p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors";
+                li.innerHTML = `
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">${item.title}</div>
+                        <div class="text-xs text-slate-500">SKU: ${item.sku} | Ref: ${item.ean} | Color: ${item.color}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold px-2 py-0.5 rounded ${totalStock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                            ${totalStock > 0 ? `${totalStock} pares` : 'Agotado'}
+                        </span>
+                        <div class="text-xs font-bold text-slate-700 mt-0.5">${item.price}</div>
+                    </div>
+                `;
+                li.addEventListener('click', () => {
+                    renderProductCard(item);
+                    hideSuggestions();
+                });
+                suggestionsList.appendChild(li);
+            });
+
+            suggestionsContainer.classList.remove('hidden');
+        }
+
+        function hideSuggestions() {
+            suggestionsContainer.classList.add('hidden');
+        }
+
+        // ==========================================
+        // 4. DISPLAY PRODUCT DETAILS CARD
+        // ==========================================
+        function renderProductCard(product) {
+            currentMatchedProduct = product;
+            emptyState.classList.add('hidden');
+            productCard.classList.remove('hidden');
+
+            cardCategory.textContent = product.category || 'CALZADO';
+            cardCode.textContent = `SKU: ${product.sku}`;
+            cardTitle.textContent = product.title;
+            cardColor.textContent = product.color;
+            cardRef.textContent = product.ean;
+            cardPrice.textContent = product.price;
+            cardLocation.textContent = product.location || 'Almacén Central';
+            cardGender.textContent = product.gender || 'General';
+
+            const totalStock = product.sizes ? Object.values(product.sizes).reduce((a, b) => a + Number(b), 0) : 0;
+            totalPairs.textContent = totalStock;
+
+            if (totalStock === 0) {
+                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-red-500 text-white shadow";
+                stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> AGOTADO`;
+            } else if (totalStock < 5) {
+                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-amber-500 text-slate-950 shadow";
+                stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> STOCK BAJO`;
+            } else {
+                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-emerald-500 text-slate-950 shadow";
+                stockBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> EN STOCK`;
+            }
+
+            const days = product.ageingDays || 0;
+            if (days <= 30) {
+                ageingTag.className = "mt-1 inline-block px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800";
+                ageingTag.textContent = `${days} días (Nuevo)`;
+            } else if (days <= 90) {
+                ageingTag.className = "mt-1 inline-block px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800";
+                ageingTag.textContent = `${days} días (Regular)`;
+            } else {
+                ageingTag.className = "mt-1 inline-block px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-900";
+                ageingTag.textContent = `${days} días (>90 días)`;
+            }
+
+            sizeGrid.innerHTML = '';
+            if (product.sizes) {
+                Object.entries(product.sizes).forEach(([size, count]) => {
+                    const sizeBox = document.createElement('div');
+                    const numCount = Number(count);
+                    let bgClass = "bg-white text-slate-800 border-slate-200";
+                    let badgeClass = "bg-emerald-100 text-emerald-800";
+
+                    if (numCount === 0) {
+                        bgClass = "bg-slate-100 text-slate-400 border-slate-200 opacity-60";
+                        badgeClass = "bg-slate-200 text-slate-500";
+                    } else if (numCount < 2) {
+                        badgeClass = "bg-amber-100 text-amber-800";
+                    }
+
+                    sizeBox.className = `p-2.5 rounded-xl border text-center font-bold flex flex-col justify-between transition-all ${bgClass}`;
+                    sizeBox.innerHTML = `
+                        <span class="text-xs text-slate-400 font-semibold block">Talla</span>
+                        <span class="text-lg font-black my-0.5">${size}</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${badgeClass}">
+                            ${numCount} ${numCount === 1 ? 'par' : 'pares'}
+                        </span>
+                    `;
+                    sizeGrid.appendChild(sizeBox);
+                });
+            }
+        }
+
+        function showEmptyState() {
+            emptyState.classList.remove('hidden');
+            productCard.classList.add('hidden');
+        }
+
+        function showNotFoundState(query) {
+            emptyState.classList.remove('hidden');
+            productCard.classList.add('hidden');
+
+            emptyState.innerHTML = `
+                <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fa-solid fa-magnifying-glass-minus text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Producto No Encontrado</h3>
+                <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
+                    No se encontró ningún artículo coincidente con "<span class="font-bold text-slate-700">${query}</span>".
+                </p>
+            `;
+        }
+
+        // ==========================================
+        // 5. VOICE SEARCH (WEB SPEECH API)
+        // ==========================================
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            voiceBtn.addEventListener('click', () => {
+                if (isRecordingVoice) {
+                    recognition.stop();
+                } else {
+                    try {
+                        recognition.start();
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+            });
+
+            recognition.onstart = () => {
+                isRecordingVoice = true;
+                voiceBtn.classList.add('pulse-recording');
+                voiceStatus.classList.remove('hidden');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.replace(/\./g, '');
+                searchInput.value = transcript;
+                clearBtn.classList.remove('hidden');
+                performSearch(transcript.trim().toLowerCase());
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Voice Error:", event.error);
+                stopVoiceState();
+            };
+
+            recognition.onend = () => {
+                stopVoiceState();
+            };
+
+            function stopVoiceState() {
+                isRecordingVoice = false;
+                voiceBtn.classList.remove('pulse-recording');
+                voiceStatus.classList.add('hidden');
+            }
+        } else {
+            voiceBtn.style.display = 'none';
+        }
+
+        document.getElementById('speakStockBtn').addEventListener('click', () => {
+            if (!currentMatchedProduct) return;
+
+            const totalStock = currentMatchedProduct.sizes ? Object.values(currentMatchedProduct.sizes).reduce((a, b) => a + Number(b), 0) : 0;
+            const textToSpeak = `Artículo ${currentMatchedProduct.title}, color ${currentMatchedProduct.color}. Tiene un total de ${totalStock} pares en stock.`;
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                utterance.lang = 'es-ES';
+                window.speechSynthesis.speak(utterance);
+            }
+        });
+
+        document.getElementById('copyCodeBtn').addEventListener('click', () => {
+            if (!currentMatchedProduct) return;
+            const textToCopy = currentMatchedProduct.sku;
+            
+            const tempInput = document.createElement('input');
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const btn = document.getElementById('copyCodeBtn');
+            btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> ¡Copiado!`;
+            setTimeout(() => {
+                btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copiar Código`;
+            }, 2000);
+        });
+
+        document.getElementById('newSearchBtn').addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.classList.add('hidden');
+            hideSuggestions();
+            showEmptyState();
+            searchInput.focus();
+        });
+
+        // ==========================================
+        // 6. BARCODE & QR CAMERA SCANNER
+        // ==========================================
+        scanBtn.addEventListener('click', () => {
+            scannerModal.classList.remove('hidden');
+            startCameraScanner();
+        });
+
+        document.getElementById('closeScannerBtn').addEventListener('click', stopCameraScanner);
+
+        function startCameraScanner() {
+            if (html5QrcodeScanner) return;
+
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            const config = { fps: 15, qrbox: { width: 250, height: 180 } };
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" }, 
+                config, 
+                onScanSuccess
+            ).catch(err => {
+                console.error("Camera error:", err);
+                alert("No se pudo acceder a la cámara o requiere permisos.");
+                stopCameraScanner();
+            });
+        }
+
+        function onScanSuccess(decodedText) {
+            playBeepSound();
+            stopCameraScanner();
+            searchInput.value = decodedText;
+            clearBtn.classList.remove('hidden');
+            performSearch(decodedText.trim().toLowerCase());
+        }
+
+        function stopCameraScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner.clear();
+                    html5QrcodeScanner = null;
+                    scannerModal.classList.add('hidden');
+                }).catch(err => {
+                    console.error("Failed to stop scanner", err);
+                    scannerModal.classList.add('hidden');
+                    html5QrcodeScanner = null;
+                });
+            } else {
+                scannerModal.classList.add('hidden');
+            }
+        }
+
+        function playBeepSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = "sine";
+                osc.frequency.value = 880;
+                gain.gain.value = 0.1;
+                osc.start();
+                setTimeout(() => { osc.stop(); ctx.close(); }, 120);
+            } catch(e) {
+                console.log("Audio not supported");
+            }
+        }
+
+        // ==========================================
+        // 7. GOOGLE APPS SCRIPT API INTEGRATION
+        // ==========================================
+        document.getElementById('openConfigBtn').addEventListener('click', () => {
+            configModal.classList.remove('hidden');
+        });
+
+        document.getElementById('closeConfigBtn').addEventListener('click', () => {
+            configModal.classList.add('hidden');
+        });
+
+        document.getElementById('saveConfigBtn').addEventListener('click', () => {
+            const url = gasUrlInput.value.trim();
+            if (url) {
+                localStorage.setItem('bata_gas_url', url);
+                gasEndpointUrl = url;
+                updateStatusBadge(true, "Google Script API Conectado");
+                fetchLiveGasData();
+            } else {
+                localStorage.removeItem('bata_gas_url');
+                gasEndpointUrl = '';
+                currentDatabase = [...SAMPLE_DATABASE];
+                updateStatusBadge(false, "Modo Demo Local");
+            }
+            configModal.classList.add('hidden');
+        });
+
+        document.getElementById('toggleDemoBtn').addEventListener('click', () => {
+            gasUrlInput.value = '';
+            localStorage.removeItem('bata_gas_url');
+            gasEndpointUrl = '';
+            currentDatabase = [...SAMPLE_DATABASE];
+            updateStatusBadge(false, "Modo Demo Local");
+            configModal.classList.add('hidden');
+        });
+
+        function updateStatusBadge(isOnline, text) {
+            statusText.textContent = text;
+            if (isOnline) {
+                statusBadge.className = "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            } else {
+                statusBadge.className = "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30";
+            }
+        }
+
+        async function fetchLiveGasData() {
+            if (!gasEndpointUrl) return;
+
+            try {
+                const response = await fetch(gasEndpointUrl);
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    currentDatabase = data;
+                    console.log("Google Apps Script Data Synced:", currentDatabase.length, "items");
+                }
+            } catch(e) {
+                console.warn("Could not load Google Apps Script Endpoint. Falling back to local dataset.", e);
+            }
+        }
+    </script>
 </body>
 </html>
