@@ -171,15 +171,37 @@
             <!-- PRODUCT DETAIL CARD -->
             <div id="productCard" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
                 
-                <!-- Card Header -->
+                <!-- Card Header with Product Image Integration -->
                 <div class="bg-bata-dark text-white p-5 sm:p-6 relative overflow-hidden">
                     <div class="absolute -right-8 -bottom-8 opacity-10 text-white pointer-events-none">
                         <i class="fa-solid fa-boxes-stacked text-9xl"></i>
                     </div>
 
-                    <div class="flex flex-wrap items-start justify-between gap-3 relative z-10">
-                        <div class="space-y-1">
-                            <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5 relative z-10">
+                        
+                        <!-- Dynamic Product Image Box -->
+                        <div class="relative w-36 h-36 sm:w-40 sm:h-40 bg-white rounded-xl p-2 shadow-lg border-2 border-slate-700/50 flex-shrink-0 group overflow-hidden flex items-center justify-center">
+                            <img id="cardImage" 
+                                 src="" 
+                                 alt="Foto del Producto" 
+                                 class="w-full h-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
+                                 onerror="handleImageError(this)">
+                            
+                            <!-- Placeholder icon fallback container -->
+                            <div id="imageFallback" class="hidden absolute inset-0 bg-slate-800 text-slate-500 flex flex-col items-center justify-center p-2 text-center">
+                                <i class="fa-solid fa-shoe-prints text-3xl mb-1 text-slate-600"></i>
+                                <span class="text-[10px] uppercase font-bold text-slate-400">Sin Imagen</span>
+                            </div>
+
+                            <!-- Image Zoom / Expand Badge -->
+                            <button id="zoomImageBtn" class="absolute bottom-1.5 right-1.5 bg-slate-900/80 hover:bg-bata-red text-white p-1.5 rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow" title="Ver Ampliado">
+                                <i class="fa-solid fa-magnifying-glass-plus"></i>
+                            </button>
+                        </div>
+
+                        <!-- Product Info Breakdown -->
+                        <div class="flex-1 space-y-1 text-center sm:text-left w-full">
+                            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                                 <span id="cardCategory" class="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase bg-bata-red text-white tracking-wider">
                                     CALZADO
                                 </span>
@@ -191,21 +213,22 @@
                                 </span>
                             </div>
                             <h2 id="cardTitle" class="text-2xl sm:text-3xl font-black text-white leading-tight mt-1">-</h2>
-                            <p id="cardLocation" class="text-xs text-slate-400 flex items-center gap-1">
+                            <p id="cardLocation" class="text-xs text-slate-400 flex items-center justify-center sm:justify-start gap-1">
                                 <i class="fa-solid fa-location-dot text-bata-red"></i> <span id="cardLocationText">Ubicación no especificada</span>
                             </p>
+
+                            <!-- Price & Stock Badge (Positioned inside flex item) -->
+                            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 border-t border-slate-800/80 mt-3">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Precio Venta</span>
+                                    <span id="cardPrice" class="text-2xl font-black text-white tracking-tight">-</span>
+                                </div>
+                                <div id="stockBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-emerald-500 text-slate-950 shadow">
+                                    <i class="fa-solid fa-circle-check"></i> EN STOCK
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Price & Stock Badge -->
-                        <div class="text-right flex flex-col items-end">
-                            <div id="stockBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-emerald-500 text-slate-950 shadow">
-                                <i class="fa-solid fa-circle-check"></i> EN STOCK
-                            </div>
-                            <div class="mt-3">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Precio Venta</span>
-                                <span id="cardPrice" class="text-2xl sm:text-3xl font-black text-white tracking-tight">-</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -286,16 +309,16 @@
                 <button id="closeScannerBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
+    <!-- IMAGE PREVIEW MODAL -->
+    <div id="imageModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="relative max-w-2xl w-full bg-white rounded-2xl p-3 shadow-2xl flex flex-col items-center">
+            <button id="closeImageModalBtn" class="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-bata-red text-white hover:bg-bata-darkRed flex items-center justify-center transition-colors shadow-lg z-10">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="w-full h-80 sm:h-96 flex items-center justify-center bg-slate-100 rounded-xl overflow-hidden p-4">
+                <img id="modalPreviewImage" src="" alt="Vista previa del producto" class="max-w-full max-h-full object-contain">
             </div>
-
-            <!-- Video Camera Display Container -->
-            <div class="overflow-hidden rounded-xl bg-slate-900 border border-slate-800 relative min-h-[260px] flex items-center justify-center">
-                <div id="reader" class="w-full"></div>
-            </div>
-
-            <p class="text-xs text-center text-slate-500 mt-3">
-                Apunta la cámara de tu dispositivo hacia el código de barras o QR del calzado.
-            </p>
+            <p id="modalImageCaption" class="text-xs font-bold text-slate-600 mt-2 text-center">-</p>
         </div>
     </div>
 
@@ -372,6 +395,15 @@
         const cardEan = document.getElementById('cardEan');
         const sizeGrid = document.getElementById('sizeGrid');
 
+        // Image Elements
+        const cardImage = document.getElementById('cardImage');
+        const imageFallback = document.getElementById('imageFallback');
+        const zoomImageBtn = document.getElementById('zoomImageBtn');
+        const imageModal = document.getElementById('imageModal');
+        const modalPreviewImage = document.getElementById('modalPreviewImage');
+        const modalImageCaption = document.getElementById('modalImageCaption');
+        const closeImageModalBtn = document.getElementById('closeImageModalBtn');
+
         const statusBadge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
         const statusDot = document.getElementById('statusDot');
@@ -383,153 +415,18 @@
         const copyCodeBtn = document.getElementById('copyCodeBtn');
         const newSearchBtn = document.getElementById('newSearchBtn');
 
-        // Initialize App on DOM Ready
-        window.addEventListener('DOMContentLoaded', () => {
-            fetchLiveInventoryData();
-            setupVoiceRecognition();
-            searchInput.focus();
-        });
-
-        // 1. FETCH INVENTORY DATA FROM APPS SCRIPT API
-        async function fetchLiveInventoryData() {
-            updateStatusBadge('loading', "Conectando...");
-            try {
-                const response = await fetch(URL_APPS_SCRIPT, { method: 'GET' });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP Error status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (Array.isArray(data) && data.length > 0) {
-                    currentDatabase = data;
-                    totalItemsCount.textContent = `${data.length} artículos cargados`;
-                    updateStatusBadge('online', `Conectado (${data.length})`);
-                    showToast(`Inventario cargado exitosamente (${data.length} productos)`, 'success');
-                } else if (Array.isArray(data) && data.length === 0) {
-                    updateStatusBadge('online', "Base de datos vacía");
-                    totalItemsCount.textContent = "0 artículos";
-                } else if (data.error) {
-                    throw new Error(data.error);
-                } else {
-                    throw new Error("Formato de respuesta JSON no válido");
-                }
-            } catch(e) {
-                console.error("Error al conectar con la API:", e);
-                updateStatusBadge('offline', "Error de conexión");
-                showToast("Error de conexión con la base de datos de Bata", "error");
-            }
+        // Image Fallback Handling Function
+        function handleImageError(imgElement) {
+            imgElement.classList.add('hidden');
+            if (imageFallback) imageFallback.classList.remove('hidden');
         }
 
-        // Update top bar connection status styling
-        function updateStatusBadge(state, text) {
-            statusText.textContent = text;
-            if (state === 'online') {
-                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
-            } else if (state === 'loading') {
-                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30";
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
-            } else {
-                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30";
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-400";
-            }
-        }
-
-        refreshDataBtn.addEventListener('click', () => {
-            fetchLiveInventoryData();
-        });
-
-        // 2. SEARCH & INSTANT AUTOCOMPLETE FILTER ("LA BALA")
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.trim().toLowerCase();
-            if (query.length > 0) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-                hideSuggestions();
-                showEmptyState();
-                return;
-            }
-            performSearch(query);
-        });
-
-        clearBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            clearBtn.classList.add('hidden');
-            hideSuggestions();
-            showEmptyState();
-            searchInput.focus();
-        });
-
-        function performSearch(query) {
-            if (!query || currentDatabase.length === 0) return;
-
-            // Search matches in SKU, EAN, Title, Category, Color
-            const matches = currentDatabase.filter(item => {
-                const skuMatch = item.sku && String(item.sku).toLowerCase().includes(query);
-                const eanMatch = item.ean && String(item.ean).toLowerCase().includes(query);
-                const titleMatch = item.title && String(item.title).toLowerCase().includes(query);
-                const catMatch = item.category && String(item.category).toLowerCase().includes(query);
-                const colorMatch = item.color && String(item.color).toLowerCase().includes(query);
-                return skuMatch || eanMatch || titleMatch || catMatch || colorMatch;
-            });
-
-            if (matches.length === 1) {
-                renderProductCard(matches[0]);
-                hideSuggestions();
-            } else if (matches.length > 1) {
-                renderSuggestions(matches);
-                renderProductCard(matches[0]); // Preview first match
-            } else {
-                hideSuggestions();
-                showNotFoundState(query);
-            }
-        }
-
-        function renderSuggestions(matches) {
-            suggestionsList.innerHTML = '';
-            resultsCount.textContent = matches.length;
-
-            matches.slice(0, 15).forEach(item => {
-                const li = document.createElement('li');
-                li.className = "p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors";
-                
-                const isAvailable = item.totalStock > 0;
-                
-                li.innerHTML = `
-                    <div class="flex flex-col">
-                        <div class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <span>${item.title || 'Artículo ' + item.sku}</span>
-                            <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border">SKU: ${item.sku}</span>
-                        </div>
-                        <div class="text-xs text-slate-400 mt-0.5">
-                            ${item.category || 'Calzado'} • ${item.gender || 'Unisex'} • ${item.color || 'Estándar'}
-                        </div>
-                    </div>
-                    <div class="text-right flex flex-col items-end">
-                        <span class="text-xs font-extrabold px-2 py-0.5 rounded-full ${isAvailable ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
-                            ${isAvailable ? `${item.totalStock} pares` : 'Agotado'}
-                        </span>
-                        <div class="text-xs font-black text-slate-800 mt-1">${item.price || 'S/ 0.00'}</div>
-                    </div>
-                `;
-
-                li.addEventListener('click', () => {
-                    renderProductCard(item);
-                    searchInput.value = item.sku;
-                    hideSuggestions();
-                });
-
-                suggestionsList.appendChild(li);
-            });
-
-            suggestionsContainer.classList.remove('hidden');
-        }
-
-        function hideSuggestions() {
-            suggestionsContainer.classList.add('hidden');
+        // Helper to Construct Bata Intranet Image URL
+        function getProductImageUrl(sku) {
+            if (!sku) return '';
+            // Clean SKU string of extra spaces or chars
+            const cleanSku = String(sku).trim();
+            return `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cleanSku}_1.JPG`;
         }
 
         // 3. RENDER PRODUCT DETAIL CARD & SIZES GRID
@@ -537,6 +434,12 @@
             currentMatchedProduct = product;
             emptyState.classList.add('hidden');
             productCard.classList.remove('hidden');
+
+            // Reset & Load Image
+            const imageUrl = product.imageUrl || getProductImageUrl(product.sku);
+            cardImage.classList.remove('hidden');
+            imageFallback.classList.add('hidden');
+            cardImage.src = imageUrl;
 
             cardCategory.textContent = product.category || 'CALZADO';
             cardCode.textContent = `SKU: ${product.sku}`;
@@ -603,189 +506,24 @@
             }
         }
 
-        function showEmptyState() {
-            emptyState.classList.remove('hidden');
-            productCard.classList.add('hidden');
-            currentMatchedProduct = null;
-        }
-
-        function showNotFoundState(query) {
-            emptyState.classList.remove('hidden');
-            productCard.classList.add('hidden');
-            currentMatchedProduct = null;
-            
-            emptyState.innerHTML = `
-                <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i class="fa-solid fa-magnifying-glass-minus text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800">Producto No Encontrado</h3>
-                <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
-                    No encontramos ningún calzado coincidente con "<span class="font-bold text-slate-700">${query}</span>" en el inventario activo.
-                </p>
-            `;
-        }
-
-        // 4. BARCODE & QR CAMERA SCANNER INTEGRATION
-        scanBtn.addEventListener('click', () => {
-            openScanner();
-        });
-
-        closeScannerBtn.addEventListener('click', () => {
-            closeScanner();
-        });
-
-        function openScanner() {
-            scannerModal.classList.remove('hidden');
-            
-            if (!html5QrcodeScanner) {
-                html5QrcodeScanner = new Html5Qrcode("reader");
-            }
-
-            const config = { 
-                fps: 10, 
-                qrbox: { width: 250, height: 180 },
-                aspectRatio: 1.0
-            };
-
-            html5QrcodeScanner.start(
-                { facingMode: "environment" }, 
-                config, 
-                onScanSuccess, 
-                onScanFailure
-            ).catch(err => {
-                console.error("Error al iniciar cámara:", err);
-                showToast("No se pudo acceder a la cámara", "error");
-                closeScanner();
-            });
-        }
-
-        function onScanSuccess(decodedText) {
-            playBeepSound(); // Trigger Audio Beep
-            closeScanner();
-            
-            const scannedCode = decodedText.trim();
-            searchInput.value = scannedCode;
-            clearBtn.classList.remove('hidden');
-            
-            showToast(`Código escaneado: ${scannedCode}`, 'success');
-            performSearch(scannedCode.toLowerCase());
-        }
-
-        function onScanFailure(error) {
-            // Silence normal frame decoding failures
-        }
-
-        function closeScanner() {
-            if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
-                html5QrcodeScanner.stop().then(() => {
-                    scannerModal.classList.add('hidden');
-                }).catch(err => {
-                    console.error("Error deteniendo escáner:", err);
-                    scannerModal.classList.add('hidden');
-                });
-            } else {
-                scannerModal.classList.add('hidden');
-            }
-        }
-
-        // 5. WEB SPEECH API (VOICE SEARCH & SPEECH SYNTHESIS)
-        function setupVoiceRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                speechRecognitionObj = new SpeechRecognition();
-                speechRecognitionObj.lang = 'es-PE';
-                speechRecognitionObj.continuous = false;
-                speechRecognitionObj.interimResults = false;
-
-                speechRecognitionObj.onstart = () => {
-                    isRecordingVoice = true;
-                    voiceBtn.classList.add('pulse-recording');
-                    voiceStatus.classList.remove('hidden');
-                    voiceText.textContent = "Escuchando... Habla el código o producto";
-                };
-
-                speechRecognitionObj.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript.trim();
-                    // Strip trailing punctuation from speech
-                    const cleanTranscript = transcript.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-                    
-                    searchInput.value = cleanTranscript;
-                    clearBtn.classList.remove('hidden');
-                    stopVoiceRecording();
-                    
-                    showToast(`Voz reconocida: "${cleanTranscript}"`, 'info');
-                    performSearch(cleanTranscript.toLowerCase());
-                };
-
-                speechRecognitionObj.onerror = (event) => {
-                    console.error("Speech Recognition Error:", event.error);
-                    stopVoiceRecording();
-                    showToast("No se logró entender el audio", "error");
-                };
-
-                speechRecognitionObj.onend = () => {
-                    stopVoiceRecording();
-                };
-
-                voiceBtn.addEventListener('click', () => {
-                    if (isRecordingVoice) {
-                        speechRecognitionObj.stop();
-                    } else {
-                        try {
-                            speechRecognitionObj.start();
-                        } catch(e) {
-                            console.error("Start speech error:", e);
-                        }
-                    }
-                });
-            } else {
-                voiceBtn.title = "Búsqueda por voz no soportada en este navegador";
-                voiceBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        function stopVoiceRecording() {
-            isRecordingVoice = false;
-            voiceBtn.classList.remove('pulse-recording');
-            voiceStatus.classList.add('hidden');
-        }
-
-        // READ STOCK ALOUD (TEXT-TO-SPEECH)
-        speakStockBtn.addEventListener('click', () => {
+        // Image Zoom Modal Event Listeners
+        zoomImageBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
+            const src = cardImage.src;
+            if (src && !cardImage.classList.contains('hidden')) {
+                modalPreviewImage.src = src;
+                modalImageCaption.textContent = `${currentMatchedProduct.title || 'SKU: ' + currentMatchedProduct.sku} (Foto Intranet)`;
+                imageModal.classList.remove('hidden');
+            }
+        });
 
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Stop ongoing speech
+        closeImageModalBtn.addEventListener('click', () => {
+            imageModal.classList.add('hidden');
+        });
 
-                let textToSpeak = `Artículo ${currentMatchedProduct.sku}. `;
-                textToSpeak += `Precio ${currentMatchedProduct.price}. `;
-                
-                const total = Number(currentMatchedProduct.totalStock) || 0;
-                textToSpeak += `Stock total ${total} pares. `;
-
-                if (currentMatchedProduct.sizes && Object.keys(currentMatchedProduct.sizes).length > 0) {
-                    textToSpeak += "Tallas disponibles: ";
-                    const availableSizes = [];
-                    Object.entries(currentMatchedProduct.sizes).forEach(([sz, qty]) => {
-                        if (Number(qty) > 0) {
-                            availableSizes.push(`Talla ${sz}, ${qty} ${qty === 1 ? 'par' : 'pares'}`);
-                        }
-                    });
-                    if (availableSizes.length > 0) {
-                        textToSpeak += availableSizes.join(". ");
-                    } else {
-                        textToSpeak += "Sin tallas disponibles en este momento.";
-                    }
-                }
-
-                const utterance = new SpeechSynthesisUtterance(textToSpeak);
-                utterance.lang = 'es-PE';
-                utterance.rate = 1.0;
-                window.speechSynthesis.speak(utterance);
-
-                showToast("Leyendo información de stock en voz alta...", "info");
-            } else {
-                showToast("Tu navegador no soporta síntesis de voz", "error");
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                imageModal.classList.add('hidden');
             }
         });
 
