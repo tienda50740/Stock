@@ -44,7 +44,6 @@
             background-color: #F1F5F9; 
         }
 
-        /* Pulse Animations for recording state */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(227, 30, 36, 0.7); }
             70% { box-shadow: 0 0 0 12px rgba(227, 30, 36, 0); }
@@ -56,13 +55,11 @@
             color: white !important;
         }
 
-        /* Custom Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #F1F5F9; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
-        /* Scanner Modal Video Overlay Adjustments */
         #reader video { 
             object-fit: cover !important; 
             border-radius: 0.75rem; 
@@ -75,7 +72,6 @@
     <!-- HEADER / TOPBAR -->
     <header class="bg-bata-dark text-white sticky top-0 z-30 shadow-lg border-b border-slate-800">
         <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <!-- Brand Logo & Title -->
             <div class="flex items-center gap-3">
                 <div class="bg-bata-red text-white font-black px-3.5 py-1 text-2xl tracking-tighter rounded shadow-md uppercase italic">
                     Bata
@@ -86,7 +82,6 @@
                 </div>
             </div>
 
-            <!-- Connection Status Badge -->
             <div class="flex items-center gap-2">
                 <div id="statusBadge" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all">
                     <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
@@ -110,19 +105,16 @@
             </label>
 
             <div class="relative flex items-center">
-                <!-- Search Icon -->
                 <div class="absolute left-4 text-slate-400 text-lg pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </div>
 
-                <!-- Input Box -->
                 <input type="text" id="searchInput" 
                     placeholder="Escribe SKU, código, nombre o categoría..." 
                     autocomplete="off" 
                     autofocus
                     class="w-full pl-11 pr-32 py-3.5 sm:py-4 text-base sm:text-lg font-semibold bg-slate-50 border-2 border-slate-200 focus:border-bata-red focus:bg-white rounded-xl outline-none transition-all duration-200 text-slate-800 placeholder-slate-400 shadow-inner">
 
-                <!-- Action Controls inside Input -->
                 <div class="absolute right-2 flex items-center gap-1">
                     <button id="clearBtn" class="hidden p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors" title="Limpiar texto">
                         <i class="fa-solid fa-xmark text-lg"></i>
@@ -138,7 +130,6 @@
                 </div>
             </div>
 
-            <!-- Voice Status Alert -->
             <div id="voiceStatus" class="hidden mt-2 text-xs font-semibold text-bata-red flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-bata-red animate-ping"></span>
                 <span id="voiceText">Escuchando... Di el código o producto</span>
@@ -157,7 +148,6 @@
         <!-- MAIN PRODUCT DISPLAY / EMPTY STATE CARD -->
         <section id="productCardContainer" class="flex-1">
             
-            <!-- EMPTY STATE -->
             <div id="emptyState" class="bg-white rounded-2xl p-8 sm:p-12 text-center border-2 border-dashed border-slate-200 shadow-sm my-auto">
                 <div class="w-16 h-16 bg-red-50 text-bata-red rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                     <i class="fa-solid fa-shoe-prints text-2xl"></i>
@@ -168,10 +158,8 @@
                 </p>
             </div>
 
-            <!-- PRODUCT DETAIL CARD -->
             <div id="productCard" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
                 
-                <!-- Card Header with Product Image Integration -->
                 <div class="bg-bata-dark text-white p-5 sm:p-6 relative overflow-hidden">
                     <div class="absolute -right-8 -bottom-8 opacity-10 text-white pointer-events-none">
                         <i class="fa-solid fa-boxes-stacked text-9xl"></i>
@@ -179,7 +167,6 @@
 
                     <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5 relative z-10">
                         
-                        <!-- Dynamic Product Image Box -->
                         <div class="relative w-36 h-36 sm:w-40 sm:h-40 bg-white rounded-xl p-2 shadow-lg border-2 border-slate-700/50 flex-shrink-0 group overflow-hidden flex items-center justify-center">
                             <img id="cardImage" 
                                  src="" 
@@ -187,19 +174,16 @@
                                  class="w-full h-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
                                  onerror="handleImageError(this)">
                             
-                            <!-- Placeholder icon fallback container -->
                             <div id="imageFallback" class="hidden absolute inset-0 bg-slate-800 text-slate-500 flex flex-col items-center justify-center p-2 text-center">
                                 <i class="fa-solid fa-shoe-prints text-3xl mb-1 text-slate-600"></i>
                                 <span class="text-[10px] uppercase font-bold text-slate-400">Sin Imagen</span>
                             </div>
 
-                            <!-- Image Zoom / Expand Badge -->
                             <button id="zoomImageBtn" class="absolute bottom-1.5 right-1.5 bg-slate-900/80 hover:bg-bata-red text-white p-1.5 rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow" title="Ver Ampliado">
                                 <i class="fa-solid fa-magnifying-glass-plus"></i>
                             </button>
                         </div>
 
-                        <!-- Product Info Breakdown -->
                         <div class="flex-1 space-y-1 text-center sm:text-left w-full">
                             <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                                 <span id="cardCategory" class="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase bg-bata-red text-white tracking-wider">
@@ -217,7 +201,6 @@
                                 <i class="fa-solid fa-location-dot text-bata-red"></i> <span id="cardLocationText">Ubicación no especificada</span>
                             </p>
 
-                            <!-- Price & Stock Badge (Positioned inside flex item) -->
                             <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 border-t border-slate-800/80 mt-3">
                                 <div>
                                     <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Precio Venta</span>
@@ -232,7 +215,6 @@
                     </div>
                 </div>
 
-                <!-- Fast Info Grid -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 border-b border-slate-200">
                     <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
                         <span class="text-[10px] font-bold text-slate-400 block uppercase">Total Pares</span>
@@ -260,7 +242,6 @@
                     </div>
                 </div>
 
-                <!-- Sizes Grid Breakdown Section -->
                 <div class="p-4 sm:p-6">
                     <div class="flex items-center justify-between mb-3">
                         <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -270,11 +251,9 @@
                         <span class="text-xs font-semibold text-slate-400">Verifique pares físicos</span>
                     </div>
 
-                    <!-- Size Boxes Grid -->
                     <div id="sizeGrid" class="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2.5"></div>
                 </div>
 
-                <!-- Card Footer Action Controls -->
                 <div class="bg-slate-50 px-4 py-3 sm:px-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
                     <div class="flex items-center gap-2">
                         <button id="speakStockBtn" class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95">
@@ -300,7 +279,7 @@
 
     <!-- BARCODE SCANNER MODAL -->
     <div id="scannerModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in duration-200">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 relative">
             <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-camera text-bata-red text-lg"></i>
@@ -309,6 +288,14 @@
                 <button id="closeScannerBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
+            </div>
+            <div class="p-2 bg-black rounded-xl overflow-hidden min-h-[280px] flex items-center justify-center">
+                <div id="reader" class="w-full"></div>
+            </div>
+            <p class="text-xs text-center text-slate-500 mt-3">Apunta la cámara al código de barras o QR del producto</p>
+        </div>
+    </div>
+
     <!-- IMAGE PREVIEW MODAL -->
     <div id="imageModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
         <div class="relative max-w-2xl w-full bg-white rounded-2xl p-3 shadow-2xl flex flex-col items-center">
@@ -328,9 +315,7 @@
         <span id="toastMessage" class="text-xs font-semibold">Notificación</span>
     </div>
 
-    <!-- AUDIO BEEP FOR SUCCESSFUL BARCODE SCAN -->
     <script>
-        // Synthesize audio beep using Web Audio API to prevent external audio dependency
         function playBeepSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -338,8 +323,8 @@
                 const gainNode = audioCtx.createGain();
 
                 oscillator.type = 'sine';
-                oscillator.frequency.value = 1000; // 1kHz beep
-                gainNode.gain.value = 0.15; // Volume
+                oscillator.frequency.value = 1000;
+                gainNode.gain.value = 0.15;
 
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
@@ -357,17 +342,14 @@
 
     <!-- CORE LOGIC & API INTEGRATION SCRIPT -->
     <script>
-        // Primary API Endpoint Provided
+        // Tu URL exacta de Google Apps Script Web App
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwHM-MDygSLP26vJnzsfbC7VxRCtFX6lwH4U8OrEfGlYIdi-BlnteO0z_MkawvfvTi3Vw/exec";
 
-        // Application State
         let currentDatabase = [];
         let html5QrcodeScanner = null;
         let isRecordingVoice = false;
         let currentMatchedProduct = null;
-        let speechRecognitionObj = null;
 
-        // DOM Elements References
         const searchInput = document.getElementById('searchInput');
         const clearBtn = document.getElementById('clearBtn');
         const voiceBtn = document.getElementById('voiceBtn');
@@ -395,7 +377,6 @@
         const cardEan = document.getElementById('cardEan');
         const sizeGrid = document.getElementById('sizeGrid');
 
-        // Image Elements
         const cardImage = document.getElementById('cardImage');
         const imageFallback = document.getElementById('imageFallback');
         const zoomImageBtn = document.getElementById('zoomImageBtn');
@@ -415,27 +396,164 @@
         const copyCodeBtn = document.getElementById('copyCodeBtn');
         const newSearchBtn = document.getElementById('newSearchBtn');
 
-        // Image Fallback Handling Function
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchLiveInventoryData();
+            searchInput.focus();
+        });
+
+        async function fetchLiveInventoryData() {
+            setConnectionStatus('connecting', 'Conectando a Google Sheets...');
+            try {
+                const response = await fetch(URL_APPS_SCRIPT);
+                const data = await response.json();
+
+                if (Array.isArray(data) && data.length > 0) {
+                    currentDatabase = data;
+                    setConnectionStatus('connected', `Conectado (${data.length} ítems)`);
+                    totalItemsCount.textContent = `${data.length} artículos sincronizados`;
+                } else {
+                    setConnectionStatus('error', 'Sin datos en la hoja');
+                }
+            } catch (e) {
+                console.error("Error al sincronizar inventario:", e);
+                setConnectionStatus('error', 'Error de conexión');
+            }
+        }
+
+        function setConnectionStatus(state, message) {
+            statusText.textContent = message;
+            if (state === 'connected') {
+                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all";
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+            } else if (state === 'connecting') {
+                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all";
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+            } else {
+                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30 transition-all";
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-400";
+            }
+        }
+
+        refreshDataBtn.addEventListener('click', () => {
+            fetchLiveInventoryData();
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toLowerCase();
+
+            if (query.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+                hideSuggestions();
+                showEmptyState();
+                return;
+            }
+
+            performSearch(query);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.classList.add('hidden');
+            hideSuggestions();
+            showEmptyState();
+            searchInput.focus();
+        });
+
+        function performSearch(query) {
+            if (!query || currentDatabase.length === 0) return;
+
+            const matches = currentDatabase.filter(item => {
+                const sku = item.sku ? String(item.sku).toLowerCase() : '';
+                const ean = item.ean ? String(item.ean).toLowerCase() : '';
+                const title = item.title ? String(item.title).toLowerCase() : '';
+                const color = item.color ? String(item.color).toLowerCase() : '';
+                const category = item.category ? String(item.category).toLowerCase() : '';
+
+                return sku.includes(query) || ean.includes(query) || title.includes(query) || color.includes(query) || category.includes(query);
+            });
+
+            if (matches.length === 1) {
+                renderProductCard(matches[0]);
+                hideSuggestions();
+            } else if (matches.length > 1) {
+                renderSuggestions(matches);
+                renderProductCard(matches[0]);
+            } else {
+                hideSuggestions();
+                showNotFoundState(query);
+            }
+        }
+
+        function renderSuggestions(matches) {
+            suggestionsList.innerHTML = '';
+            resultsCount.textContent = matches.length;
+
+            matches.forEach(item => {
+                const totalStock = item.sizes ? Object.values(item.sizes).reduce((a, b) => a + Number(b), 0) : (Number(item.totalStock) || 0);
+                const li = document.createElement('li');
+                li.className = "p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors border-b border-slate-100 last:border-none";
+                li.innerHTML = `
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">${item.title || 'Artículo sin nombre'}</div>
+                        <div class="text-xs text-slate-500">SKU: ${item.sku || '-'} | Color: ${item.color || '-'}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full ${totalStock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                            ${totalStock > 0 ? `${totalStock} pares` : 'Agotado'}
+                        </span>
+                        <div class="text-xs font-bold text-slate-700 mt-1">${item.price || ''}</div>
+                    </div>
+                `;
+                li.addEventListener('click', () => {
+                    renderProductCard(item);
+                    hideSuggestions();
+                });
+                suggestionsList.appendChild(li);
+            });
+
+            suggestionsContainer.classList.remove('hidden');
+        }
+
+        function hideSuggestions() {
+            suggestionsContainer.classList.add('hidden');
+        }
+
+        function showEmptyState() {
+            emptyState.classList.remove('hidden');
+            productCard.classList.add('hidden');
+        }
+
+        function showNotFoundState(query) {
+            emptyState.classList.remove('hidden');
+            productCard.classList.add('hidden');
+            emptyState.innerHTML = `
+                <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Producto No Encontrado</h3>
+                <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
+                    No se encontró ningún artículo coincidente con "<span class="font-bold text-slate-700">${query}</span>".
+                </p>
+            `;
+        }
+
         function handleImageError(imgElement) {
             imgElement.classList.add('hidden');
             if (imageFallback) imageFallback.classList.remove('hidden');
         }
 
-        // Helper to Construct Bata Intranet Image URL
         function getProductImageUrl(sku) {
             if (!sku) return '';
-            // Clean SKU string of extra spaces or chars
-            const cleanSku = String(sku).trim();
-            return `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cleanSku}_1.JPG`;
+            return `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${String(sku).trim()}_1.JPG`;
         }
 
-        // 3. RENDER PRODUCT DETAIL CARD & SIZES GRID
         function renderProductCard(product) {
             currentMatchedProduct = product;
             emptyState.classList.add('hidden');
             productCard.classList.remove('hidden');
 
-            // Reset & Load Image
             const imageUrl = product.imageUrl || getProductImageUrl(product.sku);
             cardImage.classList.remove('hidden');
             imageFallback.classList.add('hidden');
@@ -447,13 +565,13 @@
             cardTitle.textContent = product.title || `Artículo ${product.sku}`;
             cardLocationText.textContent = product.location || 'Almacén Central / Tienda';
             cardPrice.textContent = product.price || 'S/ 0.00';
-            totalPairs.textContent = product.totalStock ?? 0;
             cardColor.textContent = product.color || 'Estándar';
             cardEan.textContent = product.ean || product.sku;
-            ageingTag.textContent = product.ageingDays ? `Antigüedad: ${product.ageingDays}` : 'Q Actual';
+            ageingTag.textContent = product.ageingDays ? `Antigüedad: ${product.ageingDays}` : 'Stock Actual';
 
-            // Configure Stock Badge Status
-            const totalStock = Number(product.totalStock) || 0;
+            const totalStock = product.sizes ? Object.values(product.sizes).reduce((a, b) => a + Number(b), 0) : (Number(product.totalStock) || 0);
+            totalPairs.textContent = totalStock;
+
             if (totalStock <= 0) {
                 stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-red-500 text-white shadow";
                 stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> AGOTADO`;
@@ -465,23 +583,15 @@
                 stockBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> EN STOCK`;
             }
 
-            // Render Dynamic Sizes Grid
             sizeGrid.innerHTML = '';
             if (product.sizes && typeof product.sizes === 'object' && Object.keys(product.sizes).length > 0) {
-                
-                // Sort size keys numerically if possible
-                const sortedSizes = Object.keys(product.sizes).sort((a, b) => {
-                    const numA = parseFloat(a);
-                    const numB = parseFloat(b);
-                    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-                    return a.localeCompare(b);
-                });
+                const sortedSizes = Object.keys(product.sizes).sort((a, b) => parseFloat(a) - parseFloat(b) || a.localeCompare(b));
 
                 sortedSizes.forEach(size => {
                     const count = Number(product.sizes[size]) || 0;
                     const sizeBox = document.createElement('div');
                     
-                    let bgClass = "bg-white text-slate-800 border-slate-200 shadow-sm hover:border-slate-300";
+                    let bgClass = "bg-white text-slate-800 border-slate-200 shadow-sm";
                     let badgeClass = "bg-emerald-100 text-emerald-800";
 
                     if (count <= 0) {
@@ -502,62 +612,28 @@
                     sizeGrid.appendChild(sizeBox);
                 });
             } else {
-                sizeGrid.innerHTML = '<p class="text-xs text-slate-400 col-span-full py-2">Sin desglose por tallas registrado para este producto.</p>';
+                sizeGrid.innerHTML = '<p class="text-xs text-slate-400 col-span-full py-2">Sin desglose por tallas registrado.</p>';
             }
         }
 
-        // Image Zoom Modal Event Listeners
         zoomImageBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
             const src = cardImage.src;
             if (src && !cardImage.classList.contains('hidden')) {
                 modalPreviewImage.src = src;
-                modalImageCaption.textContent = `${currentMatchedProduct.title || 'SKU: ' + currentMatchedProduct.sku} (Foto Intranet)`;
+                modalImageCaption.textContent = `${currentMatchedProduct.title || 'SKU: ' + currentMatchedProduct.sku}`;
                 imageModal.classList.remove('hidden');
             }
         });
 
-        closeImageModalBtn.addEventListener('click', () => {
-            imageModal.classList.add('hidden');
-        });
+        closeImageModalBtn.addEventListener('click', () => imageModal.classList.add('hidden'));
 
-        imageModal.addEventListener('click', (e) => {
-            if (e.target === imageModal) {
-                imageModal.classList.add('hidden');
-            }
-        });
-
-        // 6. HELPER BUTTONS (COPY CODE & NEW SEARCH)
         copyCodeBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
-            const textToCopy = currentMatchedProduct.sku;
-
-            // Secure fall-back clipboard copy execution
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    showToast(`SKU ${textToCopy} copiado al portapapeles`, 'success');
-                }).catch(() => fallbackCopyTextToClipboard(textToCopy));
-            } else {
-                fallbackCopyTextToClipboard(textToCopy);
-            }
+            navigator.clipboard.writeText(currentMatchedProduct.sku).then(() => {
+                showToast(`SKU ${currentMatchedProduct.sku} copiado`, 'success');
+            }).catch(() => showToast('No se pudo copiar', 'error'));
         });
-
-        function fallbackCopyTextToClipboard(text) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.position = "fixed";
-            textArea.style.left = "-9999px";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showToast(`SKU ${text} copiado al portapapeles`, 'success');
-            } catch (err) {
-                showToast("No se pudo copiar el código", 'error');
-            }
-            document.body.removeChild(textArea);
-        }
 
         newSearchBtn.addEventListener('click', () => {
             searchInput.value = '';
@@ -567,28 +643,103 @@
             searchInput.focus();
         });
 
-        // TOAST NOTIFICATION DISPLAYER
+        scanBtn.addEventListener('click', () => {
+            scannerModal.classList.remove('hidden');
+            startCameraScanner();
+        });
+
+        closeScannerBtn.addEventListener('click', stopCameraScanner);
+
+        function startCameraScanner() {
+            if (html5QrcodeScanner) return;
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            html5QrcodeScanner.start(
+                { facingMode: "environment" }, 
+                { fps: 15, qrbox: { width: 250, height: 180 } }, 
+                (decodedText) => {
+                    playBeepSound();
+                    stopCameraScanner();
+                    searchInput.value = decodedText;
+                    clearBtn.classList.remove('hidden');
+                    performSearch(decodedText.trim().toLowerCase());
+                }
+            ).catch(err => {
+                alert("No se pudo acceder a la cámara.");
+                stopCameraScanner();
+            });
+        }
+
+        function stopCameraScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner.clear();
+                    html5QrcodeScanner = null;
+                    scannerModal.classList.add('hidden');
+                }).catch(() => {
+                    scannerModal.classList.add('hidden');
+                    html5QrcodeScanner = null;
+                });
+            } else {
+                scannerModal.classList.add('hidden');
+            }
+        }
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+
+            voiceBtn.addEventListener('click', () => {
+                if (isRecordingVoice) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+
+            recognition.onstart = () => {
+                isRecordingVoice = true;
+                voiceBtn.classList.add('pulse-recording');
+                voiceStatus.classList.remove('hidden');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.replace(/\./g, '');
+                searchInput.value = transcript;
+                clearBtn.classList.remove('hidden');
+                performSearch(transcript.trim().toLowerCase());
+            };
+
+            recognition.onend = () => {
+                isRecordingVoice = false;
+                voiceBtn.classList.remove('pulse-recording');
+                voiceStatus.classList.add('hidden');
+            };
+        } else {
+            voiceBtn.style.display = 'none';
+        }
+
+        speakStockBtn.addEventListener('click', () => {
+            if (!currentMatchedProduct) return;
+            const totalStock = currentMatchedProduct.sizes ? Object.values(currentMatchedProduct.sizes).reduce((a, b) => a + Number(b), 0) : 0;
+            const textToSpeak = `Artículo ${currentMatchedProduct.title}, color ${currentMatchedProduct.color}. Tiene un total de ${totalStock} pares en stock.`;
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                utterance.lang = 'es-ES';
+                window.speechSynthesis.speak(utterance);
+            }
+        });
+
         function showToast(message, type = 'info') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
-            const toastIcon = document.getElementById('toastIcon');
-
             toastMessage.textContent = message;
-
-            if (type === 'success') {
-                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
-            } else if (type === 'error') {
-                toastIcon.className = "fa-solid fa-circle-xmark text-red-400";
-            } else {
-                toastIcon.className = "fa-solid fa-circle-info text-sky-400";
-            }
-
             toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
-            
             setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-eventls-none');
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
             }, 3000);
-        }l
+        }
     </script>
 </body>
 </html>
