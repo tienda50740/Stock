@@ -66,9 +66,10 @@
             width: 100% !important;
         }
 
-        /* EFECTO PARA INTEGRAR LA FOTO CON FONDO BLANCO EN EL CONTENEDOR */
+        /* OPCIÓN 2: EFECTO MULTIPLY PARA QUITAR/INTEGRAR EL FONDO BLANCO DE LA IMAGEN DE INTRANET */
         .blend-multiply {
             mix-blend-mode: multiply;
+            filter: contrast(105%);
         }
     </style>
 </head>
@@ -172,12 +173,12 @@
 
                     <div class="flex flex-col items-center justify-center text-center relative z-10 gap-3">
                         
-                        <!-- IMAGEN MEJORADA SIN MARCO BLANCO MARCADO -->
-                        <div class="relative w-44 h-44 sm:w-48 sm:h-48 bg-white/95 rounded-2xl p-3 shadow-2xl border border-slate-700/60 flex items-center justify-center overflow-hidden group">
+                        <!-- MARCO CON MEZCLA OPTIMIZADA PARA IMÁGENES CON FONDO BLANCO -->
+                        <div class="relative w-44 h-44 sm:w-48 sm:h-48 bg-white rounded-2xl p-2.5 shadow-2xl border-2 border-slate-700/60 flex items-center justify-center overflow-hidden group">
                             <img id="cardImage" 
                                  src="" 
                                  alt="Foto del Producto" 
-                                 class="w-full h-full object-contain blend-multiply transition-transform duration-300 group-hover:scale-110"
+                                 class="w-full h-full object-contain blend-multiply transition-transform duration-300 group-hover:scale-105"
                                  onerror="handleImageError(this)">
                             
                             <div id="imageFallback" class="hidden absolute inset-0 bg-slate-800 text-slate-500 flex flex-col items-center justify-center p-2 text-center">
@@ -552,7 +553,6 @@
             if (imageFallback) imageFallback.classList.remove('hidden');
         }
 
-        // GENERADOR DE URL INTRANET DE BATA
         function getProductImageUrl(sku) {
             if (!sku) return '';
             const cleanSku = String(sku).trim();
@@ -564,7 +564,6 @@
             emptyState.classList.add('hidden');
             productCard.classList.remove('hidden');
 
-            // Cargar imagen desde Intranet o propiedad
             const imageUrl = product.imageUrl || getProductImageUrl(product.sku);
             cardImage.classList.remove('hidden');
             imageFallback.classList.add('hidden');
