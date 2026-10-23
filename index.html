@@ -66,15 +66,38 @@
             width: 100% !important;
         }
 
-        /* Fusión perfecta con multiply */
-        .img-blend {
-            mix-blend-mode: multiply;
+        /* ESCENARIO DE ESTUDIO PARA LA FOTO (la foto ya viene sin fondo blanco).
+           Fondo claro con un leve resplandor rojo Bata en la base: el calzado
+           resalta y, si el recorte falla, la foto original (fondo blanco) se ve igual de limpia. */
+        .photo-stage {
+            background:
+                radial-gradient(ellipse 70% 45% at 50% 100%, rgba(227, 30, 36, 0.16), transparent 70%),
+                radial-gradient(circle at 50% 35%, #ffffff 0%, #f1f5f9 55%, #d9e1ec 100%);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 18px 40px -12px rgba(0, 0, 0, 0.6);
+        }
+        /* Sombra de contacto bajo el zapato */
+        .photo-stage::after {
+            content: "";
+            position: absolute;
+            left: 20%;
+            right: 20%;
+            bottom: 11%;
+            height: 14px;
+            background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.38) 0%, rgba(15, 23, 42, 0) 70%);
+            filter: blur(3px);
+            pointer-events: none;
+        }
+        .img-product {
+            position: relative;
+            z-index: 1;
+            padding: 0.6rem 0.6rem 1.1rem;
+            filter: drop-shadow(0 8px 6px rgba(15, 23, 42, 0.28));
         }
     </style>
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col justify-between selection:bg-red-500 selection:text-white">
 
-    <!-- HEADER / TOPBAR -->
+    <!-- HEADER / TOPBAR (SIN LOGO BATA) -->
     <header class="bg-bata-dark text-white sticky top-0 z-30 shadow-lg border-b border-slate-800">
         <div class="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
             <div>
@@ -160,7 +183,7 @@
 
             <div id="productCard" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
                 
-                <!-- TARJETA SUPERIOR AZUL UNIFICADA CON CONTENEDOR BLANCO PARA LA FOTO -->
+                <!-- TARJETA SUPERIOR OSCURA CON FOTO SOBRE ESCENARIO CLARO -->
                 <div class="bg-slate-900 text-white p-5 sm:p-6 relative overflow-hidden">
                     <div class="absolute -right-8 -bottom-8 opacity-10 text-white pointer-events-none">
                         <i class="fa-solid fa-boxes-stacked text-9xl"></i>
@@ -168,21 +191,21 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center relative z-10">
                         
-                        <!-- FOTO DEL PRODUCTO EN CONTENEDOR BLANCO CON MIX-BLEND-MODE -->
+                        <!-- FOTO DEL PRODUCTO (ESCENARIO CLARO) -->
                         <div class="md:col-span-4 flex justify-center items-center">
-                            <div class="relative w-44 h-44 sm:w-52 sm:h-52 bg-white rounded-2xl p-3 shadow-xl border border-slate-700 flex items-center justify-center overflow-hidden group">
+                            <div class="photo-stage relative w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden flex items-center justify-center group">
                                 <img id="cardImage" 
                                      src="" 
                                      alt="Foto del Producto" 
-                                     class="w-full h-full object-contain img-blend transition-transform duration-300 group-hover:scale-105"
+                                     class="img-product w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                                      onerror="handleImageError(this)">
                                 
-                                <div id="imageFallback" class="hidden absolute inset-0 bg-slate-800 text-slate-400 flex flex-col items-center justify-center p-2 text-center">
-                                    <i class="fa-solid fa-shoe-prints text-3xl mb-1 text-slate-500"></i>
-                                    <span class="text-[10px] uppercase font-bold text-slate-400">Sin Imagen</span>
+                                <div id="imageFallback" class="hidden absolute inset-0 text-slate-400 flex flex-col items-center justify-center p-2 text-center z-10">
+                                    <i class="fa-solid fa-shoe-prints text-3xl mb-1 text-slate-400"></i>
+                                    <span class="text-[10px] uppercase font-bold text-slate-500">Sin Imagen</span>
                                 </div>
 
-                                <button id="zoomImageBtn" class="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-bata-red text-white p-2 rounded-xl text-xs opacity-0 group-hover:opacity-100 transition-all shadow-lg border border-slate-700" title="Ver Ampliado">
+                                <button id="zoomImageBtn" class="absolute bottom-2 right-2 z-20 bg-slate-900/80 hover:bg-bata-red text-white p-2 rounded-xl text-xs sm:opacity-0 sm:group-hover:opacity-100 transition-all shadow-lg" title="Ver Ampliado">
                                     <i class="fa-solid fa-magnifying-glass-plus"></i>
                                 </button>
                             </div>
@@ -311,8 +334,8 @@
             <button id="closeImageModalBtn" class="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-bata-red text-white hover:bg-bata-darkRed flex items-center justify-center transition-colors shadow-lg z-10">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <div class="w-full h-80 sm:h-96 flex items-center justify-center bg-white rounded-xl overflow-hidden p-4">
-                <img id="modalPreviewImage" src="" alt="Vista previa del producto" class="max-w-full max-h-full object-contain img-blend">
+            <div class="photo-stage relative w-full h-80 sm:h-96 flex items-center justify-center rounded-xl overflow-hidden p-4">
+                <img id="modalPreviewImage" src="" alt="Vista previa del producto" class="img-product max-w-full max-h-full object-contain">
             </div>
             <p id="modalImageCaption" class="text-xs font-bold text-slate-600 mt-2 text-center">-</p>
         </div>
@@ -370,6 +393,9 @@
         const totalItemsCount = document.getElementById('totalItemsCount');
 
         const emptyState = document.getElementById('emptyState');
+        // Guarda el contenido original para restaurarlo después de un "No encontrado"
+        const emptyStateDefaultHTML = emptyState.innerHTML;
+        const escapeHTML = (t) => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const productCard = document.getElementById('productCard');
 
         const cardCategory = document.getElementById('cardCategory');
@@ -524,6 +550,7 @@
         }
 
         function showEmptyState() {
+            emptyState.innerHTML = emptyStateDefaultHTML;
             emptyState.classList.remove('hidden');
             productCard.classList.add('hidden');
         }
@@ -537,7 +564,7 @@
                 </div>
                 <h3 class="text-lg font-bold text-slate-800">Producto No Encontrado</h3>
                 <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
-                    No se encontró ningún artículo coincidente con "<span class="font-bold text-slate-700">${query}</span>".
+                    No se encontró ningún artículo coincidente con "<span class="font-bold text-slate-700">${escapeHTML(query)}</span>".
                 </p>
             `;
         }
@@ -547,10 +574,72 @@
             if (imageFallback) imageFallback.classList.remove('hidden');
         }
 
-        function getProductImageUrl(sku) {
+        function getOriginalProductImageUrl(sku) {
             if (!sku) return '';
             const cleanSku = String(sku).trim();
-            return `https://images.weserv.nl/?url=intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cleanSku}_1.JPG`;
+            return `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cleanSku}_1.JPG`;
+        }
+
+        // Carga la foto a través de weserv y conserva la URL original como respaldo.
+        function getProductImageUrl(sku) {
+            const originalUrl = getOriginalProductImageUrl(sku);
+            if (!originalUrl) return '';
+            // Usar el formato exacto solicitado: weserv delante de la URL original completa.
+            return `https://images.weserv.nl/?url=${originalUrl}`;
+        }
+
+        // Quita el fondo blanco conectado con los bordes.
+        // Parámetros solicitados: Umbral = 17, Suavizado = 0.
+        // Umbral 17 significa aceptar como fondo los píxeles a una distancia máxima
+        // de 17 niveles por canal respecto del blanco puro (255, 255, 255).
+        // Suavizado 0 elimina el fondo sin aplicar difuminado adicional a los bordes.
+        // Si el navegador bloquea canvas/CORS, la foto original sigue visible.
+        function removeWhiteBackground(imgElement, sku, originalUrl) {
+            if (!imgElement || imgElement.dataset.processedSku === String(sku)) return;
+            imgElement.dataset.processedSku = String(sku);
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                canvas.width = imgElement.naturalWidth;
+                canvas.height = imgElement.naturalHeight;
+                if (!canvas.width || !canvas.height) return;
+                ctx.drawImage(imgElement, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                const width = canvas.width, height = canvas.height;
+                const visited = new Uint8Array(width * height);
+                const queue = new Int32Array(width * height);
+                let head = 0, tail = 0;
+                const umbral = 17;
+                const suavizado = 0;
+                const minWhite = 255 - umbral;
+                const enqueue = (x, y) => {
+                    if (x < 0 || y < 0 || x >= width || y >= height) return;
+                    const pos = y * width + x;
+                    if (visited[pos]) return;
+                    const i = pos * 4;
+                    const isWhiteBackground = data[i] >= minWhite && data[i + 1] >= minWhite && data[i + 2] >= minWhite;
+                    if (isWhiteBackground) {
+                        visited[pos] = 1;
+                        queue[tail++] = pos;
+                    }
+                };
+                for (let x = 0; x < width; x++) { enqueue(x, 0); enqueue(x, height - 1); }
+                for (let y = 0; y < height; y++) { enqueue(0, y); enqueue(width - 1, y); }
+                while (head < tail) {
+                    const pos = queue[head++];
+                    // Suavizado 0: transparencia total en los píxeles identificados como fondo.
+                    data[pos * 4 + 3] = suavizado > 0 ? Math.max(0, 255 - suavizado) : 0;
+                    const x = pos % width, y = Math.floor(pos / width);
+                    enqueue(x + 1, y); enqueue(x - 1, y); enqueue(x, y + 1); enqueue(x, y - 1);
+                }
+                ctx.putImageData(imageData, 0, 0);
+                imgElement.onload = null; // evita volver a procesar el canvas
+                imgElement.src = canvas.toDataURL('image/png');
+            } catch (err) {
+                console.warn('No se pudo quitar el fondo; se mantiene la foto sin procesar.', err);
+                // No ocultar la foto: mantener la imagen que ya cargó desde el proxy.
+            }
         }
 
         function renderProductCard(product) {
@@ -558,7 +647,22 @@
             emptyState.classList.add('hidden');
             productCard.classList.remove('hidden');
 
+            const originalImageUrl = product.imageUrl || getOriginalProductImageUrl(product.sku);
             const imageUrl = product.imageUrl || getProductImageUrl(product.sku);
+            // Permitir leer los píxeles del proxy con canvas (si el servidor habilita CORS).
+            // Debe establecerse ANTES de asignar src.
+            cardImage.crossOrigin = 'anonymous';
+            delete cardImage.dataset.processedSku;
+            cardImage.onload = () => removeWhiteBackground(cardImage, product.sku, originalImageUrl);
+            cardImage.onerror = () => {
+                // Si falla el proxy, probar directamente con la URL intranet.
+                if (cardImage.src !== originalImageUrl) {
+                    cardImage.onerror = () => handleImageError(cardImage);
+                    cardImage.src = originalImageUrl;
+                } else {
+                    handleImageError(cardImage);
+                }
+            };
             cardImage.classList.remove('hidden');
             imageFallback.classList.add('hidden');
             cardImage.src = imageUrl;
