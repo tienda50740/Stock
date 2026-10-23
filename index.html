@@ -66,7 +66,7 @@
             color: white !important;
         }
 
-        /* FIX CRÍTICO CÁMARA ESCÁNER PANTALLA COMPLETA */
+        /* FIX DEFINITIVO CÁMARA ESCÁNER PANTALLA COMPLETA SIN EL RECTÁNGULO NATIVO */
         #qr-reader {
             position: absolute !important;
             inset: 0 !important;
@@ -84,9 +84,16 @@
             top: 0 !important;
             left: 0 !important;
         }
-        /* Ocultar elementos nativos de la librería html5-qrcode */
-        #qr-reader__scan_region, #qr-reader__dashboard, #qr-reader img {
+        /* Ocultar ABSOLUTAMENTE TODOS los marcos/cuadros inyectados por html5-qrcode */
+        #qr-reader__scan_region, 
+        #qr-reader__scan_region *, 
+        #qr-reader__dashboard, 
+        #qr-reader img,
+        #qr-reader canvas,
+        #qr-reader svg {
             display: none !important;
+            border: none !important;
+            box-shadow: none !important;
         }
 
         .photo-stage {
@@ -400,11 +407,11 @@
                 </div>
             </div>
 
-            <!-- ZONA CENTRAL: VIEWFINDER EXACTO CON ESQUINAS Y CÓDIGO DE BARRAS -->
+            <!-- ZONA CENTRAL: VIEWFINDER UNICO (REDONDEADO CON BORDES BLANCOS Y CÓDIGO) -->
             <div class="flex flex-col items-center justify-center my-auto w-full">
                 <h2 class="text-white font-bold text-base mb-4 drop-shadow-md text-center">Escanea el código de barras</h2>
                 
-                <!-- RECTÁNGULO DE ESCANEO -->
+                <!-- RECTÁNGULO DE ESCANEO ÚNICO -->
                 <div class="relative w-72 h-44 sm:w-80 sm:h-48 rounded-3xl flex items-center justify-center overflow-hidden bg-black/10 backdrop-blur-[1px]">
                     <!-- ESQUINAS BLANCAS REDONDEADAS DE ENCUADRE -->
                     <div class="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-white rounded-tl-2xl"></div>
@@ -557,10 +564,6 @@
             });
         });
 
-        /**
-         * EXTRAE SKU BATA DE CÓDIGO DE BARRAS EAN-13
-         * Ej: 1881241310030 -> Extrae 8812413
-         */
         function extractSkuFromEan13(code) {
             const cleanCode = String(code).trim().replace(/\D/g, '');
             if (cleanCode.length === 13) {
@@ -884,7 +887,8 @@
                 html5QrcodeScanner = new Html5Qrcode("qr-reader");
             }
 
-            const config = { fps: 20, qrbox: { width: 280, height: 180 } };
+            // SE DESACTIVA EL RECTÁNGULO DIBUJADO NATIVAMENTE POR LA LIBRERÍA
+            const config = { fps: 20 };
 
             html5QrcodeScanner.start(
                 { facingMode: "environment" },
