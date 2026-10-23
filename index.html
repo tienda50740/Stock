@@ -66,7 +66,6 @@
             width: 100% !important;
         }
 
-        /* OPCIÓN 2: EFECTO MULTIPLY PARA QUITAR/INTEGRAR EL FONDO BLANCO DE LA IMAGEN DE INTRANET */
         .blend-multiply {
             mix-blend-mode: multiply;
             filter: contrast(105%);
@@ -173,7 +172,6 @@
 
                     <div class="flex flex-col items-center justify-center text-center relative z-10 gap-3">
                         
-                        <!-- MARCO CON MEZCLA OPTIMIZADA PARA IMÁGENES CON FONDO BLANCO -->
                         <div class="relative w-44 h-44 sm:w-48 sm:h-48 bg-white rounded-2xl p-2.5 shadow-2xl border-2 border-slate-700/60 flex items-center justify-center overflow-hidden group">
                             <img id="cardImage" 
                                  src="" 
@@ -191,7 +189,6 @@
                             </button>
                         </div>
 
-                        <!-- INFORMACIÓN DEL PRODUCTO -->
                         <div class="space-y-1.5 w-full mt-1">
                             <div class="flex flex-wrap items-center justify-center gap-2">
                                 <span id="cardCategory" class="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase bg-bata-red text-white tracking-wider">
@@ -352,7 +349,8 @@
 
     <!-- CORE LOGIC & API INTEGRATION SCRIPT -->
     <script>
-        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwHM-MDygSLP26vJnzsfbC7VxRCtFX6lwH4U8OrEfGlYIdi-BlnteO0z_MkawvfvTi3Vw/exec";
+        // URL de tu Apps Script unificado (sin parámetros adicionales para que cargue el inventario completo)
+        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzAop3ucrjAhM4wFR-xWrD-ZvmAsHfFg1VN6sjHAWDkZ2IY1f2IuNnBRHavOk8-DBJ9ng/exec";
 
         let currentDatabase = [];
         let html5QrcodeScanner = null;
