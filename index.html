@@ -121,7 +121,7 @@
 
     <div class="max-w-6xl w-full mx-auto flex flex-col min-h-screen">
 
-        <!-- CABECERA (Hacer doble clic aquí activa el dictado por voz automáticamente) -->
+        <!-- CABECERA -->
         <header id="headerBar" class="bg-white sticky top-0 z-30 border-b border-slate-100 shadow-sm px-4 pt-3 pb-2 cursor-pointer" title="Doble toque para hablar">
             <div class="flex items-center justify-between text-xs mb-2.5">
                 <div class="flex items-center gap-1.5 font-bold text-slate-700 truncate">
@@ -267,7 +267,6 @@
                                             </span>
                                         </div>
 
-                                        <!-- TÍTULO MÁS GRANDE Y LEGIBLE -->
                                         <h2 id="cardTitle" class="text-base sm:text-xl font-black text-slate-900 leading-snug break-words">-</h2>
 
                                         <div class="mt-1">
@@ -486,13 +485,26 @@
         const modalImageCaption = document.getElementById('modalImageCaption');
         const closeImageModalBtn = document.getElementById('closeImageModalBtn');
 
+        // GESTOR DE HISTORIAL PARA EL BOTÓN "ATRÁS"
+        window.addEventListener('popstate', (e) => {
+            // Si el escáner está abierto, lo cerramos sin salir de la página
+            if (!scannerModal.classList.contains('hidden')) {
+                stopCameraScanner(false);
+                return;
+            }
+            // Si la previsualización de imagen está abierta, la cerramos
+            if (!imageModal.classList.contains('hidden')) {
+                imageModal.classList.add('hidden');
+                return;
+            }
+        });
+
         window.addEventListener('DOMContentLoaded', () => {
             loadLocalDatabase();
             fetchLiveInventoryData();
             setupPreciseShake();
         });
 
-        // CARGAR DESDE CACHÉ LOCAL OFFLINE PRIMERO
         function loadLocalDatabase() {
             try {
                 const cachedData = localStorage.getItem(URL_APPS_STORAGE_KEY);
@@ -833,10 +845,13 @@
                 modalPreviewImage.src = src;
                 modalImageCaption.textContent = `${currentMatchedProduct.title || 'SKU: ' + currentMatchedProduct.sku}`;
                 imageModal.classList.remove('hidden');
+                history.pushState({ modalOpen: 'image' }, '');
             }
         });
 
-        closeImageModalBtn.addEventListener('click', () => imageModal.classList.add('hidden'));
+        closeImageModalBtn.addEventListener('click', () => {
+            imageModal.classList.add('hidden');
+        });
 
         copyCodeBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
@@ -851,12 +866,24 @@
         function openScanner() {
             scannerModal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+            history.pushState({ modalOpen: 'scanner' }, '');
             startCameraScanner();
         }
 
-        closeScannerBtn.addEventListener('click', stopCameraScanner);
+        closeScannerBtn.addEventListener('click', () => {
+            if (history.state && history.state.modalOpen === 'scanner') {
+                history.back();
+            } else {
+                stopCameraScanner(false);
+            }
+        });
+
         manualInputBtn.addEventListener('click', () => {
-            stopCameraScanner();
+            if (history.state && history.state.modalOpen === 'scanner') {
+                history.back();
+            } else {
+                stopCameraScanner(false);
+            }
             searchInput.focus();
         });
 
@@ -872,7 +899,11 @@
                 config,
                 (decodedText) => {
                     playBeepSound();
-                    stopCameraScanner();
+                    if (history.state && history.state.modalOpen === 'scanner') {
+                        history.back();
+                    } else {
+                        stopCameraScanner(false);
+                    }
                     
                     const extractedSku = extractSkuFromEan13(decodedText);
                     searchInput.value = extractedSku;
@@ -890,11 +921,11 @@
                 } catch (e) {}
             }).catch(err => {
                 showToast("Acceso denegado a la cámara", "error");
-                stopCameraScanner();
+                stopCameraScanner(false);
             });
         }
 
-        function stopCameraScanner() {
+        function stopCameraScanner(triggerHistoryBack = false) {
             if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
                 html5QrcodeScanner.stop().then(() => {
                     scannerModal.classList.add('hidden');
@@ -972,7 +1003,6 @@
             }
         }
 
-        // SISTEMA DE VOZ Y DOBLE TOQUE EN CABECERA
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
@@ -987,7 +1017,7 @@
             }
 
             voiceBtn.addEventListener('click', toggleVoiceRecognition);
-            headerBar.addEventListener('dblclick', toggleVoiceRecognition); // Doble toque en cabecera
+            headerBar.addEventListener('dblclick', toggleVoiceRecognition);
 
             recognition.onstart = () => {
                 isRecordingVoice = true;
