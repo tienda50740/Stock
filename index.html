@@ -178,7 +178,7 @@
 
             <div id="voiceStatus" class="hidden mt-2 text-xs font-bold text-bata-red flex items-center justify-center gap-2 bg-red-50 py-1.5 rounded-lg border border-red-100">
                 <span class="w-2 h-2 rounded-full bg-bata-red animate-ping"></span>
-                <span id="voiceText">Escuchando consulta de voz...</span>
+                <span id="voiceText">Escuchando... Di el código de barras</span>
             </div>
         </header>
 
@@ -348,7 +348,7 @@
 
     </div>
 
-    <!-- MODAL ESCÁNER CON BOTÓN FLASH CORREGIDO -->
+    <!-- MODAL ESCÁNER CON RAYITO LIMPIO SIN BLOQUE GRIS -->
     <div id="scannerModal" class="fixed inset-0 z-50 bg-black hidden flex flex-col justify-between select-none overflow-hidden">
         <div id="qr-reader"></div>
 
@@ -356,15 +356,13 @@
             
             <div class="w-full flex flex-col gap-3 pointer-events-auto">
                 <div class="flex items-center justify-between text-white pt-2 px-1">
-                    <button id="closeScannerBtn" class="p-2 rounded-full hover:bg-white/25 transition-all text-xl focus:outline-none">
+                    <button id="closeScannerBtn" class="p-2 rounded-full hover:bg-white/20 transition-all text-xl focus:outline-none">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
-                    <!-- BOTÓN DE FLASH ESTILO CÁPSULA (LINTERNA APAGADA / ENCENDIDA) -->
-                    <div class="flex items-center gap-4">
-                        <button id="flashToggleBtn" class="w-9 h-11 rounded-2xl bg-white/30 backdrop-blur-md flex items-center justify-center transition-all focus:outline-none text-white border border-white/30 active:scale-95">
-                            <i class="fa-solid fa-bolt text-lg text-white" id="flashIcon"></i>
-                        </button>
-                    </div>
+                    <!-- RAYITO LIMPIO FLOTANTE SIN RECTÁNGULO GRIS -->
+                    <button id="flashToggleBtn" class="w-10 h-10 rounded-full flex items-center justify-center transition-all focus:outline-none text-white active:scale-90">
+                        <i class="fa-solid fa-bolt text-2xl text-white drop-shadow-md" id="flashIcon"></i>
+                    </button>
                 </div>
 
                 <div class="bg-white/95 backdrop-blur-md text-gray-800 rounded-2xl p-3.5 shadow-lg flex items-center justify-between border border-white/40">
@@ -440,8 +438,9 @@
         let currentMatchedProduct = null;
         let selectedBrand = 'all';
 
-        // Variables para detección de sacudida (Shake Gesture)
+        // Variables para Detección Precisa de Sacudida (Double Shake)
         let lastX = null, lastY = null, lastZ = null;
+        let shakeCount = 0;
         let lastShakeTime = 0;
 
         const searchInput = document.getElementById('searchInput');
@@ -488,7 +487,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             fetchLiveInventoryData();
-            setupShakeToScan();
+            setupPreciseShake();
         });
 
         async function fetchLiveInventoryData() {
@@ -887,11 +886,9 @@
 
         function updateFlashIconUI() {
             if (isFlashOn) {
-                flashToggleBtn.className = "w-9 h-11 rounded-2xl bg-amber-400 flex items-center justify-center transition-all focus:outline-none text-slate-950 border border-amber-300 shadow-lg active:scale-95";
-                flashIcon.className = "fa-solid fa-bolt text-lg text-slate-950";
+                flashIcon.className = "fa-solid fa-bolt text-2xl text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]";
             } else {
-                flashToggleBtn.className = "w-9 h-11 rounded-2xl bg-white/30 backdrop-blur-md flex items-center justify-center transition-all focus:outline-none text-white border border-white/30 active:scale-95";
-                flashIcon.className = "fa-solid fa-bolt text-lg text-white";
+                flashIcon.className = "fa-solid fa-bolt text-2xl text-white drop-shadow-md";
             }
         }
 
@@ -912,13 +909,11 @@
             });
         }
 
-        // AUTOMATIZACIÓN 1: SACUDIR EL MÓVIL PARA ABRIR ESCÁNER (SHAKE GESTURE)
-        function setupShakeToScan() {
+        // SACUDIDA PRECISA (REQUIERE DOBLE AGITACIÓN FUERTE EN MENOS DE 1 SEGUNDO)
+        function setupPreciseShake() {
             if (window.DeviceMotionEvent) {
                 window.addEventListener('devicemotion', (e) => {
                     const now = Date.now();
-                    if ((now - lastShakeTime) < 1500) return; // Evitar disparos repetidos en menos de 1.5s
-
                     const acc = e.accelerationIncludingGravity;
                     if (!acc || acc.x === null) return;
 
@@ -927,12 +922,21 @@
                         const deltaY = Math.abs(acc.y - lastY);
                         const deltaZ = Math.abs(acc.z - lastZ);
 
-                        // Umbral de sensibilidad de sacudida
-                        if ((deltaX + deltaY + deltaZ) > 28) {
-                            lastShakeTime = now;
-                            if (navigator.vibrate) navigator.vibrate(80);
-                            showToast("Sacudida detectada: Abriendo escáner...", "success");
-                            openScanner();
+                        // Umbral de aceleración alto (48) para evitar falsos positivos
+                        if ((deltaX + deltaY + deltaZ) > 48) {
+                            if (now - lastShakeTime < 1000) {
+                                shakeCount++;
+                                if (shakeCount >= 2) {
+                                    shakeCount = 0;
+                                    lastShakeTime = now + 2000;
+                                    if (navigator.vibrate) navigator.vibrate(100);
+                                    showToast("Doble sacudida: Abriendo escáner", "success");
+                                    openScanner();
+                                }
+                            } else {
+                                shakeCount = 1;
+                                lastShakeTime = now;
+                            }
                         }
                     }
 
@@ -943,7 +947,7 @@
             }
         }
 
-        // RECONOCIMIENTO DE VOZ AUTOMÁTICO
+        // RECONOCIMIENTO DE VOZ E INTENCIONES HABLADAS
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
@@ -964,8 +968,24 @@
             };
 
             recognition.onresult = (event) => {
-                let rawTranscript = event.results[0][0].transcript;
-                let cleanTranscript = rawTranscript.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
+                let rawTranscript = event.results[0][0].transcript.toLowerCase();
+                
+                // Si la persona dice "abrir escáner" o "escanear" por voz
+                if (rawTranscript.includes('escanear') || rawTranscript.includes('camara') || rawTranscript.includes('cámara')) {
+                    openScanner();
+                    return;
+                }
+
+                // Filtrar palabras de dictado ("buscar", "código", "sku", etc.)
+                let cleanedWords = rawTranscript
+                    .replace(/buscar/g, '')
+                    .replace(/código/g, '')
+                    .replace(/codigo/g, '')
+                    .replace(/sku/g, '')
+                    .replace(/artículo/g, '')
+                    .replace(/articulo/g, '');
+
+                let cleanTranscript = cleanedWords.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
 
                 searchInput.value = cleanTranscript;
                 clearBtn.classList.remove('hidden');
