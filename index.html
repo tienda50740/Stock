@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Consulta de Articulo Stock - Bata1</title>
+    <title>Consulta de Articulo Stock - Bata</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,16 +25,16 @@
                         bata: {
                             red: '#E31E24',
                             darkRed: '#B81318',
-                            dark: '#0F172A', // Slate 900 para el bloque oscuro
+                            dark: '#0F172A',
+                            bg: '#F8FAFC'
                         }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif']
                     },
                     boxShadow: {
-                        'soft': '0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 10px -2px rgba(15, 23, 42, 0.03)',
-                        'hover': '0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1)',
-                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.4)',
+                        'soft': '0 4px 20px -2px rgba(15, 23, 42, 0.05)',
+                        'floating': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
                     }
                 }
             }
@@ -44,326 +44,311 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #F1F5F9; /* Slate 100 */
+            background-color: #F8FAFC;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes scanLine {
+            0% { top: 10%; opacity: 0.8; }
+            50% { top: 85%; opacity: 1; }
+            100% { top: 10%; opacity: 0.8; }
+        }
+        .animate-scan {
+            animation: scanLine 2s infinite ease-in-out;
+        }
+
+        #reader video {
+            object-fit: cover !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .pulse-recording {
+            animation: pulse-red 1.5s infinite;
+            background-color: #E31E24 !important;
+            color: white !important;
+        }
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(227, 30, 36, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(227, 30, 36, 0); }
             100% { box-shadow: 0 0 0 0 rgba(227, 30, 36, 0); }
         }
-        .pulse-recording {
-            animation: pulse-red 1.5s infinite;
-            background-color: #E31E24 !important;
-            color: white !important;
-            border-color: #E31E24 !important;
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
-
-        #reader video { 
-            object-fit: cover !important; 
-            border-radius: 1rem; 
-            width: 100% !important;
-        }
-
-        /* Escenario para la foto del zapato (Estilo Estudio Fotográfico) */
-        .photo-stage {
-            background: linear-gradient(180deg, #F8FAFC 0%, #E2E8F0 100%);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
-        }
-        .img-product {
-            position: relative;
-            z-index: 1;
-            padding: 1rem;
-            filter: drop-shadow(0 15px 15px rgba(15, 23, 42, 0.2));
-            transition: transform 0.3s ease;
-        }
-        .group:hover .img-product {
-            transform: scale(1.05) translateY(-5px);
-        }
     </style>
 </head>
-<body class="min-h-screen text-slate-800 flex flex-col justify-between selection:bg-bata-red selection:text-white">
+<body class="bg-slate-50 text-slate-800 flex flex-col h-screen overflow-hidden select-none">
 
-    <!-- HEADER CLARO Y LIMPIO -->
-    <header class="bg-white sticky top-0 z-30 shadow-sm border-b border-slate-200">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-bata-red rounded-xl flex items-center justify-center shadow-md">
-                    <i class="fa-solid fa-shoe-prints text-white text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-900">Bata Stock</h1>
-                    <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Consulta en Tienda</p>
+    <!-- TOP APP BAR -->
+    <header class="bg-white border-b border-slate-200 shrink-0 z-30">
+        <div class="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <button id="btnBackHeader" class="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-900 rounded-full hover:bg-slate-100">
+                    <i class="fa-solid fa-arrow-left text-lg"></i>
+                </button>
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 bg-bata-red rounded-lg flex items-center justify-center text-white font-black text-xs shadow-sm">
+                        B
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-black text-slate-900 tracking-tight leading-none">Bata Stock</h1>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Tienda Cusco</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <div id="statusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200 transition-all">
-                    <span id="statusDot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            <div class="flex items-center gap-2">
+                <div id="statusBadge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200">
+                    <span id="statusDot" class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                     <span id="statusText">Conectando...</span>
                 </div>
-                <button id="refreshDataBtn" title="Sincronizar" class="w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all active:scale-95">
-                    <i class="fa-solid fa-rotate text-sm"></i>
+                <button id="refreshDataBtn" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-50 rounded-xl border border-slate-200 active:scale-95 transition-all">
+                    <i class="fa-solid fa-rotate text-xs"></i>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- CUERPO PRINCIPAL -->
-    <main class="max-w-4xl w-full mx-auto px-4 py-6 sm:py-8 flex-1 flex flex-col gap-6 relative">
-
-        <!-- BUSCADOR ("LA BALA") -->
-        <section class="bg-white rounded-3xl p-4 sm:p-5 shadow-soft border border-slate-200/60 relative z-20">
-            <div class="flex justify-between items-center mb-3">
-                <label for="searchInput" class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-bata-red"></i> Búsqueda Rápida
-                </label>
-                <span id="totalItemsCount" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">0 items</span>
-            </div>
-
-            <div class="relative flex items-center group">
-                <div class="absolute left-4 text-slate-400 group-focus-within:text-bata-red transition-colors pointer-events-none">
-                    <i class="fa-solid fa-magnifying-glass text-lg"></i>
-                </div>
-
-                <input type="text" id="searchInput" 
-                    placeholder="SKU, nombre o categoría..." 
-                    autocomplete="off" 
-                    autofocus
-                    class="w-full pl-12 pr-32 py-4 text-base sm:text-lg font-bold bg-slate-50 border-2 border-slate-200 focus:border-bata-red focus:ring-4 focus:ring-red-500/10 focus:bg-white rounded-2xl outline-none transition-all duration-200 text-slate-900 placeholder-slate-400 placeholder:font-medium shadow-inner-light">
-
-                <div class="absolute right-2 flex items-center gap-2">
-                    <button id="clearBtn" class="hidden w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-xl transition-colors" title="Limpiar">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-
-                    <button id="voiceBtn" class="w-10 h-10 flex items-center justify-center text-slate-600 bg-white border border-slate-200 hover:border-bata-red hover:text-bata-red rounded-xl transition-all shadow-sm" title="Voz">
-                        <i class="fa-solid fa-microphone text-lg"></i>
-                    </button>
-
-                    <button id="scanBtn" class="w-10 h-10 flex items-center justify-center bg-bata-red hover:bg-bata-darkRed text-white rounded-xl shadow-md transition-all active:scale-95" title="Escanear">
-                        <i class="fa-solid fa-barcode text-lg"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div id="voiceStatus" class="hidden mt-3 text-xs font-bold text-bata-red flex items-center justify-center gap-2 bg-red-50 py-2.5 rounded-xl border border-red-100">
-                <span class="w-2 h-2 rounded-full bg-bata-red animate-ping"></span>
-                <span id="voiceText">Escuchando...</span>
-            </div>
-        </section>
-
-        <!-- SUGERENCIAS -->
-        <section id="suggestionsContainer" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden absolute top-[160px] w-[calc(100%-2rem)] max-w-[calc(56rem-2rem)] z-40">
-            <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-700 flex justify-between items-center">
-                <span>Resultados (<span id="resultsCount">0</span>)</span>
-                <span class="text-slate-400 font-medium">Toca para seleccionar</span>
-            </div>
-            <ul id="suggestionsList" class="divide-y divide-slate-100 max-h-72 overflow-y-auto"></ul>
-        </section>
-
-        <!-- AREA DE PRODUCTO -->
-        <section id="productCardContainer" class="flex-1 relative">
+    <!-- BUSCADOR SUPERIOR "STICKY" -->
+    <div class="bg-white border-b border-slate-200 px-4 py-3 shrink-0 z-20 shadow-sm">
+        <div class="max-w-md mx-auto relative flex items-center">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-sm"></i>
+            <input type="text" id="searchInput" 
+                placeholder="SKU, EAN-13 o nombre..." 
+                autocomplete="off"
+                class="w-full pl-10 pr-24 py-2.5 bg-slate-100 focus:bg-white border border-slate-200 focus:border-bata-red rounded-xl text-sm font-bold text-slate-900 outline-none transition-all placeholder:font-normal placeholder:text-slate-400">
             
-            <!-- EMPTY STATE -->
-            <div id="emptyState" class="bg-white rounded-3xl p-10 sm:p-16 text-center border-2 border-dashed border-slate-200 shadow-soft my-auto flex flex-col items-center justify-center min-h-[350px]">
-                <div class="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-slate-100">
-                    <i class="fa-solid fa-box-open text-3xl"></i>
-                </div>
-                <h3 class="text-lg font-black text-slate-800">Listo para Consultar</h3>
-                <p class="text-sm text-slate-500 max-w-xs mx-auto mt-2 leading-relaxed font-medium">
-                    Ingresa un SKU, usa el micrófono o escanea el código de barras para ver el inventario exacto.
-                </p>
-            </div>
-
-            <!-- TARJETA DEL PRODUCTO -->
-            <div id="productCard" class="hidden bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden transition-all duration-300">
-                
-                <!-- SECCIÓN SUPERIOR (FONDO OSCURO PARA CONTRASTE) -->
-                <div class="bg-bata-dark text-white p-5 sm:p-7 relative">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center relative z-10">
-                        
-                        <!-- FOTO DEL PRODUCTO -->
-                        <div class="md:col-span-5 flex justify-center items-center">
-                            <div class="photo-stage relative w-52 h-52 sm:w-60 sm:h-60 rounded-3xl overflow-hidden flex items-center justify-center group border border-slate-700/50">
-                                <img id="cardImage" 
-                                     src="" 
-                                     alt="Foto" 
-                                     class="img-product w-full h-full object-contain"
-                                     onerror="handleImageError(this)">
-                                
-                                <div id="imageFallback" class="hidden absolute inset-0 text-slate-400 flex flex-col items-center justify-center p-4 text-center z-10 bg-slate-800">
-                                    <i class="fa-solid fa-shoe-prints text-4xl mb-2 text-slate-600"></i>
-                                    <span class="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Sin Imagen</span>
-                                </div>
-
-                                <button id="zoomImageBtn" class="absolute bottom-3 right-3 z-20 bg-slate-900/80 hover:bg-bata-red text-white w-8 h-8 rounded-full flex items-center justify-center text-xs sm:opacity-0 sm:group-hover:opacity-100 transition-all shadow-lg backdrop-blur-sm" title="Ampliar">
-                                    <i class="fa-solid fa-expand"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- DATOS DEL PRODUCTO -->
-                        <div class="md:col-span-7 flex flex-col justify-center space-y-4">
-                            <div class="space-y-3">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <span id="cardCategory" class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-bata-red text-white tracking-widest shadow-sm">
-                                        CALZADO
-                                    </span>
-                                    <span id="cardCode" class="text-[11px] font-mono font-medium bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">
-                                        SKU: -
-                                    </span>
-                                </div>
-
-                                <h2 id="cardTitle" class="text-2xl sm:text-3xl font-black text-white leading-tight tracking-tight">-</h2>
-                                
-                                <p id="cardLocation" class="text-[11px] font-medium text-slate-400 flex items-center gap-1.5 bg-slate-800/50 w-fit px-2.5 py-1 rounded-md border border-slate-700/50">
-                                    <i class="fa-solid fa-location-dot text-bata-red"></i> <span id="cardLocationText">Almacén Central</span>
-                                </p>
-                            </div>
-
-                            <!-- BLOQUES DE DATOS -->
-                            <div class="grid grid-cols-3 gap-2 sm:gap-3 pt-2">
-                                
-                                <div class="bg-slate-800/80 border border-slate-700/50 p-3 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
-                                    <div class="absolute -right-4 -top-4 text-slate-700/30 group-hover:text-bata-red/20 transition-colors"><i class="fa-solid fa-tag text-4xl"></i></div>
-                                    <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mb-1 relative z-10">Precio</span>
-                                    <span id="cardPrice" class="text-lg sm:text-xl font-black text-white tracking-tight relative z-10">-</span>
-                                </div>
-
-                                <div class="bg-slate-800/80 border border-slate-700/50 p-3 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
-                                    <div class="absolute -right-4 -top-4 text-slate-700/30 group-hover:text-emerald-500/20 transition-colors"><i class="fa-solid fa-boxes-stacked text-4xl"></i></div>
-                                    <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mb-1 relative z-10">Total</span>
-                                    <div class="flex items-baseline gap-1 relative z-10">
-                                        <span id="totalPairs" class="text-lg sm:text-xl font-black text-white">0</span>
-                                        <span class="text-[9px] font-bold text-slate-400">pares</span>
-                                    </div>
-                                </div>
-
-                                <div class="bg-slate-800/80 border border-slate-700/50 p-3 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
-                                    <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mb-1 relative z-10">Antigüedad</span>
-                                    <span id="ageingTag" class="inline-block px-2 py-0.5 rounded text-[10px] font-black bg-slate-700 text-slate-300 border border-slate-600 truncate max-w-full relative z-10">
-                                        -
-                                    </span>
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- BARRITA DE ESTADO -->
-                <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-                    <span class="text-[11px] text-slate-600 font-bold uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-shield-halved text-emerald-600"></i> Estado de Inventario
-                    </span>
-                    <div id="stockBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        <i class="fa-solid fa-circle-check"></i> EN STOCK
-                    </div>
-                </div>
-
-                <!-- MATRIZ DE TALLAS -->
-                <div class="p-5 sm:p-7 bg-white">
-                    <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-layer-group text-bata-red"></i>
-                            <span>Tallas Disponibles</span>
-                        </h4>
-                        <span class="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-1 rounded-md">Verificar físico</span>
-                    </div>
-
-                    <div id="sizeGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3"></div>
-                </div>
-
-                <!-- BOTONES DE ACCIÓN -->
-                <div class="bg-slate-50 px-5 py-4 sm:px-7 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <button id="speakStockBtn" class="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm">
-                            <i class="fa-solid fa-volume-high text-slate-400"></i> Leer Stock
-                        </button>
-                        <button id="copyCodeBtn" class="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm">
-                            <i class="fa-solid fa-copy text-slate-400"></i> Copiar
-                        </button>
-                    </div>
-
-                    <button id="newSearchBtn" class="w-full sm:w-auto px-6 py-2.5 bg-bata-red hover:bg-bata-darkRed text-white rounded-xl text-xs font-extrabold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Nueva Búsqueda
-                    </button>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="bg-white border-t border-slate-200 py-4 px-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-auto">
-        <p>© Bata Perú - Control de Stock</p>
-    </footer>
-
-    <!-- MODAL ESCÁNER -->
-    <div id="scannerModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl relative animate-in fade-in zoom-in duration-200">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-bata-red">
-                        <i class="fa-solid fa-camera"></i>
-                    </div>
-                    <h3 class="font-black text-slate-800 text-sm">Escanear Producto</h3>
-                </div>
-                <button id="closeScannerBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors">
-                    <i class="fa-solid fa-xmark"></i>
+            <div class="absolute right-1.5 flex items-center gap-1">
+                <button id="clearBtn" class="hidden w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-lg">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+                <button id="voiceBtn" class="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-bata-red bg-white border border-slate-200 rounded-lg shadow-xs" title="Búsqueda por voz">
+                    <i class="fa-solid fa-microphone text-xs"></i>
+                </button>
+                <button id="scanBtn" class="w-8 h-8 flex items-center justify-center bg-bata-red hover:bg-bata-darkRed text-white rounded-lg shadow-sm active:scale-95 transition-all" title="Escanear">
+                    <i class="fa-solid fa-barcode text-xs"></i>
                 </button>
             </div>
-            <div class="p-2 bg-slate-900 rounded-2xl overflow-hidden min-h-[280px] flex items-center justify-center relative">
-                <div id="reader" class="w-full"></div>
-                <!-- Línea de escaneo -->
-                <div class="absolute w-full h-0.5 bg-bata-red/80 shadow-[0_0_10px_rgba(227,30,36,1)] animate-pulse pointer-events-none" style="top: 50%;"></div>
-            </div>
-            <p class="text-[11px] font-bold text-center text-slate-500 mt-4 bg-slate-50 py-2 rounded-lg border border-slate-100">Enfoca el código de barras</p>
+        </div>
+        
+        <div id="voiceStatus" class="hidden mt-2 text-[11px] font-bold text-bata-red flex items-center justify-center gap-2 bg-red-50 py-1.5 rounded-lg border border-red-100">
+            <span class="w-2 h-2 rounded-full bg-bata-red animate-ping"></span>
+            <span id="voiceText">Escuchando...</span>
         </div>
     </div>
 
-    <!-- MODAL IMAGEN -->
-    <div id="imageModal" class="hidden fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="relative max-w-2xl w-full bg-white rounded-3xl p-4 shadow-2xl flex flex-col items-center animate-in fade-in zoom-in duration-200">
-            <button id="closeImageModalBtn" class="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-slate-800 text-white hover:bg-bata-red flex items-center justify-center transition-colors shadow-lg z-10 border-2 border-white">
-                <i class="fa-solid fa-xmark text-lg"></i>
+    <!-- CONTENIDO PRINCIPAL SCROLLABLE -->
+    <main class="flex-1 overflow-y-auto max-w-md w-full mx-auto p-4 space-y-4 pb-20 no-scrollbar">
+
+        <!-- CHIPS DE CATEGORÍA / FILTROS RÁPIDOS -->
+        <section class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+            <button class="chip-filter active px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-slate-900 text-white border border-slate-900">
+                Todos
             </button>
-            <div class="photo-stage rounded-2xl w-full h-80 sm:h-[28rem] flex items-center justify-center overflow-hidden p-6 border border-slate-100">
-                <img id="modalPreviewImage" src="" alt="Preview" class="max-w-full max-h-full object-contain img-product">
+            <button class="chip-filter px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                Calzado
+            </button>
+            <button class="chip-filter px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                Deportivas
+            </button>
+            <button class="chip-filter px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                Accesorios
+            </button>
+        </section>
+
+        <!-- RESULTADOS EN LISTA (SUGERENCIAS/MATCHES) -->
+        <section id="suggestionsContainer" class="hidden bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div class="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 flex justify-between items-center">
+                <span>Resultados (<span id="resultsCount">0</span>)</span>
+                <span class="text-slate-400 font-normal">Toca para ver detalle</span>
             </div>
-            <p id="modalImageCaption" class="text-xs font-bold text-slate-700 mt-4 text-center bg-slate-100 px-4 py-2 rounded-xl">-</p>
+            <ul id="suggestionsList" class="divide-y divide-slate-100 max-h-56 overflow-y-auto no-scrollbar"></ul>
+        </section>
+
+        <!-- ESTADO VACÍO (INICIAL) -->
+        <section id="emptyState" class="bg-white rounded-2xl p-8 text-center border border-slate-200 shadow-sm flex flex-col items-center justify-center min-h-[280px]">
+            <div class="w-16 h-16 bg-slate-100 text-slate-300 rounded-full flex items-center justify-center mb-3">
+                <i class="fa-solid fa-box-open text-2xl"></i>
+            </div>
+            <h3 class="text-base font-black text-slate-800">Consulta de Inventario</h3>
+            <p class="text-xs text-slate-400 max-w-xs mx-auto mt-1 leading-relaxed">
+                Ingresa SKU, escanea un código de barras EAN-13 o presiona el micrófono.
+            </p>
+        </section>
+
+        <!-- TARJETA DETALLE DE PRODUCTO (UNA SOLA PANTALLA) -->
+        <section id="productCard" class="hidden bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm space-y-0">
+            
+            <!-- ENCABEZADO DE TARJETA -->
+            <div class="p-4 border-b border-slate-100 flex items-start gap-4">
+                <!-- FOTO CON REMOCIÓN DE FONDO EN CANVAS -->
+                <div class="w-24 h-24 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center shrink-0 relative overflow-hidden group">
+                    <img id="cardImage" src="" alt="Producto" class="w-full h-full object-contain p-1 transition-transform duration-300 group-hover:scale-110" onerror="handleImageError(this)">
+                    <div id="imageFallback" class="hidden absolute inset-0 text-slate-300 flex flex-col items-center justify-center bg-slate-50">
+                        <i class="fa-solid fa-shoe-prints text-xl"></i>
+                        <span class="text-[9px] font-bold text-slate-400 mt-1">Sin foto</span>
+                    </div>
+                </div>
+
+                <!-- INFO PRINCIPAL -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span id="cardCategory" class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-red-50 text-bata-red border border-red-100">
+                            CALZADO
+                        </span>
+                        <span id="cardCode" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                            SKU: -
+                        </span>
+                    </div>
+                    
+                    <h2 id="cardTitle" class="text-base font-black text-slate-900 leading-snug truncate">-</h2>
+                    
+                    <div class="mt-2 flex items-baseline justify-between">
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold block uppercase">Precio</span>
+                            <span id="cardPrice" class="text-lg font-black text-bata-red">S/ 0.00</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 font-bold block uppercase">Total Stock</span>
+                            <span id="totalPairs" class="text-lg font-black text-slate-800">0 <span class="text-xs font-normal text-slate-500">prs</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BADGES Y UBICACIÓN -->
+            <div class="bg-slate-50 px-4 py-2 border-b border-slate-100 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5 text-slate-500 font-medium text-[11px]">
+                    <i class="fa-solid fa-location-dot text-bata-red"></i>
+                    <span id="cardLocationText">Almacén Central</span>
+                </div>
+                <div id="stockBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-emerald-100 text-emerald-800">
+                    EN STOCK
+                </div>
+            </div>
+
+            <!-- MATRIZ DE TALLAS -->
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Tallas Disponibles</span>
+                    <span id="ageingTag" class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Antigüedad: -</span>
+                </div>
+
+                <div id="sizeGrid" class="grid grid-cols-4 gap-2"></div>
+            </div>
+
+            <!-- ACCIONES -->
+            <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
+                <button id="speakStockBtn" class="flex-1 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-2xs">
+                    <i class="fa-solid fa-volume-high text-slate-400"></i> Leer Stock
+                </button>
+                <button id="copyCodeBtn" class="flex-1 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-2xs">
+                    <i class="fa-solid fa-copy text-slate-400"></i> Copiar SKU
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION BAR (MENÚ INFERIOR) -->
+    <nav class="bg-white border-t border-slate-200 fixed bottom-0 inset-x-0 z-30 shrink-0 shadow-lg">
+        <div class="max-w-md mx-auto grid grid-cols-5 h-14">
+            <button class="flex flex-col items-center justify-center text-bata-red font-bold">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px] mt-0.5">Inicio</span>
+            </button>
+            <button class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-700">
+                <i class="fa-solid fa-user text-lg"></i>
+                <span class="text-[10px] mt-0.5">Mi Cuenta</span>
+            </button>
+            <button id="navScanBtn" class="flex flex-col items-center justify-center text-slate-400 hover:text-bata-red">
+                <div class="w-10 h-10 bg-bata-red text-white rounded-full flex items-center justify-center -mt-5 shadow-md border-2 border-white">
+                    <i class="fa-solid fa-barcode text-base"></i>
+                </div>
+                <span class="text-[10px] mt-0.5 font-bold text-slate-600">Escanear</span>
+            </button>
+            <button class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-700">
+                <i class="fa-solid fa-store text-lg"></i>
+                <span class="text-[10px] mt-0.5">En tienda</span>
+            </button>
+            <button class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-700">
+                <i class="fa-solid fa-ellipsis text-lg"></i>
+                <span class="text-[10px] mt-0.5">Más</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- FULLSCREEN CAMERA SCANNER OVERLAY -->
+    <div id="scannerModal" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between overflow-hidden">
+        
+        <!-- HEADER CÁMARA -->
+        <div class="relative z-20 p-4 flex items-center justify-between text-white bg-gradient-to-b from-black/80 to-transparent">
+            <button id="closeScannerBtn" class="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white text-lg active:scale-95">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <button class="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white text-sm">
+                    <i class="fa-solid fa-bolt-slash"></i>
+                </button>
+                <button class="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white text-sm">
+                    <i class="fa-solid fa-circle-question"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- TARJETA UBICACIÓN FLOTANTE -->
+        <div class="relative z-20 mx-6 -mt-2">
+            <div class="bg-white/95 backdrop-blur-md rounded-2xl p-3 flex items-center justify-between shadow-lg">
+                <div class="text-xs">
+                    <span class="text-slate-400 font-medium block text-[10px]">Estás en:</span>
+                    <span class="font-black text-slate-900 text-sm">Cusco</span>
+                </div>
+                <button class="text-xs font-bold text-slate-700 flex items-center gap-1 hover:underline">
+                    <i class="fa-solid fa-pen text-[10px]"></i> Cambiar
+                </button>
+            </div>
+        </div>
+
+        <!-- VISOR DE CÁMARA REAL (HTML5QRCODE) CON OVERLAY DE ESCANEO -->
+        <div class="absolute inset-0 z-0 flex items-center justify-center">
+            <div id="reader" class="w-full h-full object-cover"></div>
+
+            <!-- OVERLAY CON BORDES BLANCOS Y CÓDIGO DE BARRAS CENTRAL -->
+            <div class="absolute z-10 flex flex-col items-center justify-center pointer-events-none">
+                <p class="text-white text-sm font-bold mb-4 drop-shadow-md">Escanea el código de barras</p>
+                
+                <div class="w-72 h-44 border-4 border-white rounded-3xl relative flex items-center justify-center overflow-hidden bg-black/10 backdrop-blur-[1px]">
+                    <!-- FILIGRANA DIBUJO CÓDIGO DE BARRAS -->
+                    <div class="flex items-center justify-center gap-1.5 opacity-30 text-white">
+                        <div class="w-1.5 h-24 bg-white rounded-full"></div>
+                        <div class="w-1 h-24 bg-white rounded-full"></div>
+                        <div class="w-2.5 h-24 bg-white rounded-full"></div>
+                        <div class="w-1.5 h-24 bg-white rounded-full"></div>
+                        <div class="w-3 h-24 bg-white rounded-full"></div>
+                        <div class="w-1 h-24 bg-white rounded-full"></div>
+                        <div class="w-2 h-24 bg-white rounded-full"></div>
+                    </div>
+                    <!-- LÍNEA LÁSER ANIMADA -->
+                    <div class="absolute inset-x-0 h-0.5 bg-bata-red shadow-[0_0_12px_rgba(227,30,36,1)] animate-scan"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER CÁMARA (BOTÓN MANUAL) -->
+        <div class="relative z-20 p-6 flex justify-center bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+            <button id="manualCodeBtn" class="px-6 py-3 rounded-full border border-white/80 bg-white/20 backdrop-blur-md text-white font-bold text-xs tracking-wide active:scale-95 transition-all shadow-lg">
+                Ingresar código manualmente
+            </button>
         </div>
     </div>
 
-    <!-- TOAST -->
-    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none border border-slate-700">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
-        <span id="toastMessage" class="text-sm font-bold">Notificación</span>
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-16 inset-x-4 max-w-md mx-auto z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toastMessage" class="text-xs font-bold">Notificación</span>
     </div>
-
-    <script>
-        function playBeepSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.value = 1200;
-                gainNode.gain.value = 0.1;
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.start();
-                setTimeout(() => { oscillator.stop(); audioCtx.close(); }, 100);
-            } catch(e) {}
-        }
-    </script>
 
     <script>
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzAop3ucrjAhM4wFR-xWrD-ZvmAsHfFg1VN6sjHAWDkZ2IY1f2IuNnBRHavOk8-DBJ9ng/exec";
@@ -377,16 +362,14 @@
         const clearBtn = document.getElementById('clearBtn');
         const voiceBtn = document.getElementById('voiceBtn');
         const voiceStatus = document.getElementById('voiceStatus');
-        const voiceText = document.getElementById('voiceText');
         const scanBtn = document.getElementById('scanBtn');
+        const navScanBtn = document.getElementById('navScanBtn');
+
         const suggestionsContainer = document.getElementById('suggestionsContainer');
         const suggestionsList = document.getElementById('suggestionsList');
         const resultsCount = document.getElementById('resultsCount');
-        const totalItemsCount = document.getElementById('totalItemsCount');
 
         const emptyState = document.getElementById('emptyState');
-        const emptyStateDefaultHTML = emptyState.innerHTML;
-        const escapeHTML = (t) => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const productCard = document.getElementById('productCard');
 
         const cardCategory = document.getElementById('cardCategory');
@@ -398,14 +381,8 @@
         const totalPairs = document.getElementById('totalPairs');
         const ageingTag = document.getElementById('ageingTag');
         const sizeGrid = document.getElementById('sizeGrid');
-
         const cardImage = document.getElementById('cardImage');
         const imageFallback = document.getElementById('imageFallback');
-        const zoomImageBtn = document.getElementById('zoomImageBtn');
-        const imageModal = document.getElementById('imageModal');
-        const modalPreviewImage = document.getElementById('modalPreviewImage');
-        const modalImageCaption = document.getElementById('modalImageCaption');
-        const closeImageModalBtn = document.getElementById('closeImageModalBtn');
 
         const statusBadge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
@@ -414,13 +391,12 @@
 
         const scannerModal = document.getElementById('scannerModal');
         const closeScannerBtn = document.getElementById('closeScannerBtn');
+        const manualCodeBtn = document.getElementById('manualCodeBtn');
         const speakStockBtn = document.getElementById('speakStockBtn');
         const copyCodeBtn = document.getElementById('copyCodeBtn');
-        const newSearchBtn = document.getElementById('newSearchBtn');
 
         window.addEventListener('DOMContentLoaded', () => {
             fetchLiveInventoryData();
-            searchInput.focus();
         });
 
         async function fetchLiveInventoryData() {
@@ -431,7 +407,6 @@
                 if (Array.isArray(data) && data.length > 0) {
                     currentDatabase = data;
                     setConnectionStatus('connected', `${data.length} ítems`);
-                    totalItemsCount.textContent = `${data.length} artículos`;
                 } else {
                     setConnectionStatus('error', 'Sin datos');
                 }
@@ -443,23 +418,35 @@
         function setConnectionStatus(state, message) {
             statusText.textContent = message;
             if (state === 'connected') {
-                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 transition-all";
-                statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                statusBadge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200";
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse";
             } else if (state === 'connecting') {
-                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200 transition-all";
-                statusDot.className = "w-2 h-2 rounded-full bg-amber-500 animate-pulse";
+                statusBadge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200";
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse";
             } else {
-                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-200 transition-all";
-                statusDot.className = "w-2 h-2 rounded-full bg-red-500";
+                statusBadge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-200";
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-red-500";
             }
         }
 
         refreshDataBtn.addEventListener('click', () => {
-            refreshDataBtn.classList.add('animate-spin');
+            refreshDataBtn.querySelector('i').classList.add('animate-spin');
             fetchLiveInventoryData().finally(() => {
-                setTimeout(() => refreshDataBtn.classList.remove('animate-spin'), 500);
+                setTimeout(() => refreshDataBtn.querySelector('i').classList.remove('animate-spin'), 500);
             });
         });
+
+        /**
+         * LÓGICA DE EXTRACCIÓN EAN-13 A SKU BATA
+         * Ejemplo: EAN 1881241310030 -> Extrae los 7 dígitos internos 8812413
+         */
+        function extractSkuFromEan13(code) {
+            const cleanCode = String(code).trim().replace(/\D/g, '');
+            if (cleanCode.length === 13) {
+                return cleanCode.substring(1, 8); // Extrae los 7 dígitos desde la pos 1 a 7
+            }
+            return cleanCode;
+        }
 
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.trim().toLowerCase();
@@ -484,11 +471,19 @@
 
         function performSearch(query) {
             if (!query || currentDatabase.length === 0) return;
+
+            // Extraer SKU si es un código EAN-13
+            const extractedSku = extractSkuFromEan13(query);
+
             const matches = currentDatabase.filter(item => {
                 const sku = item.sku ? String(item.sku).toLowerCase() : '';
                 const title = item.title ? String(item.title).toLowerCase() : '';
                 const category = item.category ? String(item.category).toLowerCase() : '';
-                return sku.includes(query) || title.includes(query) || category.includes(query);
+
+                return sku.includes(query) || 
+                       sku.includes(extractedSku) || 
+                       title.includes(query) || 
+                       category.includes(query);
             });
 
             if (matches.length === 1) {
@@ -509,22 +504,22 @@
             matches.forEach(item => {
                 const totalStock = item.sizes ? Object.values(item.sizes).reduce((a, b) => a + Number(b), 0) : (Number(item.totalStock) || 0);
                 const li = document.createElement('li');
-                li.className = "p-4 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors border-b border-slate-100 last:border-none group";
+                li.className = "p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors border-b border-slate-100 last:border-none";
                 li.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-red-50 group-hover:text-bata-red transition-colors border border-slate-200">
-                            <i class="fa-solid fa-shoe-prints"></i>
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-400">
+                            <i class="fa-solid fa-shoe-prints text-xs"></i>
                         </div>
                         <div>
-                            <div class="text-sm font-bold text-slate-800 line-clamp-1">${item.title || 'Artículo sin nombre'}</div>
-                            <div class="text-xs font-mono text-slate-500 mt-0.5">SKU: ${item.sku || '-'}</div>
+                            <div class="text-xs font-bold text-slate-800">${item.title || 'Artículo'}</div>
+                            <div class="text-[10px] font-mono text-slate-400">SKU: ${item.sku || '-'}</div>
                         </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider ${totalStock > 0 ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-red-100 text-red-700 border border-red-200'}">
-                            ${totalStock > 0 ? `${totalStock} pares` : 'Agotado'}
+                        <span class="text-[9px] font-black px-2 py-0.5 rounded ${totalStock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'}">
+                            ${totalStock > 0 ? `${totalStock} prs` : 'Agotado'}
                         </span>
-                        <div class="text-xs font-bold text-slate-700 mt-1">${item.price || ''}</div>
+                        <div class="text-xs font-black text-slate-800 mt-0.5">${item.price || ''}</div>
                     </div>
                 `;
                 li.addEventListener('click', () => {
@@ -542,7 +537,6 @@
         }
 
         function showEmptyState() {
-            emptyState.innerHTML = emptyStateDefaultHTML;
             emptyState.classList.remove('hidden');
             productCard.classList.add('hidden');
         }
@@ -551,12 +545,12 @@
             emptyState.classList.remove('hidden');
             productCard.classList.add('hidden');
             emptyState.innerHTML = `
-                <div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-amber-100">
-                    <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                <div class="w-14 h-14 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
                 </div>
-                <h3 class="text-lg font-black text-slate-800">Producto No Encontrado</h3>
-                <p class="text-sm text-slate-500 max-w-xs mx-auto mt-2 leading-relaxed font-medium">
-                    No hay resultados para "<span class="font-bold text-bata-red">${escapeHTML(query)}</span>". Verifica el SKU.
+                <h3 class="text-base font-black text-slate-800">No Encontrado</h3>
+                <p class="text-xs text-slate-400 max-w-xs mx-auto mt-1">
+                    No existe el SKU o código "${query}". Verifica el número.
                 </p>
             `;
         }
@@ -578,7 +572,10 @@
             return `https://images.weserv.nl/?url=${originalUrl}`;
         }
 
-        function removeWhiteBackground(imgElement, sku, originalUrl) {
+        /**
+         * PROCESAMIENTO CANVAS EN TIEMPO REAL: REMOCIÓN DE FONDO BLANCO
+         */
+        function removeWhiteBackground(imgElement, sku) {
             if (!imgElement || imgElement.dataset.processedSku === String(sku)) return;
             imgElement.dataset.processedSku = String(sku);
             try {
@@ -594,17 +591,14 @@
                 const visited = new Uint8Array(width * height);
                 const queue = new Int32Array(width * height);
                 let head = 0, tail = 0;
-                const umbral = 17;
-                const suavizado = 0;
-                const minWhite = 255 - umbral;
+                const minWhite = 238; 
                 
                 const enqueue = (x, y) => {
                     if (x < 0 || y < 0 || x >= width || y >= height) return;
                     const pos = y * width + x;
                     if (visited[pos]) return;
                     const i = pos * 4;
-                    const isWhiteBackground = data[i] >= minWhite && data[i + 1] >= minWhite && data[i + 2] >= minWhite;
-                    if (isWhiteBackground) {
+                    if (data[i] >= minWhite && data[i + 1] >= minWhite && data[i + 2] >= minWhite) {
                         visited[pos] = 1;
                         queue[tail++] = pos;
                     }
@@ -615,7 +609,7 @@
                 
                 while (head < tail) {
                     const pos = queue[head++];
-                    data[pos * 4 + 3] = suavizado > 0 ? Math.max(0, 255 - suavizado) : 0;
+                    data[pos * 4 + 3] = 0;
                     const x = pos % width, y = Math.floor(pos / width);
                     enqueue(x + 1, y); enqueue(x - 1, y); enqueue(x, y + 1); enqueue(x, y - 1);
                 }
@@ -636,15 +630,8 @@
             
             cardImage.crossOrigin = 'anonymous';
             delete cardImage.dataset.processedSku;
-            cardImage.onload = () => removeWhiteBackground(cardImage, product.sku, originalImageUrl);
-            cardImage.onerror = () => {
-                if (cardImage.src !== originalImageUrl) {
-                    cardImage.onerror = () => handleImageError(cardImage);
-                    cardImage.src = originalImageUrl;
-                } else {
-                    handleImageError(cardImage);
-                }
-            };
+            cardImage.onload = () => removeWhiteBackground(cardImage, product.sku);
+            cardImage.onerror = () => handleImageError(cardImage);
             cardImage.classList.remove('hidden');
             imageFallback.classList.add('hidden');
             cardImage.src = imageUrl;
@@ -654,20 +641,20 @@
             cardTitle.textContent = product.title || `Artículo ${product.sku}`;
             cardLocationText.textContent = product.location || 'Almacén Central';
             cardPrice.textContent = product.price || 'S/ 0.00';
-            ageingTag.textContent = product.ageingDays ? product.ageingDays : 'N/A';
+            ageingTag.textContent = `Antigüedad: ${product.ageingDays || 'N/A'}`;
 
             const totalStock = product.sizes ? Object.values(product.sizes).reduce((a, b) => a + Number(b), 0) : (Number(product.totalStock) || 0);
-            totalPairs.textContent = totalStock;
+            totalPairs.innerHTML = `${totalStock} <span class="text-xs font-normal text-slate-500">prs</span>`;
 
             if (totalStock <= 0) {
-                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-red-100 text-red-700 border border-red-200";
-                stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> AGOTADO`;
+                stockBadge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-100 text-red-700";
+                stockBadge.textContent = "AGOTADO";
             } else if (totalStock < 3) {
-                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-amber-100 text-amber-700 border border-amber-200";
-                stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> STOCK BAJO`;
+                stockBadge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800";
+                stockBadge.textContent = "STOCK BAJO";
             } else {
-                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-100 text-emerald-700 border border-emerald-200";
-                stockBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> EN STOCK`;
+                stockBadge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800";
+                stockBadge.textContent = "EN STOCK";
             }
 
             sizeGrid.innerHTML = '';
@@ -678,87 +665,92 @@
                     const count = Number(product.sizes[size]) || 0;
                     const sizeBox = document.createElement('div');
                     
-                    let containerClass = "relative p-3 rounded-2xl border flex flex-col items-center justify-center transition-all duration-200 ";
-                    let numberClass = "text-2xl font-black ";
-                    let badgeClass = "text-[10px] font-extrabold px-2 py-0.5 rounded-md mt-1 border ";
+                    let bgClass = count > 0 ? "bg-white border-slate-200 text-slate-800" : "bg-slate-50 border-slate-100 text-slate-300";
+                    let badgeClass = count > 0 ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-slate-100 text-slate-400";
 
-                    if (count <= 0) {
-                        containerClass += "bg-slate-50 border-slate-200 opacity-60 grayscale";
-                        numberClass += "text-slate-400";
-                        badgeClass += "bg-slate-200 text-slate-500 border-transparent";
-                    } else if (count === 1) {
-                        containerClass += "bg-white border-amber-300 shadow-sm hover:shadow-md hover:border-amber-400 cursor-default";
-                        numberClass += "text-slate-800";
-                        badgeClass += "bg-amber-100 text-amber-700 border-amber-200";
-                    } else {
-                        containerClass += "bg-white border-emerald-300 shadow-sm hover:shadow-md hover:border-emerald-500 cursor-default";
-                        numberClass += "text-slate-800";
-                        badgeClass += "bg-emerald-50 text-emerald-700 border-emerald-200";
-                    }
-
-                    sizeBox.className = containerClass;
+                    sizeBox.className = `p-2 rounded-xl border flex flex-col items-center justify-center ${bgClass}`;
                     sizeBox.innerHTML = `
-                        <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest absolute top-2">Talla</span>
-                        <span class="${numberClass} mt-3">${size}</span>
-                        <span class="${badgeClass}">
-                            ${count} ${count === 1 ? 'par' : 'pares'}
+                        <span class="text-[9px] text-slate-400 font-bold uppercase">Talla</span>
+                        <span class="text-base font-black leading-tight">${size}</span>
+                        <span class="text-[9px] font-extrabold px-1.5 py-0.2 rounded border mt-0.5 ${badgeClass}">
+                            ${count} ${count === 1 ? 'par' : 'prs'}
                         </span>
                     `;
                     sizeGrid.appendChild(sizeBox);
                 });
             } else {
-                sizeGrid.innerHTML = '<div class="col-span-full py-4 text-center"><p class="text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200 inline-block px-4 py-2 rounded-lg">Sin desglose por tallas</p></div>';
+                sizeGrid.innerHTML = '<p class="col-span-full text-xs font-bold text-slate-400 text-center py-2">Sin desglose por tallas</p>';
             }
         }
 
-        zoomImageBtn.addEventListener('click', () => {
-            if (!currentMatchedProduct) return;
-            const src = cardImage.src;
-            if (src && !cardImage.classList.contains('hidden')) {
-                modalPreviewImage.src = src;
-                modalImageCaption.textContent = `${currentMatchedProduct.title || 'SKU: ' + currentMatchedProduct.sku}`;
-                imageModal.classList.remove('hidden');
-            }
-        });
+        // BÚSQUEDA POR VOZ SIN ESPACIOS
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
 
-        closeImageModalBtn.addEventListener('click', () => imageModal.classList.add('hidden'));
+            voiceBtn.addEventListener('click', () => {
+                if (isRecordingVoice) recognition.stop();
+                else recognition.start();
+            });
 
-        copyCodeBtn.addEventListener('click', () => {
-            if (!currentMatchedProduct) return;
-            navigator.clipboard.writeText(currentMatchedProduct.sku).then(() => {
-                showToast(`SKU ${currentMatchedProduct.sku} copiado`, 'success');
-            }).catch(() => showToast('No se pudo copiar', 'error'));
-        });
+            recognition.onstart = () => {
+                isRecordingVoice = true;
+                voiceBtn.classList.add('pulse-recording');
+                voiceStatus.classList.remove('hidden');
+            };
 
-        newSearchBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            clearBtn.classList.add('hidden');
-            hideSuggestions();
-            showEmptyState();
-            searchInput.focus();
-        });
+            recognition.onresult = (event) => {
+                // ELIMINAR TODOS LOS ESPACIOS Y CARACTERES NO ALFANUMÉRICOS
+                let rawTranscript = event.results[0][0].transcript;
+                let cleanTranscript = rawTranscript.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
 
-        scanBtn.addEventListener('click', () => {
+                searchInput.value = cleanTranscript;
+                clearBtn.classList.remove('hidden');
+                performSearch(cleanTranscript.toLowerCase());
+            };
+
+            recognition.onend = () => {
+                isRecordingVoice = false;
+                voiceBtn.classList.remove('pulse-recording');
+                voiceStatus.classList.add('hidden');
+            };
+        } else {
+            voiceBtn.style.display = 'none';
+        }
+
+        // CONTROL DEL ESCÁNER CÁMARA
+        const openScanner = () => {
             scannerModal.classList.remove('hidden');
             startCameraScanner();
-        });
+        };
 
-        closeScannerBtn.addEventListener('click', stopCameraScanner);
+        scanBtn.addEventListener('click', openScanner);
+        navScanBtn.addEventListener('click', openScanner);
+        closeScannerBtn.addEventListener('click', () => stopCameraScanner());
+        manualCodeBtn.addEventListener('click', () => {
+            stopCameraScanner();
+            searchInput.focus();
+        });
 
         function startCameraScanner() {
             if (html5QrcodeScanner) return;
             html5QrcodeScanner = new Html5Qrcode("reader");
             html5QrcodeScanner.start(
                 { facingMode: "environment" }, 
-                { fps: 15, qrbox: { width: 250, height: 180 } }, 
+                { fps: 20, qrbox: { width: 280, height: 180 } }, 
                 (decodedText) => {
                     playBeepSound();
                     stopCameraScanner();
-                    searchInput.value = decodedText;
+                    
+                    // Extraer SKU si es EAN-13
+                    const extractedSku = extractSkuFromEan13(decodedText);
+                    
+                    searchInput.value = extractedSku;
                     clearBtn.classList.remove('hidden');
-                    performSearch(decodedText.trim().toLowerCase());
+                    performSearch(extractedSku.toLowerCase());
                 }
-            ).catch(err => {
+            ).catch(() => {
                 showToast("No se pudo acceder a la cámara", "error");
                 stopCameraScanner();
             });
@@ -779,45 +771,25 @@
             }
         }
 
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'es-ES';
-
-            voiceBtn.addEventListener('click', () => {
-                if (isRecordingVoice) {
-                    recognition.stop();
-                } else {
-                    recognition.start();
-                }
-            });
-
-            recognition.onstart = () => {
-                isRecordingVoice = true;
-                voiceBtn.classList.add('pulse-recording');
-                voiceStatus.classList.remove('hidden');
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript.replace(/\./g, '');
-                searchInput.value = transcript;
-                clearBtn.classList.remove('hidden');
-                performSearch(transcript.trim().toLowerCase());
-            };
-
-            recognition.onend = () => {
-                isRecordingVoice = false;
-                voiceBtn.classList.remove('pulse-recording');
-                voiceStatus.classList.add('hidden');
-            };
-        } else {
-            voiceBtn.style.display = 'none';
+        function playBeepSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 1200;
+                gainNode.gain.value = 0.1;
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                setTimeout(() => { oscillator.stop(); audioCtx.close(); }, 100);
+            } catch(e) {}
         }
 
         speakStockBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
             const totalStock = currentMatchedProduct.sizes ? Object.values(currentMatchedProduct.sizes).reduce((a, b) => a + Number(b), 0) : 0;
-            const textToSpeak = `Artículo ${currentMatchedProduct.title}. Tiene un total de ${totalStock} pares en stock.`;
+            const textToSpeak = `Artículo ${currentMatchedProduct.title}. Stock disponible: ${totalStock} pares.`;
 
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(textToSpeak);
@@ -826,22 +798,24 @@
             }
         });
 
+        copyCodeBtn.addEventListener('click', () => {
+            if (!currentMatchedProduct) return;
+            navigator.clipboard.writeText(currentMatchedProduct.sku).then(() => {
+                showToast(`SKU ${currentMatchedProduct.sku} copiado`, 'success');
+            });
+        });
+
         function showToast(message, type = 'info') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
             const toastIcon = document.getElementById('toastIcon');
             
             toastMessage.textContent = message;
-            
-            if (type === 'success') {
-                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
-            } else if (type === 'error') {
-                toastIcon.className = "fa-solid fa-circle-exclamation text-red-400 text-lg";
-            }
+            toastIcon.className = type === 'success' ? "fa-solid fa-circle-check text-emerald-400 text-base" : "fa-solid fa-circle-exclamation text-red-400 text-base";
 
-            toast.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
             setTimeout(() => {
-                toast.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
             }, 3000);
         }
     </script>
