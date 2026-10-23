@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Consulta de Articulo Stock - Bata1</title>
 
     <!-- Tailwind CSS CDN -->
@@ -25,13 +25,17 @@
                         bata: {
                             red: '#E31E24',
                             darkRed: '#B81318',
-                            dark: '#111827',
+                            dark: '#0F172A',
                             slate: '#1E293B',
                             light: '#F8FAFC'
                         }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(227, 30, 36, 0.4)',
+                        'soft': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
                     }
                 }
             }
@@ -42,6 +46,7 @@
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #F1F5F9; 
+            -webkit-tap-highlight-color: transparent;
         }
 
         @keyframes pulse-red {
@@ -53,10 +58,11 @@
             animation: pulse-red 1.5s infinite;
             background-color: #E31E24 !important;
             color: white !important;
+            border-color: #E31E24 !important;
         }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #F1F5F9; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
@@ -66,192 +72,196 @@
             width: 100% !important;
         }
 
-        /* ESCENARIO DE ESTUDIO PARA LA FOTO (la foto ya viene sin fondo blanco).
-           Fondo claro con un leve resplandor rojo Bata en la base: el calzado
-           resalta y, si el recorte falla, la foto original (fondo blanco) se ve igual de limpia. */
+        /* Escenario para la foto del zapato */
         .photo-stage {
-            background:
-                radial-gradient(ellipse 70% 45% at 50% 100%, rgba(227, 30, 36, 0.16), transparent 70%),
-                radial-gradient(circle at 50% 35%, #ffffff 0%, #f1f5f9 55%, #d9e1ec 100%);
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 18px 40px -12px rgba(0, 0, 0, 0.6);
-        }
-        /* Sombra de contacto bajo el zapato */
-        .photo-stage::after {
-            content: "";
-            position: absolute;
-            left: 20%;
-            right: 20%;
-            bottom: 11%;
-            height: 14px;
-            background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.38) 0%, rgba(15, 23, 42, 0) 70%);
-            filter: blur(3px);
-            pointer-events: none;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05), 0 10px 20px -5px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
         }
         .img-product {
             position: relative;
             z-index: 1;
-            padding: 0.6rem 0.6rem 1.1rem;
-            filter: drop-shadow(0 8px 6px rgba(15, 23, 42, 0.28));
+            padding: 1rem;
+            filter: drop-shadow(0 15px 10px rgba(15, 23, 42, 0.2));
+            transition: transform 0.3s ease;
+        }
+        .group:hover .img-product {
+            transform: scale(1.05) translateY(-5px);
+        }
+
+        /* Efecto Cristal para el header */
+        .glass-header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
     </style>
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col justify-between selection:bg-red-500 selection:text-white">
 
-    <!-- HEADER / TOPBAR (SIN LOGO BATA) -->
-    <header class="bg-bata-dark text-white sticky top-0 z-30 shadow-lg border-b border-slate-800">
-        <div class="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
-            <div>
-                <h1 class="text-base sm:text-lg font-extrabold tracking-tight leading-tight">Consulta de Articulo Stock - Bata1</h1>
-                <p class="text-xs text-slate-400 hidden sm:block">Control de Stock en Tienda y Almacén</p>
+    <!-- HEADER -->
+    <header class="glass-header text-white sticky top-0 z-30 shadow-lg border-b border-slate-700/50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-bata-red rounded-lg flex items-center justify-center shadow-glow">
+                    <i class="fa-solid fa-shoe-prints text-white text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-extrabold tracking-tight leading-tight">Consulta de Stock</h1>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Bata1</p>
+                </div>
             </div>
 
             <div class="flex items-center gap-2">
-                <div id="statusBadge" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all">
-                    <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <div id="statusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 transition-all">
+                    <span id="statusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                     <span id="statusText">Conectando...</span>
                 </div>
-                <button id="refreshDataBtn" title="Sincronizar Inventario" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-                    <i class="fa-solid fa-rotate"></i>
+                <button id="refreshDataBtn" title="Sincronizar Inventario" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 rounded-full transition-colors active:scale-95">
+                    <i class="fa-solid fa-rotate text-sm"></i>
                 </button>
             </div>
         </div>
     </header>
 
     <!-- MAIN APP BODY -->
-    <main class="max-w-4xl w-full mx-auto px-4 py-4 sm:py-6 flex-1 flex flex-col gap-5">
+    <main class="max-w-4xl w-full mx-auto px-4 py-5 sm:py-8 flex-1 flex flex-col gap-5">
 
         <!-- SEARCH CONTAINER ("LA BALA") -->
-        <section class="bg-white rounded-2xl p-4 sm:p-5 shadow-xl border border-slate-200">
-            <label for="searchInput" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-                <span>Escanear, Hablar o Buscar ("La Bala")</span>
-                <span id="totalItemsCount" class="text-slate-400 font-normal lowercase">0 artículos cargados</span>
-            </label>
+        <section class="bg-white rounded-3xl p-4 sm:p-5 shadow-soft border border-slate-200/60 relative z-20">
+            <div class="flex justify-between items-center mb-3">
+                <label for="searchInput" class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-bata-red"></i> Búsqueda Rápida
+                </label>
+                <span id="totalItemsCount" class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">0 artículos</span>
+            </div>
 
-            <div class="relative flex items-center">
-                <div class="absolute left-4 text-slate-400 text-lg pointer-events-none">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+            <div class="relative flex items-center group">
+                <div class="absolute left-4 text-slate-400 group-focus-within:text-bata-red transition-colors pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass text-lg"></i>
                 </div>
 
                 <input type="text" id="searchInput" 
-                    placeholder="Escribe SKU, código, nombre o categoría..." 
+                    placeholder="Escanear, hablar o escribir SKU..." 
                     autocomplete="off" 
                     autofocus
-                    class="w-full pl-11 pr-32 py-3.5 sm:py-4 text-base sm:text-lg font-semibold bg-slate-50 border-2 border-slate-200 focus:border-bata-red focus:bg-white rounded-xl outline-none transition-all duration-200 text-slate-800 placeholder-slate-400 shadow-inner">
+                    class="w-full pl-12 pr-32 py-4 text-base sm:text-lg font-bold bg-slate-50 border-2 border-slate-200 focus:border-bata-red focus:ring-4 focus:ring-red-500/10 focus:bg-white rounded-2xl outline-none transition-all duration-200 text-slate-800 placeholder-slate-400 placeholder:font-medium shadow-sm">
 
-                <div class="absolute right-2 flex items-center gap-1">
-                    <button id="clearBtn" class="hidden p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors" title="Limpiar texto">
+                <div class="absolute right-2 flex items-center gap-1.5">
+                    <button id="clearBtn" class="hidden w-9 h-9 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-xl transition-colors" title="Limpiar texto">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
 
-                    <button id="voiceBtn" class="p-2.5 text-slate-600 hover:text-bata-red hover:bg-red-50 rounded-xl transition-all" title="Búsqueda por Voz">
+                    <button id="voiceBtn" class="w-10 h-10 flex items-center justify-center text-slate-600 bg-white border border-slate-200 hover:border-bata-red hover:text-bata-red rounded-xl transition-all shadow-sm" title="Búsqueda por Voz">
                         <i class="fa-solid fa-microphone text-lg"></i>
                     </button>
 
-                    <button id="scanBtn" class="p-2.5 bg-bata-red hover:bg-bata-darkRed text-white rounded-xl shadow-md transition-all active:scale-95" title="Escanear Código de Barras / QR">
+                    <button id="scanBtn" class="w-10 h-10 flex items-center justify-center bg-bata-red hover:bg-bata-darkRed text-white rounded-xl shadow-md shadow-red-500/30 transition-all active:scale-95" title="Escanear Código">
                         <i class="fa-solid fa-barcode text-lg"></i>
                     </button>
                 </div>
             </div>
 
-            <div id="voiceStatus" class="hidden mt-2 text-xs font-semibold text-bata-red flex items-center gap-2">
+            <div id="voiceStatus" class="hidden mt-3 text-xs font-bold text-bata-red flex items-center justify-center gap-2 bg-red-50 py-2 rounded-lg border border-red-100">
                 <span class="w-2 h-2 rounded-full bg-bata-red animate-ping"></span>
                 <span id="voiceText">Escuchando... Di el código o producto</span>
             </div>
         </section>
 
         <!-- INSTANT AUTOCOMPLETE MATCHES LIST -->
-        <section id="suggestionsContainer" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
-            <div class="px-4 py-2.5 bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-600 flex justify-between items-center">
+        <section id="suggestionsContainer" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all absolute top-[160px] w-[calc(100%-2rem)] max-w-[calc(56rem-2rem)] z-40">
+            <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 flex justify-between items-center">
                 <span>Resultados Encontrados (<span id="resultsCount">0</span>)</span>
-                <span class="text-slate-400 font-normal">Toca para seleccionar</span>
+                <span class="text-slate-400 font-medium">Toca para seleccionar</span>
             </div>
-            <ul id="suggestionsList" class="divide-y divide-slate-100 max-h-64 overflow-y-auto"></ul>
+            <ul id="suggestionsList" class="divide-y divide-slate-100 max-h-72 overflow-y-auto"></ul>
         </section>
 
         <!-- MAIN PRODUCT DISPLAY / EMPTY STATE CARD -->
-        <section id="productCardContainer" class="flex-1">
+        <section id="productCardContainer" class="flex-1 relative">
             
-            <div id="emptyState" class="bg-white rounded-2xl p-8 sm:p-12 text-center border-2 border-dashed border-slate-200 shadow-sm my-auto">
-                <div class="w-16 h-16 bg-red-50 text-bata-red rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                    <i class="fa-solid fa-shoe-prints text-2xl"></i>
+            <div id="emptyState" class="bg-white rounded-3xl p-10 sm:p-16 text-center border-2 border-dashed border-slate-200 shadow-soft my-auto flex flex-col items-center justify-center min-h-[300px]">
+                <div class="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-slate-100">
+                    <i class="fa-solid fa-box-open text-3xl"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800">Listo para Buscar Productos</h3>
-                <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
-                    Usa el buscador "La Bala", presiona el botón de micrófono para hablar o escanea el código de barras de un calzado con la cámara.
+                <h3 class="text-lg font-extrabold text-slate-800">Esperando Búsqueda</h3>
+                <p class="text-sm text-slate-500 max-w-xs mx-auto mt-2 leading-relaxed">
+                    Ingresa un SKU, usa el micrófono o escanea el código de barras para consultar el inventario exacto.
                 </p>
             </div>
 
-            <div id="productCard" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all">
+            <div id="productCard" class="hidden bg-white rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden transition-all duration-300">
                 
-                <!-- TARJETA SUPERIOR OSCURA CON FOTO SOBRE ESCENARIO CLARO -->
-                <div class="bg-slate-900 text-white p-5 sm:p-6 relative overflow-hidden">
-                    <div class="absolute -right-8 -bottom-8 opacity-10 text-white pointer-events-none">
-                        <i class="fa-solid fa-boxes-stacked text-9xl"></i>
-                    </div>
+                <!-- TARJETA SUPERIOR OSCURA -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 sm:p-7 relative overflow-hidden">
+                    <!-- Patrón de fondo -->
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-slate-700/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
 
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center relative z-10">
                         
-                        <!-- FOTO DEL PRODUCTO (ESCENARIO CLARO) -->
-                        <div class="md:col-span-4 flex justify-center items-center">
-                            <div class="photo-stage relative w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden flex items-center justify-center group">
+                        <!-- FOTO DEL PRODUCTO -->
+                        <div class="md:col-span-5 flex justify-center items-center">
+                            <div class="photo-stage relative w-52 h-52 sm:w-64 sm:h-64 rounded-[2rem] overflow-hidden flex items-center justify-center group bg-white">
                                 <img id="cardImage" 
                                      src="" 
                                      alt="Foto del Producto" 
-                                     class="img-product w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                                     class="img-product w-full h-full object-contain"
                                      onerror="handleImageError(this)">
                                 
-                                <div id="imageFallback" class="hidden absolute inset-0 text-slate-400 flex flex-col items-center justify-center p-2 text-center z-10">
-                                    <i class="fa-solid fa-shoe-prints text-3xl mb-1 text-slate-400"></i>
-                                    <span class="text-[10px] uppercase font-bold text-slate-500">Sin Imagen</span>
+                                <div id="imageFallback" class="hidden absolute inset-0 text-slate-400 flex flex-col items-center justify-center p-4 text-center z-10 bg-slate-50">
+                                    <i class="fa-solid fa-shoe-prints text-4xl mb-2 text-slate-300"></i>
+                                    <span class="text-[10px] uppercase font-extrabold text-slate-400 tracking-wider">Sin Imagen</span>
                                 </div>
 
-                                <button id="zoomImageBtn" class="absolute bottom-2 right-2 z-20 bg-slate-900/80 hover:bg-bata-red text-white p-2 rounded-xl text-xs sm:opacity-0 sm:group-hover:opacity-100 transition-all shadow-lg" title="Ver Ampliado">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i>
+                                <button id="zoomImageBtn" class="absolute bottom-3 right-3 z-20 bg-slate-900/80 hover:bg-bata-red text-white w-8 h-8 rounded-full flex items-center justify-center text-xs sm:opacity-0 sm:group-hover:opacity-100 transition-all shadow-lg backdrop-blur-sm" title="Ver Ampliado">
+                                    <i class="fa-solid fa-expand"></i>
                                 </button>
                             </div>
                         </div>
 
                         <!-- DATOS DEL PRODUCTO -->
-                        <div class="md:col-span-8 flex flex-col justify-between space-y-4">
-                            <div class="space-y-2">
+                        <div class="md:col-span-7 flex flex-col justify-center space-y-4">
+                            <div class="space-y-3">
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <span id="cardCategory" class="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase bg-bata-red text-white tracking-wider shadow">
+                                    <span id="cardCategory" class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-bata-red text-white tracking-widest shadow-sm">
                                         CALZADO
                                     </span>
-                                    <span id="cardCode" class="text-xs font-mono bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded border border-slate-700">
+                                    <span id="cardCode" class="text-[11px] font-mono font-medium bg-slate-700/50 text-slate-300 px-2.5 py-1 rounded-md border border-slate-600/50">
                                         SKU: -
                                     </span>
                                 </div>
 
                                 <h2 id="cardTitle" class="text-2xl sm:text-3xl font-black text-white leading-tight tracking-tight">-</h2>
                                 
-                                <p id="cardLocation" class="text-xs text-slate-400 flex items-center gap-1.5">
+                                <p id="cardLocation" class="text-xs font-medium text-slate-400 flex items-center gap-1.5">
                                     <i class="fa-solid fa-location-dot text-bata-red"></i> <span id="cardLocationText">Ubicación no especificada</span>
                                 </p>
                             </div>
 
-                            <!-- 3 BLOQUES: PRECIO, TOTAL PARES Y ANTIGÜEDAD -->
-                            <div class="grid grid-cols-3 gap-2.5 pt-3 border-t border-slate-800 items-center">
+                            <!-- BLOQUES DE DATOS -->
+                            <div class="grid grid-cols-3 gap-2 sm:gap-3 pt-4 border-t border-slate-700/50">
                                 
                                 <!-- PRECIO VENTA -->
-                                <div class="bg-slate-800/60 border border-slate-700/60 p-2.5 rounded-xl text-center shadow-inner">
-                                    <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Precio Venta</span>
-                                    <span id="cardPrice" class="text-lg sm:text-2xl font-black text-white tracking-tight">-</span>
+                                <div class="bg-slate-800/80 border border-slate-700/50 p-3 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
+                                    <div class="absolute -right-4 -top-4 text-slate-700/30 group-hover:text-bata-red/20 transition-colors"><i class="fa-solid fa-tag text-3xl"></i></div>
+                                    <span class="text-[9px] sm:text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1 relative z-10">Precio</span>
+                                    <span id="cardPrice" class="text-lg sm:text-xl font-black text-white tracking-tight relative z-10">-</span>
                                 </div>
 
                                 <!-- TOTAL PARES -->
-                                <div class="bg-slate-800/60 border border-slate-700/60 p-2.5 rounded-xl text-center shadow-inner">
-                                    <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Total Pares</span>
-                                    <div class="flex items-baseline justify-center gap-1 mt-0.5">
-                                        <span id="totalPairs" class="text-lg sm:text-2xl font-black text-white">0</span>
-                                        <span class="text-[10px] font-bold text-slate-400">pares</span>
+                                <div class="bg-slate-800/80 border border-slate-700/50 p-3 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
+                                    <div class="absolute -right-4 -top-4 text-slate-700/30 group-hover:text-emerald-500/20 transition-colors"><i class="fa-solid fa-boxes-stacked text-3xl"></i></div>
+                                    <span class="text-[9px] sm:text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1 relative z-10">Total</span>
+                                    <div class="flex items-baseline gap-1 relative z-10">
+                                        <span id="totalPairs" class="text-lg sm:text-xl font-black text-white">0</span>
+                                        <span class="text-[9px] font-bold text-slate-400">pares</span>
                                     </div>
                                 </div>
 
                                 <!-- ANTIGÜEDAD -->
-                                <div class="bg-slate-800/60 border border-slate-700/60 p-2.5 rounded-xl text-center shadow-inner">
-                                    <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider mb-0.5">Antigüedad</span>
-                                    <span id="ageingTag" class="inline-block px-2 py-0.5 rounded text-xs font-bold bg-slate-700 text-slate-200 border border-slate-600 truncate max-w-full">
+                                <div class="bg-slate-800/80 border border-slate-700/50 p-3 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
+                                    <span class="text-[9px] sm:text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1 relative z-10">Antigüedad</span>
+                                    <span id="ageingTag" class="inline-block px-2 py-0.5 rounded text-[10px] font-black bg-slate-700 text-slate-200 border border-slate-600 truncate max-w-full relative z-10">
                                         -
                                     </span>
                                 </div>
@@ -263,40 +273,40 @@
                 </div>
 
                 <!-- BARRITA DE ESTADO / EN STOCK -->
-                <div class="bg-slate-950 px-5 py-2.5 border-t border-slate-800 flex items-center justify-between">
-                    <span class="text-xs text-slate-400 font-semibold flex items-center gap-1.5">
-                        <i class="fa-solid fa-shield-halved text-emerald-400"></i> Estado de Inventario
+                <div class="bg-slate-900 px-5 py-3 border-t border-slate-800 flex items-center justify-between shadow-inner">
+                    <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved text-emerald-400"></i> Estado
                     </span>
-                    <div id="stockBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-emerald-500 text-slate-950 shadow-md">
+                    <div id="stockBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-500 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
                         <i class="fa-solid fa-circle-check"></i> EN STOCK
                     </div>
                 </div>
 
                 <!-- MATRIZ DE TALLAS -->
-                <div class="p-4 sm:p-6 bg-white">
-                    <div class="flex items-center justify-between mb-3">
-                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-ruler-horizontal text-bata-red"></i>
-                            <span>Disponibilidad de Tallas en Almacén</span>
+                <div class="p-5 sm:p-7 bg-slate-50">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-bata-red"></i>
+                            <span>Tallas Disponibles</span>
                         </h4>
-                        <span class="text-xs font-semibold text-slate-400">Verifique pares físicos</span>
+                        <span class="text-[10px] font-bold text-slate-400 bg-white border border-slate-200 px-2 py-1 rounded-md">Verificar físico</span>
                     </div>
 
-                    <div id="sizeGrid" class="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2.5"></div>
+                    <div id="sizeGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3"></div>
                 </div>
 
                 <!-- BOTONES DE ACCIÓN -->
-                <div class="bg-slate-50 px-4 py-3 sm:px-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex items-center gap-2">
-                        <button id="speakStockBtn" class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95">
-                            <i class="fa-solid fa-volume-high text-bata-red"></i> Leer Stock
+                <div class="bg-white px-5 py-4 sm:px-7 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button id="speakStockBtn" class="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all active:scale-95 border border-slate-200">
+                            <i class="fa-solid fa-volume-high text-slate-500"></i> Leer Stock
                         </button>
-                        <button id="copyCodeBtn" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-all active:scale-95">
-                            <i class="fa-solid fa-copy"></i> Copiar Código
+                        <button id="copyCodeBtn" class="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all active:scale-95 border border-slate-200">
+                            <i class="fa-solid fa-copy text-slate-500"></i> Copiar SKU
                         </button>
                     </div>
 
-                    <button id="newSearchBtn" class="px-4 py-2 bg-bata-red hover:bg-bata-darkRed text-white rounded-xl text-xs font-extrabold transition-all shadow-md active:scale-95 flex items-center gap-2">
+                    <button id="newSearchBtn" class="w-full sm:w-auto px-6 py-2.5 bg-bata-red hover:bg-bata-darkRed text-white rounded-xl text-xs font-extrabold transition-all shadow-md shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-plus"></i> Nueva Búsqueda
                     </button>
                 </div>
@@ -305,46 +315,50 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-white border-t border-slate-200 py-3 px-4 text-center text-xs text-slate-400 mt-6">
-        <p>© Bata Perú - Consulta de Articulo Stock - Bata1</p>
+    <footer class="bg-white border-t border-slate-200 py-4 px-4 text-center text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-auto">
+        <p>© Bata Perú - Control de Stock</p>
     </footer>
 
     <!-- BARCODE SCANNER MODAL -->
-    <div id="scannerModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 relative">
+    <div id="scannerModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in duration-200">
             <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-camera text-bata-red text-lg"></i>
-                    <h3 class="font-bold text-slate-800 text-base">Escáner de Código de Barras</h3>
+                    <div class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-bata-red">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                    <h3 class="font-extrabold text-slate-800 text-sm">Escanear Producto</h3>
                 </div>
                 <button id="closeScannerBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <div class="p-2 bg-black rounded-xl overflow-hidden min-h-[280px] flex items-center justify-center">
+            <div class="p-2 bg-slate-900 rounded-2xl overflow-hidden min-h-[280px] flex items-center justify-center relative">
                 <div id="reader" class="w-full"></div>
+                <!-- Línea de escaneo animada -->
+                <div class="absolute top-1/2 left-0 w-full h-0.5 bg-bata-red/80 shadow-[0_0_10px_rgba(227,30,36,1)] animate-pulse pointer-events-none"></div>
             </div>
-            <p class="text-xs text-center text-slate-500 mt-3">Apunta la cámara al código de barras o QR del producto</p>
+            <p class="text-[11px] font-semibold text-center text-slate-500 mt-4 bg-slate-50 py-2 rounded-lg">Enfoca el código de barras dentro del recuadro</p>
         </div>
     </div>
 
     <!-- IMAGE PREVIEW MODAL -->
     <div id="imageModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="relative max-w-2xl w-full bg-white rounded-2xl p-3 shadow-2xl flex flex-col items-center">
-            <button id="closeImageModalBtn" class="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-bata-red text-white hover:bg-bata-darkRed flex items-center justify-center transition-colors shadow-lg z-10">
+        <div class="relative max-w-2xl w-full bg-white rounded-3xl p-4 shadow-2xl flex flex-col items-center animate-in fade-in zoom-in duration-200">
+            <button id="closeImageModalBtn" class="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-slate-800 text-white hover:bg-bata-red flex items-center justify-center transition-colors shadow-lg z-10 border-2 border-white">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <div class="photo-stage relative w-full h-80 sm:h-96 flex items-center justify-center rounded-xl overflow-hidden p-4">
-                <img id="modalPreviewImage" src="" alt="Vista previa del producto" class="img-product max-w-full max-h-full object-contain">
+            <div class="bg-slate-50 rounded-2xl w-full h-80 sm:h-[28rem] flex items-center justify-center overflow-hidden p-4 border border-slate-100">
+                <img id="modalPreviewImage" src="" alt="Vista previa del producto" class="max-w-full max-h-full object-contain drop-shadow-2xl">
             </div>
-            <p id="modalImageCaption" class="text-xs font-bold text-slate-600 mt-2 text-center">-</p>
+            <p id="modalImageCaption" class="text-xs font-bold text-slate-700 mt-3 text-center bg-slate-100 px-4 py-1.5 rounded-full">-</p>
         </div>
     </div>
 
     <!-- NOTIFICATION TOAST FEEDBACK -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none border border-slate-800">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
-        <span id="toastMessage" class="text-xs font-semibold">Notificación</span>
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none border border-slate-700">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastMessage" class="text-sm font-bold">Notificación</span>
     </div>
 
     <script>
@@ -355,8 +369,8 @@
                 const gainNode = audioCtx.createGain();
 
                 oscillator.type = 'sine';
-                oscillator.frequency.value = 1000;
-                gainNode.gain.value = 0.15;
+                oscillator.frequency.value = 1200;
+                gainNode.gain.value = 0.1;
 
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
@@ -365,7 +379,7 @@
                 setTimeout(() => {
                     oscillator.stop();
                     audioCtx.close();
-                }, 120);
+                }, 100);
             } catch(e) {
                 console.log("Audio Context play error:", e);
             }
@@ -374,6 +388,7 @@
 
     <!-- CORE LOGIC & API INTEGRATION SCRIPT -->
     <script>
+        // Reemplaza esta URL con tu endpoint de Apps Script
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzAop3ucrjAhM4wFR-xWrD-ZvmAsHfFg1VN6sjHAWDkZ2IY1f2IuNnBRHavOk8-DBJ9ng/exec";
 
         let currentDatabase = [];
@@ -393,7 +408,6 @@
         const totalItemsCount = document.getElementById('totalItemsCount');
 
         const emptyState = document.getElementById('emptyState');
-        // Guarda el contenido original para restaurarlo después de un "No encontrado"
         const emptyStateDefaultHTML = emptyState.innerHTML;
         const escapeHTML = (t) => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const productCard = document.getElementById('productCard');
@@ -440,33 +454,36 @@
 
                 if (Array.isArray(data) && data.length > 0) {
                     currentDatabase = data;
-                    setConnectionStatus('connected', `Conectado (${data.length} ítems)`);
-                    totalItemsCount.textContent = `${data.length} artículos sincronizados`;
+                    setConnectionStatus('connected', `${data.length} ítems`);
+                    totalItemsCount.textContent = `${data.length} artículos`;
                 } else {
                     setConnectionStatus('error', 'Sin datos');
                 }
             } catch (e) {
                 console.error("Error al sincronizar inventario:", e);
-                setConnectionStatus('error', 'Error de conexión');
+                setConnectionStatus('error', 'Desconectado');
             }
         }
 
         function setConnectionStatus(state, message) {
             statusText.textContent = message;
             if (state === 'connected') {
-                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all";
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all";
+                statusDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
             } else if (state === 'connecting') {
-                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all";
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 transition-all";
+                statusDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
             } else {
-                statusBadge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30 transition-all";
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-400";
+                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20 transition-all";
+                statusDot.className = "w-2 h-2 rounded-full bg-red-400";
             }
         }
 
         refreshDataBtn.addEventListener('click', () => {
-            fetchLiveInventoryData();
+            refreshDataBtn.classList.add('animate-spin');
+            fetchLiveInventoryData().finally(() => {
+                setTimeout(() => refreshDataBtn.classList.remove('animate-spin'), 500);
+            });
         });
 
         searchInput.addEventListener('input', (e) => {
@@ -508,7 +525,7 @@
                 hideSuggestions();
             } else if (matches.length > 1) {
                 renderSuggestions(matches);
-                renderProductCard(matches[0]);
+                renderProductCard(matches[0]); // Muestra el primero por defecto
             } else {
                 hideSuggestions();
                 showNotFoundState(query);
@@ -522,14 +539,19 @@
             matches.forEach(item => {
                 const totalStock = item.sizes ? Object.values(item.sizes).reduce((a, b) => a + Number(b), 0) : (Number(item.totalStock) || 0);
                 const li = document.createElement('li');
-                li.className = "p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors border-b border-slate-100 last:border-none";
+                li.className = "p-4 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors border-b border-slate-100 last:border-none group";
                 li.innerHTML = `
-                    <div>
-                        <div class="text-sm font-bold text-slate-800">${item.title || 'Artículo sin nombre'}</div>
-                        <div class="text-xs text-slate-500">SKU: ${item.sku || '-'}</div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-red-50 group-hover:text-bata-red transition-colors">
+                            <i class="fa-solid fa-shoe-prints"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-800 line-clamp-1">${item.title || 'Artículo sin nombre'}</div>
+                            <div class="text-xs font-mono text-slate-500 mt-0.5">SKU: ${item.sku || '-'}</div>
+                        </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-xs font-bold px-2.5 py-1 rounded-full ${totalStock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                        <span class="text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider ${totalStock > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">
                             ${totalStock > 0 ? `${totalStock} pares` : 'Agotado'}
                         </span>
                         <div class="text-xs font-bold text-slate-700 mt-1">${item.price || ''}</div>
@@ -538,6 +560,7 @@
                 li.addEventListener('click', () => {
                     renderProductCard(item);
                     hideSuggestions();
+                    searchInput.value = item.sku; // Actualiza el input con el SKU seleccionado
                 });
                 suggestionsList.appendChild(li);
             });
@@ -559,12 +582,12 @@
             emptyState.classList.remove('hidden');
             productCard.classList.add('hidden');
             emptyState.innerHTML = `
-                <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                    <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                <div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-amber-100">
+                    <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800">Producto No Encontrado</h3>
-                <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
-                    No se encontró ningún artículo coincidente con "<span class="font-bold text-slate-700">${escapeHTML(query)}</span>".
+                <h3 class="text-lg font-extrabold text-slate-800">Producto No Encontrado</h3>
+                <p class="text-sm text-slate-500 max-w-xs mx-auto mt-2 leading-relaxed">
+                    No hay resultados para "<span class="font-bold text-slate-700">${escapeHTML(query)}</span>". Verifica el SKU e intenta de nuevo.
                 </p>
             `;
         }
@@ -580,20 +603,13 @@
             return `https://intranet.emcomer.pe/INTER/TONW/FotosArticulos/${cleanSku}_1.JPG`;
         }
 
-        // Carga la foto a través de weserv y conserva la URL original como respaldo.
         function getProductImageUrl(sku) {
             const originalUrl = getOriginalProductImageUrl(sku);
             if (!originalUrl) return '';
-            // Usar el formato exacto solicitado: weserv delante de la URL original completa.
             return `https://images.weserv.nl/?url=${originalUrl}`;
         }
 
-        // Quita el fondo blanco conectado con los bordes.
-        // Parámetros solicitados: Umbral = 17, Suavizado = 0.
-        // Umbral 17 significa aceptar como fondo los píxeles a una distancia máxima
-        // de 17 niveles por canal respecto del blanco puro (255, 255, 255).
-        // Suavizado 0 elimina el fondo sin aplicar difuminado adicional a los bordes.
-        // Si el navegador bloquea canvas/CORS, la foto original sigue visible.
+        // Función para quitar fondo blanco usando canvas
         function removeWhiteBackground(imgElement, sku, originalUrl) {
             if (!imgElement || imgElement.dataset.processedSku === String(sku)) return;
             imgElement.dataset.processedSku = String(sku);
@@ -613,6 +629,7 @@
                 const umbral = 17;
                 const suavizado = 0;
                 const minWhite = 255 - umbral;
+                
                 const enqueue = (x, y) => {
                     if (x < 0 || y < 0 || x >= width || y >= height) return;
                     const pos = y * width + x;
@@ -624,21 +641,22 @@
                         queue[tail++] = pos;
                     }
                 };
+                
                 for (let x = 0; x < width; x++) { enqueue(x, 0); enqueue(x, height - 1); }
                 for (let y = 0; y < height; y++) { enqueue(0, y); enqueue(width - 1, y); }
+                
                 while (head < tail) {
                     const pos = queue[head++];
-                    // Suavizado 0: transparencia total en los píxeles identificados como fondo.
                     data[pos * 4 + 3] = suavizado > 0 ? Math.max(0, 255 - suavizado) : 0;
                     const x = pos % width, y = Math.floor(pos / width);
                     enqueue(x + 1, y); enqueue(x - 1, y); enqueue(x, y + 1); enqueue(x, y - 1);
                 }
+                
                 ctx.putImageData(imageData, 0, 0);
-                imgElement.onload = null; // evita volver a procesar el canvas
+                imgElement.onload = null; 
                 imgElement.src = canvas.toDataURL('image/png');
             } catch (err) {
-                console.warn('No se pudo quitar el fondo; se mantiene la foto sin procesar.', err);
-                // No ocultar la foto: mantener la imagen que ya cargó desde el proxy.
+                console.warn('No se pudo quitar el fondo.', err);
             }
         }
 
@@ -649,13 +667,11 @@
 
             const originalImageUrl = product.imageUrl || getOriginalProductImageUrl(product.sku);
             const imageUrl = product.imageUrl || getProductImageUrl(product.sku);
-            // Permitir leer los píxeles del proxy con canvas (si el servidor habilita CORS).
-            // Debe establecerse ANTES de asignar src.
+            
             cardImage.crossOrigin = 'anonymous';
             delete cardImage.dataset.processedSku;
             cardImage.onload = () => removeWhiteBackground(cardImage, product.sku, originalImageUrl);
             cardImage.onerror = () => {
-                // Si falla el proxy, probar directamente con la URL intranet.
                 if (cardImage.src !== originalImageUrl) {
                     cardImage.onerror = () => handleImageError(cardImage);
                     cardImage.src = originalImageUrl;
@@ -672,22 +688,23 @@
             cardTitle.textContent = product.title || `Artículo ${product.sku}`;
             cardLocationText.textContent = product.location || 'Almacén Central / Tienda';
             cardPrice.textContent = product.price || 'S/ 0.00';
-            ageingTag.textContent = product.ageingDays ? product.ageingDays : 'Sin registro';
+            ageingTag.textContent = product.ageingDays ? product.ageingDays : 'N/A';
 
             const totalStock = product.sizes ? Object.values(product.sizes).reduce((a, b) => a + Number(b), 0) : (Number(product.totalStock) || 0);
             totalPairs.textContent = totalStock;
 
             if (totalStock <= 0) {
-                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-red-500 text-white shadow-md";
+                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]";
                 stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> AGOTADO`;
             } else if (totalStock < 3) {
-                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-amber-500 text-slate-950 shadow-md";
+                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-amber-500 text-slate-900 shadow-[0_0_15px_rgba(245,158,11,0.5)]";
                 stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> STOCK BAJO`;
             } else {
-                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase bg-emerald-500 text-slate-950 shadow-md";
+                stockBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-500 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)]";
                 stockBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> EN STOCK`;
             }
 
+            // Renderizado de Tallas Mejorado
             sizeGrid.innerHTML = '';
             if (product.sizes && typeof product.sizes === 'object' && Object.keys(product.sizes).length > 0) {
                 const sortedSizes = Object.keys(product.sizes).sort((a, b) => parseFloat(a) - parseFloat(b) || a.localeCompare(b));
@@ -696,28 +713,36 @@
                     const count = Number(product.sizes[size]) || 0;
                     const sizeBox = document.createElement('div');
                     
-                    let bgClass = "bg-white text-slate-800 border-slate-200 shadow-sm";
-                    let badgeClass = "bg-emerald-100 text-emerald-800";
+                    let containerClass = "relative p-3 rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-200 ";
+                    let numberClass = "text-2xl font-black ";
+                    let badgeClass = "text-[10px] font-extrabold px-2 py-0.5 rounded-full mt-1 ";
 
                     if (count <= 0) {
-                        bgClass = "bg-slate-100 text-slate-400 border-slate-200 opacity-60";
-                        badgeClass = "bg-slate-200 text-slate-500";
+                        containerClass += "bg-slate-100 border-slate-200 opacity-60 grayscale";
+                        numberClass += "text-slate-400";
+                        badgeClass += "bg-slate-200 text-slate-500";
                     } else if (count === 1) {
-                        badgeClass = "bg-amber-100 text-amber-800";
+                        containerClass += "bg-white border-amber-200 shadow-sm hover:shadow-md hover:border-amber-400 cursor-default";
+                        numberClass += "text-slate-800";
+                        badgeClass += "bg-amber-100 text-amber-800";
+                    } else {
+                        containerClass += "bg-white border-emerald-100 shadow-sm hover:shadow-md hover:border-emerald-400 cursor-default";
+                        numberClass += "text-slate-800";
+                        badgeClass += "bg-emerald-100 text-emerald-800";
                     }
 
-                    sizeBox.className = `p-2.5 rounded-xl border text-center font-bold flex flex-col justify-between transition-all ${bgClass}`;
+                    sizeBox.className = containerClass;
                     sizeBox.innerHTML = `
-                        <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Talla</span>
-                        <span class="text-xl font-black my-0.5">${size}</span>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${badgeClass}">
+                        <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest absolute top-2">Talla</span>
+                        <span class="${numberClass} mt-3">${size}</span>
+                        <span class="${badgeClass}">
                             ${count} ${count === 1 ? 'par' : 'pares'}
                         </span>
                     `;
                     sizeGrid.appendChild(sizeBox);
                 });
             } else {
-                sizeGrid.innerHTML = '<p class="text-xs text-slate-400 col-span-full py-2">Sin desglose por tallas registrado.</p>';
+                sizeGrid.innerHTML = '<div class="col-span-full py-4 text-center"><p class="text-xs font-bold text-slate-400 bg-slate-100 inline-block px-4 py-2 rounded-lg">Sin desglose por tallas</p></div>';
             }
         }
 
@@ -736,7 +761,7 @@
         copyCodeBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
             navigator.clipboard.writeText(currentMatchedProduct.sku).then(() => {
-                showToast(`SKU ${currentMatchedProduct.sku} copiado`, 'success');
+                showToast(`SKU ${currentMatchedProduct.sku} copiado al portapapeles`, 'success');
             }).catch(() => showToast('No se pudo copiar', 'error'));
         });
 
@@ -769,7 +794,7 @@
                     performSearch(decodedText.trim().toLowerCase());
                 }
             ).catch(err => {
-                alert("No se pudo acceder a la cámara.");
+                showToast("No se pudo acceder a la cámara", "error");
                 stopCameraScanner();
             });
         }
@@ -839,10 +864,19 @@
         function showToast(message, type = 'info') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
             toastMessage.textContent = message;
-            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            
+            if (type === 'success') {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            } else if (type === 'error') {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-red-400 text-lg";
+            }
+
+            toast.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
             setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+                toast.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
             }, 3000);
         }
     </script>
