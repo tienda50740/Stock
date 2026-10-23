@@ -121,8 +121,8 @@
 
     <div class="max-w-6xl w-full mx-auto flex flex-col min-h-screen">
 
-        <!-- CABECERA -->
-        <header class="bg-white sticky top-0 z-30 border-b border-slate-100 shadow-sm px-4 pt-3 pb-2">
+        <!-- CABECERA (Hacer doble clic aquí activa el dictado por voz automáticamente) -->
+        <header id="headerBar" class="bg-white sticky top-0 z-30 border-b border-slate-100 shadow-sm px-4 pt-3 pb-2 cursor-pointer" title="Doble toque para hablar">
             <div class="flex items-center justify-between text-xs mb-2.5">
                 <div class="flex items-center gap-1.5 font-bold text-slate-700 truncate">
                     <i class="fa-solid fa-location-dot text-bata-red text-sm"></i>
@@ -133,9 +133,9 @@
                 <div class="flex items-center gap-2">
                     <div id="statusBadge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200/80 transition-all">
                         <span id="statusDot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                        <span id="statusText">Conectando...</span>
+                        <span id="statusText">Cargando...</span>
                     </div>
-                    <button id="refreshDataBtn" title="Sincronizar" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-all active:scale-95">
+                    <button id="refreshDataBtn" title="Sincronizar base de datos" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-all active:scale-95">
                         <i class="fa-solid fa-rotate text-xs"></i>
                     </button>
                 </div>
@@ -178,7 +178,7 @@
 
             <div id="voiceStatus" class="hidden mt-2 text-xs font-bold text-bata-red flex items-center justify-center gap-2 bg-red-50 py-1.5 rounded-lg border border-red-100">
                 <span class="w-2 h-2 rounded-full bg-bata-red animate-ping"></span>
-                <span id="voiceText">Escuchando... Di el código de barras</span>
+                <span id="voiceText">Escuchando... Di el código o "Escanear"</span>
             </div>
         </header>
 
@@ -267,7 +267,8 @@
                                             </span>
                                         </div>
 
-                                        <h2 id="cardTitle" class="text-sm sm:text-xl font-black text-slate-900 leading-snug truncate sm:whitespace-normal">-</h2>
+                                        <!-- TÍTULO MÁS GRANDE Y LEGIBLE -->
+                                        <h2 id="cardTitle" class="text-base sm:text-xl font-black text-slate-900 leading-snug break-words">-</h2>
 
                                         <div class="mt-1">
                                             <span class="text-[9px] text-slate-400 font-bold uppercase block">Precio</span>
@@ -348,7 +349,7 @@
 
     </div>
 
-    <!-- MODAL ESCÁNER CON RAYITO LIMPIO SIN BLOQUE GRIS -->
+    <!-- MODAL ESCÁNER -->
     <div id="scannerModal" class="fixed inset-0 z-50 bg-black hidden flex flex-col justify-between select-none overflow-hidden">
         <div id="qr-reader"></div>
 
@@ -359,7 +360,6 @@
                     <button id="closeScannerBtn" class="p-2 rounded-full hover:bg-white/20 transition-all text-xl focus:outline-none">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
-                    <!-- RAYITO LIMPIO FLOTANTE SIN RECTÁNGULO GRIS -->
                     <button id="flashToggleBtn" class="w-10 h-10 rounded-full flex items-center justify-center transition-all focus:outline-none text-white active:scale-90">
                         <i class="fa-solid fa-bolt text-2xl text-white drop-shadow-md" id="flashIcon"></i>
                     </button>
@@ -427,6 +427,7 @@
     </div>
 
     <script>
+        const URL_APPS_STORAGE_KEY = "bata_offline_inventory_db";
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzAop3ucrjAhM4wFR-xWrD-ZvmAsHfFg1VN6sjHAWDkZ2IY1f2IuNnBRHavOk8-DBJ9ng/exec";
 
         let currentDatabase = [];
@@ -438,7 +439,6 @@
         let currentMatchedProduct = null;
         let selectedBrand = 'all';
 
-        // Variables para Detección Precisa de Sacudida (Double Shake)
         let lastX = null, lastY = null, lastZ = null;
         let shakeCount = 0;
         let lastShakeTime = 0;
@@ -447,6 +447,7 @@
         const clearBtn = document.getElementById('clearBtn');
         const voiceBtn = document.getElementById('voiceBtn');
         const voiceStatus = document.getElementById('voiceStatus');
+        const headerBar = document.getElementById('headerBar');
         const scanBtn = document.getElementById('scanBtn');
         const centerScanNav = document.getElementById('centerScanNav');
         const catalogList = document.getElementById('catalogList');
@@ -486,24 +487,47 @@
         const closeImageModalBtn = document.getElementById('closeImageModalBtn');
 
         window.addEventListener('DOMContentLoaded', () => {
+            loadLocalDatabase();
             fetchLiveInventoryData();
             setupPreciseShake();
         });
 
+        // CARGAR DESDE CACHÉ LOCAL OFFLINE PRIMERO
+        function loadLocalDatabase() {
+            try {
+                const cachedData = localStorage.getItem(URL_APPS_STORAGE_KEY);
+                if (cachedData) {
+                    const parsed = JSON.parse(cachedData);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        currentDatabase = parsed;
+                        setConnectionStatus('connected', `${parsed.length} ítems (Offline)`);
+                        applyFilters();
+                    }
+                }
+            } catch (e) {}
+        }
+
         async function fetchLiveInventoryData() {
-            setConnectionStatus('connecting', 'Conectando...');
+            if (currentDatabase.length === 0) {
+                setConnectionStatus('connecting', 'Conectando...');
+            }
             try {
                 const response = await fetch(URL_APPS_SCRIPT);
                 const data = await response.json();
                 if (Array.isArray(data) && data.length > 0) {
                     currentDatabase = data;
+                    localStorage.setItem(URL_APPS_STORAGE_KEY, JSON.stringify(data));
                     setConnectionStatus('connected', `${data.length} ítems`);
                     applyFilters();
-                } else {
+                } else if (currentDatabase.length === 0) {
                     setConnectionStatus('error', 'Sin datos');
                 }
             } catch (e) {
-                setConnectionStatus('error', 'Desconectado');
+                if (currentDatabase.length === 0) {
+                    setConnectionStatus('error', 'Sin conexión');
+                } else {
+                    setConnectionStatus('connected', `${currentDatabase.length} ítems (Offline)`);
+                }
             }
         }
 
@@ -524,7 +548,10 @@
         refreshDataBtn.addEventListener('click', () => {
             refreshDataBtn.querySelector('i').classList.add('animate-spin');
             fetchLiveInventoryData().finally(() => {
-                setTimeout(() => refreshDataBtn.querySelector('i').classList.remove('animate-spin'), 500);
+                setTimeout(() => {
+                    refreshDataBtn.querySelector('i').classList.remove('animate-spin');
+                    showToast("Base de datos sincronizada", "success");
+                }, 600);
             });
         });
 
@@ -909,7 +936,6 @@
             });
         }
 
-        // SACUDIDA PRECISA (REQUIERE DOBLE AGITACIÓN FUERTE EN MENOS DE 1 SEGUNDO)
         function setupPreciseShake() {
             if (window.DeviceMotionEvent) {
                 window.addEventListener('devicemotion', (e) => {
@@ -922,7 +948,6 @@
                         const deltaY = Math.abs(acc.y - lastY);
                         const deltaZ = Math.abs(acc.z - lastZ);
 
-                        // Umbral de aceleración alto (48) para evitar falsos positivos
                         if ((deltaX + deltaY + deltaZ) > 48) {
                             if (now - lastShakeTime < 1000) {
                                 shakeCount++;
@@ -947,19 +972,22 @@
             }
         }
 
-        // RECONOCIMIENTO DE VOZ E INTENCIONES HABLADAS
+        // SISTEMA DE VOZ Y DOBLE TOQUE EN CABECERA
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
 
-            voiceBtn.addEventListener('click', () => {
+            function toggleVoiceRecognition() {
                 if (isRecordingVoice) {
                     recognition.stop();
                 } else {
                     recognition.start();
                 }
-            });
+            }
+
+            voiceBtn.addEventListener('click', toggleVoiceRecognition);
+            headerBar.addEventListener('dblclick', toggleVoiceRecognition); // Doble toque en cabecera
 
             recognition.onstart = () => {
                 isRecordingVoice = true;
@@ -970,13 +998,11 @@
             recognition.onresult = (event) => {
                 let rawTranscript = event.results[0][0].transcript.toLowerCase();
                 
-                // Si la persona dice "abrir escáner" o "escanear" por voz
                 if (rawTranscript.includes('escanear') || rawTranscript.includes('camara') || rawTranscript.includes('cámara')) {
                     openScanner();
                     return;
                 }
 
-                // Filtrar palabras de dictado ("buscar", "código", "sku", etc.)
                 let cleanedWords = rawTranscript
                     .replace(/buscar/g, '')
                     .replace(/código/g, '')
