@@ -51,7 +51,6 @@
             touch-action: manipulation;
         }
 
-        /* Ocultar barra de desplazamiento */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -66,7 +65,6 @@
             color: white !important;
         }
 
-        /* FIX DEFINITIVO CÁMARA ESCÁNER PANTALLA COMPLETA SIN EL RECTÁNGULO NATIVO */
         #qr-reader {
             position: absolute !important;
             inset: 0 !important;
@@ -84,7 +82,6 @@
             top: 0 !important;
             left: 0 !important;
         }
-        /* Ocultar ABSOLUTAMENTE TODOS los marcos/cuadros inyectados por html5-qrcode */
         #qr-reader__scan_region, 
         #qr-reader__scan_region *, 
         #qr-reader__dashboard, 
@@ -121,12 +118,10 @@
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col justify-between pb-20 md:pb-6 selection:bg-bata-red selection:text-white">
 
-    <!-- CONTENEDOR PRINCIPAL FIX DE PANTALLA ÚNICA -->
     <div class="max-w-6xl w-full mx-auto flex flex-col min-h-screen">
 
-        <!-- CABECERA DE BUSCADOR Y UBICACIÓN ESTILO E-COMMERCE -->
+        <!-- CABECERA -->
         <header class="bg-white sticky top-0 z-30 border-b border-slate-100 shadow-sm px-4 pt-3 pb-2">
-            <!-- Fila superior: Ubicación + Indicador de Conexión -->
             <div class="flex items-center justify-between text-xs mb-2.5">
                 <div class="flex items-center gap-1.5 font-bold text-slate-700 truncate">
                     <i class="fa-solid fa-location-dot text-bata-red text-sm"></i>
@@ -145,7 +140,7 @@
                 </div>
             </div>
 
-            <!-- Fila Búsqueda Rápida -->
+            <!-- BÚSQUEDA -->
             <div class="relative flex items-center gap-2">
                 <div class="relative flex-1 flex items-center">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-sm pointer-events-none"></i>
@@ -180,17 +175,16 @@
                 </div>
             </div>
 
-            <!-- ESTADO DE VOZ ACTIVADA -->
             <div id="voiceStatus" class="hidden mt-2 text-xs font-bold text-bata-red flex items-center justify-center gap-2 bg-red-50 py-1.5 rounded-lg border border-red-100">
                 <span class="w-2 h-2 rounded-full bg-bata-red animate-ping"></span>
                 <span id="voiceText">Escuchando consulta de voz...</span>
             </div>
         </header>
 
-        <!-- CONTENIDO PRINCIPAL EN UNA SOLA PANTALLA -->
+        <!-- CONTENIDO PRINCIPAL -->
         <main class="flex-1 px-4 py-3 flex flex-col gap-3 max-w-6xl w-full mx-auto">
 
-            <!-- FILA 1: MARCAS -->
+            <!-- FILA DE MARCAS -->
             <section class="overflow-x-auto no-scrollbar py-1">
                 <div class="flex gap-2.5 min-w-max" id="brandsContainer">
                     <button data-brand="all" class="brand-chip active bg-slate-900 text-white px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-sm border border-slate-900 transition-all">
@@ -214,26 +208,10 @@
                 </div>
             </section>
 
-            <!-- FILA 2: CHIPS DE FILTROS RÁPIDOS -->
-            <section class="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs font-semibold py-0.5">
-                <button class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:border-slate-300">
-                    <i class="fa-solid fa-sliders text-slate-400"></i> Filtrar
-                </button>
-                <button id="filterStockBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:border-bata-red hover:text-bata-red transition-all">
-                    <i class="fa-solid fa-circle-check text-emerald-500"></i> En Stock
-                </button>
-                <button id="filterAgeBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:border-slate-300">
-                    <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> Antigüedad
-                </button>
-                <div class="ml-auto text-[11px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg" id="totalItemsCount">
-                    0 ítems
-                </div>
-            </section>
-
             <!-- PANEL RESULTADOS Y DETALLE -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
                 
-                <!-- LISTA DE ARTÍCULOS O SUGERENCIAS -->
+                <!-- LISTA DE ARTÍCULOS -->
                 <section id="resultsSection" class="lg:col-span-5 flex flex-col gap-2">
                     <div class="flex items-center justify-between text-xs font-extrabold text-slate-500 uppercase tracking-wider px-1">
                         <span id="resultsCountHeader">Catálogo Disponible</span>
@@ -246,7 +224,7 @@
                 <!-- DETALLE DEL ARTÍCULO SELECCIONADO -->
                 <section id="detailSection" class="lg:col-span-7">
                     
-                    <!-- EMPTY STATE INICIAL -->
+                    <!-- EMPTY STATE -->
                     <div id="emptyState" class="bg-white rounded-3xl p-8 text-center border border-slate-200/80 shadow-soft flex flex-col items-center justify-center min-h-[320px]">
                         <div class="w-16 h-16 bg-red-50 text-bata-red rounded-full flex items-center justify-center mb-3 shadow-sm">
                             <i class="fa-solid fa-shoe-prints text-2xl"></i>
@@ -257,13 +235,14 @@
                         </p>
                     </div>
 
-                    <!-- TARJETA DETALLE COMPLETA DE PRODUCTO -->
+                    <!-- TARJETA DETALLE PRODUCTO (FOTO IZQUIERDA Y DATOS DERECHA EN MÓVIL Y PC) -->
                     <div id="productCard" class="hidden bg-white rounded-3xl border border-slate-200/80 shadow-soft overflow-hidden transition-all">
                         <div class="p-4 sm:p-5 border-b border-slate-100">
-                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                            <div class="grid grid-cols-12 gap-3 sm:gap-4 items-center">
                                 
-                                <div class="sm:col-span-5 flex justify-center">
-                                    <div class="photo-stage relative w-48 h-48 sm:w-52 sm:h-52 rounded-2xl border border-slate-100 flex items-center justify-center p-3 group overflow-hidden">
+                                <!-- FOTO A LA IZQUIERDA (span-5) -->
+                                <div class="col-span-5 flex justify-center">
+                                    <div class="photo-stage relative w-36 h-36 sm:w-52 sm:h-52 rounded-2xl border border-slate-100 flex items-center justify-center p-2 sm:p-3 group overflow-hidden">
                                         <img id="cardImage" src="" alt="Producto" class="img-product max-w-full max-h-full object-contain" onerror="handleImageError(this)">
                                         
                                         <div id="imageFallback" class="hidden absolute inset-0 text-slate-400 flex flex-col items-center justify-center p-2 text-center bg-slate-50">
@@ -277,40 +256,38 @@
                                     </div>
                                 </div>
 
-                                <div class="sm:col-span-7 flex flex-col justify-between space-y-3">
+                                <!-- DATOS A LA DERECHA (span-7) -->
+                                <div class="col-span-7 flex flex-col justify-between space-y-2 sm:space-y-3">
                                     <div>
-                                        <div class="flex items-center justify-between gap-2 mb-1">
-                                            <span id="cardCategory" class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-bata-red/10 text-bata-red tracking-wider">
+                                        <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                            <span id="cardCategory" class="px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-black uppercase bg-bata-red/10 text-bata-red tracking-wider">
                                                 CALZADO
                                             </span>
-                                            <span id="cardCode" class="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                                            <span id="cardCode" class="text-[10px] sm:text-xs font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                                                 SKU: -
                                             </span>
                                         </div>
 
-                                        <h2 id="cardTitle" class="text-lg sm:text-xl font-black text-slate-900 leading-snug">-</h2>
+                                        <h2 id="cardTitle" class="text-sm sm:text-xl font-black text-slate-900 leading-snug truncate sm:whitespace-normal">-</h2>
 
-                                        <div class="flex items-center gap-2 mt-1.5">
-                                            <span id="cardPrice" class="text-2xl font-black text-slate-900">S/ 0.00</span>
+                                        <div class="mt-1">
+                                            <span class="text-[9px] text-slate-400 font-bold uppercase block">Precio</span>
+                                            <span id="cardPrice" class="text-lg sm:text-2xl font-black text-bata-red">S/ 0.00</span>
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
-                                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                            <span class="text-[9px] font-bold text-slate-400 uppercase block">Total Stock</span>
-                                            <span id="totalPairs" class="text-base font-black text-slate-800">0 pares</span>
+                                    <div class="pt-1 border-t border-slate-100 flex items-center justify-between">
+                                        <div>
+                                            <span class="text-[9px] text-slate-400 font-bold uppercase block">Total Stock</span>
+                                            <span id="totalPairs" class="text-sm sm:text-base font-black text-slate-800">0 prs</span>
                                         </div>
-
-                                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                            <span class="text-[9px] font-bold text-slate-400 uppercase block">Antigüedad</span>
-                                            <span id="ageingTag" class="text-xs font-bold text-slate-700 truncate block">-</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-center justify-between">
-                                        <div id="stockBadge" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-emerald-100 text-emerald-800">
+                                        <div id="stockBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black tracking-wider uppercase bg-emerald-100 text-emerald-800">
                                             <i class="fa-solid fa-circle-check"></i> EN STOCK
                                         </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between pt-1">
+                                        <span id="ageingTag" class="text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 truncate">-</span>
                                         <button id="copyCodeBtn" class="text-xs font-bold text-slate-500 hover:text-bata-red flex items-center gap-1">
                                             <i class="fa-solid fa-copy"></i> Copiar SKU
                                         </button>
@@ -320,6 +297,7 @@
                             </div>
                         </div>
 
+                        <!-- DESGLOSE DE TALLAS -->
                         <div class="p-4 sm:p-5 bg-white">
                             <div class="flex items-center justify-between mb-3">
                                 <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
@@ -371,31 +349,25 @@
 
     </div>
 
-    <!-- MODAL ESCÁNER CÓDIGO BARRAS FULLSCREEN ESTILO NATIVO EXACTO -->
+    <!-- MODAL ESCÁNER CON FLASH EN LUGAR DE INTERROGACIÓN -->
     <div id="scannerModal" class="fixed inset-0 z-50 bg-black hidden flex flex-col justify-between select-none overflow-hidden">
-        <!-- CÁMARA DE FONDO REAL PANTALLA COMPLETA -->
         <div id="qr-reader"></div>
 
-        <!-- OVERLAY NATIVO SOBRE PUESTO -->
         <div class="relative z-10 flex flex-col justify-between h-full w-full p-4 pointer-events-none">
             
-            <!-- HEADER SUPERIOR -->
             <div class="w-full flex flex-col gap-3 pointer-events-auto">
                 <div class="flex items-center justify-between text-white pt-2 px-1">
-                    <button id="closeScannerBtn" class="p-2 rounded-full hover:bg-white/20 transition-all text-xl focus:outline-none">
+                    <button id="closeScannerBtn" class="p-2 rounded-full hover:bg-white/25 transition-all text-xl focus:outline-none">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
+                    <!-- BOTÓN DE FLASH EN LA ESQUINA SUPERIOR DERECHA -->
                     <div class="flex items-center gap-4 text-xl">
-                        <button id="flashToggleBtn" class="p-2 rounded-full hover:bg-white/20 transition-all focus:outline-none">
+                        <button id="flashToggleBtn" class="p-2.5 rounded-full bg-black/30 backdrop-blur-md hover:bg-white/25 transition-all focus:outline-none text-white">
                             <i class="fa-solid fa-bolt-slash" id="flashIcon"></i>
-                        </button>
-                        <button class="p-2 rounded-full hover:bg-white/20 transition-all focus:outline-none">
-                            <i class="fa-regular fa-circle-question"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- TARJETA FLOTANTE DE UBICACIÓN -->
                 <div class="bg-white/95 backdrop-blur-md text-gray-800 rounded-2xl p-3.5 shadow-lg flex items-center justify-between border border-white/40">
                     <div class="flex flex-col">
                         <span class="text-[10px] text-gray-500 font-medium">Estás en :</span>
@@ -407,19 +379,15 @@
                 </div>
             </div>
 
-            <!-- ZONA CENTRAL: VIEWFINDER UNICO (REDONDEADO CON BORDES BLANCOS Y CÓDIGO) -->
             <div class="flex flex-col items-center justify-center my-auto w-full">
                 <h2 class="text-white font-bold text-base mb-4 drop-shadow-md text-center">Escanea el código de barras</h2>
                 
-                <!-- RECTÁNGULO DE ESCANEO ÚNICO -->
                 <div class="relative w-72 h-44 sm:w-80 sm:h-48 rounded-3xl flex items-center justify-center overflow-hidden bg-black/10 backdrop-blur-[1px]">
-                    <!-- ESQUINAS BLANCAS REDONDEADAS DE ENCUADRE -->
                     <div class="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-white rounded-tl-2xl"></div>
                     <div class="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-white rounded-tr-2xl"></div>
                     <div class="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-white rounded-bl-2xl"></div>
                     <div class="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-white rounded-br-2xl"></div>
 
-                    <!-- MARCA DE AGUA CÓDIGO DE BARRAS -->
                     <div class="flex items-center justify-center gap-1.5 opacity-30 text-white select-none">
                         <div class="w-1.5 h-24 bg-white rounded-full"></div>
                         <div class="w-1 h-24 bg-white rounded-full"></div>
@@ -430,12 +398,10 @@
                         <div class="w-2 h-24 bg-white rounded-full"></div>
                     </div>
 
-                    <!-- LÍNEA LÁSER ANIMADA -->
                     <div class="absolute inset-x-3 h-0.5 bg-bata-red shadow-[0_0_12px_#E31E24] animate-laser rounded-full"></div>
                 </div>
             </div>
 
-            <!-- BOTÓN INFERIOR CÁPSULA -->
             <div class="w-full flex justify-center pb-6 pointer-events-auto">
                 <button id="manualInputBtn" class="w-full max-w-xs py-3 px-6 border border-white/80 bg-white/20 backdrop-blur-md text-white font-bold rounded-full shadow-lg text-center hover:bg-white/30 active:scale-95 transition-all text-xs sm:text-sm">
                     Ingresar código manualmente
@@ -474,7 +440,6 @@
         let isRecordingVoice = false;
         let currentMatchedProduct = null;
         let selectedBrand = 'all';
-        let stockOnlyFilter = false;
 
         const searchInput = document.getElementById('searchInput');
         const clearBtn = document.getElementById('clearBtn');
@@ -483,9 +448,7 @@
         const scanBtn = document.getElementById('scanBtn');
         const centerScanNav = document.getElementById('centerScanNav');
         const catalogList = document.getElementById('catalogList');
-        const resultsCountHeader = document.getElementById('resultsCountHeader');
         const resultsCountBadge = document.getElementById('resultsCountBadge');
-        const totalItemsCount = document.getElementById('totalItemsCount');
 
         const emptyState = document.getElementById('emptyState');
         const productCard = document.getElementById('productCard');
@@ -519,7 +482,6 @@
         const modalPreviewImage = document.getElementById('modalPreviewImage');
         const modalImageCaption = document.getElementById('modalImageCaption');
         const closeImageModalBtn = document.getElementById('closeImageModalBtn');
-        const filterStockBtn = document.getElementById('filterStockBtn');
 
         window.addEventListener('DOMContentLoaded', () => {
             fetchLiveInventoryData();
@@ -533,7 +495,6 @@
                 if (Array.isArray(data) && data.length > 0) {
                     currentDatabase = data;
                     setConnectionStatus('connected', `${data.length} ítems`);
-                    totalItemsCount.textContent = `${data.length} ítems`;
                     applyFilters();
                 } else {
                     setConnectionStatus('error', 'Sin datos');
@@ -602,16 +563,6 @@
             });
         });
 
-        filterStockBtn.addEventListener('click', () => {
-            stockOnlyFilter = !stockOnlyFilter;
-            if (stockOnlyFilter) {
-                filterStockBtn.classList.add('border-bata-red', 'text-bata-red', 'bg-red-50');
-            } else {
-                filterStockBtn.classList.remove('border-bata-red', 'text-bata-red', 'bg-red-50');
-            }
-            applyFilters();
-        });
-
         function applyFilters() {
             const rawQuery = searchInput.value.trim().toLowerCase();
             const extractedSku = extractSkuFromEan13(rawQuery);
@@ -631,10 +582,7 @@
                                      (item.category && item.category.toLowerCase().includes(selectedBrand.toLowerCase())) ||
                                      (item.title && item.title.toLowerCase().includes(selectedBrand.toLowerCase()));
 
-                const totalStock = item.sizes ? Object.values(item.sizes).reduce((a, b) => a + Number(b), 0) : (Number(item.totalStock) || 0);
-                const matchesStock = !stockOnlyFilter || totalStock > 0;
-
-                return matchesQuery && matchesBrand && matchesStock;
+                return matchesQuery && matchesBrand;
             });
 
             renderCatalogList(filteredDatabase);
@@ -793,19 +741,19 @@
             cardCode.textContent = `SKU: ${product.sku}`;
             cardTitle.textContent = product.title || `Artículo ${product.sku}`;
             cardPrice.textContent = product.price || 'S/ 0.00';
-            ageingTag.textContent = product.ageingDays ? product.ageingDays : 'Sin registro';
+            ageingTag.textContent = product.ageingDays ? `Antigüedad: ${product.ageingDays}` : 'Antigüedad: N/A';
 
             const totalStock = product.sizes ? Object.values(product.sizes).reduce((a, b) => a + Number(b), 0) : (Number(product.totalStock) || 0);
-            totalPairs.textContent = `${totalStock} pares`;
+            totalPairs.textContent = `${totalStock} prs`;
 
             if (totalStock <= 0) {
-                stockBadge.className = "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-red-100 text-red-700";
+                stockBadge.className = "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black tracking-wider uppercase bg-red-100 text-red-700";
                 stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> AGOTADO`;
             } else if (totalStock < 3) {
-                stockBadge.className = "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-amber-100 text-amber-700";
+                stockBadge.className = "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black tracking-wider uppercase bg-amber-100 text-amber-700";
                 stockBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CRÍTICO`;
             } else {
-                stockBadge.className = "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-emerald-100 text-emerald-800";
+                stockBadge.className = "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black tracking-wider uppercase bg-emerald-100 text-emerald-800";
                 stockBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> EN STOCK`;
             }
 
@@ -887,7 +835,6 @@
                 html5QrcodeScanner = new Html5Qrcode("qr-reader");
             }
 
-            // SE DESACTIVA EL RECTÁNGULO DIBUJADO NATIVAMENTE POR LA LIBRERÍA
             const config = { fps: 20 };
 
             html5QrcodeScanner.start(
@@ -947,7 +894,6 @@
             });
         }
 
-        // BÚSQUEDA POR VOZ ELIMINANDO ESPACIOS
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
@@ -985,7 +931,6 @@
             voiceBtn.style.display = 'none';
         }
 
-        // Lectura por sintetizador
         speakStockBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
             const totalStock = currentMatchedProduct.sizes ? Object.values(currentMatchedProduct.sizes).reduce((a, b) => a + Number(b), 0) : 0;
