@@ -5,16 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Consulta de Artículo Stock - Bata</title>
 
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- HTML5 QR Code Reader Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <script>
@@ -30,9 +23,7 @@
                             slate: '#0F172A'
                         }
                     },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif']
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     boxShadow: {
                         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
                         'float': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
@@ -44,9 +35,9 @@
     </script>
 
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #F8FAFC; 
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
@@ -65,7 +56,6 @@
             color: white !important;
         }
 
-        /* FIX CÁMARA ESCÁNER PANTALLA COMPLETA */
         #qr-reader {
             position: absolute !important;
             inset: 0 !important;
@@ -75,17 +65,17 @@
             background: black !important;
             overflow: hidden !important;
         }
-        #qr-reader video { 
-            object-fit: cover !important; 
+        #qr-reader video {
+            object-fit: cover !important;
             width: 100% !important;
             height: 100% !important;
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
         }
-        #qr-reader__scan_region, 
-        #qr-reader__scan_region *, 
-        #qr-reader__dashboard, 
+        #qr-reader__scan_region,
+        #qr-reader__scan_region *,
+        #qr-reader__dashboard,
         #qr-reader img,
         #qr-reader canvas,
         #qr-reader svg {
@@ -94,17 +84,26 @@
             box-shadow: none !important;
         }
 
+        /* 🎨 FONDO DE LA IMAGEN */
         .photo-stage {
-            background: radial-gradient(circle, #FFFFFF 40%, #F1F5F9 100%);
+            background-color: #F0F0F0;
         }
-        
+
+        /* ⚡ LA MAGIA PARA QUE EL FONDO BLANCO SE VUELVA TRANSPARENTE */
         .img-product {
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            filter: drop-shadow(0 12px 12px rgba(15, 23, 42, 0.12));
+            mix-blend-mode: multiply;
+        }
+
+        img[data-from-bata="true"] {
+            transform: scale(1.15);
         }
 
         .product-card:hover .img-product {
-            transform: scale(1.06) translateY(-4px);
+            transform: scale(1.1) translateY(-4px);
+        }
+        .product-card:hover img[data-from-bata="true"] {
+            transform: scale(1.25) translateY(-4px);
         }
 
         @keyframes scanLaser {
@@ -122,7 +121,7 @@
     <div class="max-w-6xl w-full mx-auto flex flex-col min-h-screen">
 
         <!-- CABECERA -->
-        <header id="headerBar" class="bg-white sticky top-0 z-30 border-b border-slate-100 shadow-sm px-4 pt-3 pb-2 cursor-pointer" title="Doble toque para hablar">
+        <header id="headerBar" class="bg-white sticky top-0 z-30 border-b border-slate-100 shadow-sm px-4 pt-3 pb-2">
             <div class="flex items-center justify-between text-xs mb-2.5">
                 <div class="flex items-center gap-1.5 font-bold text-slate-700 truncate">
                     <i class="fa-solid fa-location-dot text-bata-red text-sm"></i>
@@ -141,13 +140,12 @@
                 </div>
             </div>
 
-            <!-- BÚSQUEDA -->
             <div class="relative flex items-center gap-2">
                 <div class="relative flex-1 flex items-center">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-sm pointer-events-none"></i>
-                    <input type="text" id="searchInput" 
-                        placeholder="Buscar SKU, EAN-13, zapato..." 
-                        autocomplete="off" 
+                    <input type="text" id="searchInput"
+                        placeholder="Buscar SKU, EAN-13, zapato..."
+                        autocomplete="off"
                         class="w-full pl-10 pr-20 py-2.5 text-sm font-semibold bg-slate-100/80 focus:bg-white border border-transparent focus:border-bata-red rounded-full outline-none transition-all text-slate-900 placeholder:text-slate-400 placeholder:font-normal">
 
                     <div class="absolute right-2 flex items-center gap-1">
@@ -185,7 +183,6 @@
         <!-- CONTENIDO PRINCIPAL -->
         <main class="flex-1 px-4 py-3 flex flex-col gap-3 max-w-6xl w-full mx-auto">
 
-            <!-- FILA DE MARCAS -->
             <section class="overflow-x-auto no-scrollbar py-1">
                 <div class="flex gap-2.5 min-w-max" id="brandsContainer">
                     <button data-brand="all" class="brand-chip active bg-slate-900 text-white px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-sm border border-slate-900 transition-all">
@@ -193,6 +190,9 @@
                     </button>
                     <button data-brand="Bata" class="brand-chip bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all">
                         <span class="font-black text-bata-red tracking-tighter">BATA</span>
+                    </button>
+                    <button data-brand="Adidas" class="brand-chip bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-cubes text-blue-600"></i> Adidas
                     </button>
                     <button data-brand="Power" class="brand-chip bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all">
                         <i class="fa-solid fa-bolt text-amber-500"></i> Power
@@ -209,23 +209,11 @@
                 </div>
             </section>
 
-            <!-- PANEL RESULTADOS Y DETALLE -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-                
-                <!-- LISTA DE ARTÍCULOS -->
-                <section id="resultsSection" class="lg:col-span-5 flex flex-col gap-2">
-                    <div class="flex items-center justify-between text-xs font-extrabold text-slate-500 uppercase tracking-wider px-1">
-                        <span id="resultsCountHeader">Catálogo Disponible</span>
-                        <span id="resultsCountBadge" class="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded-full">0</span>
-                    </div>
 
-                    <div id="catalogList" class="flex flex-col gap-2 max-h-[calc(100vh-280px)] overflow-y-auto no-scrollbar pr-1"></div>
-                </section>
+                <!-- DETALLE DEL PRODUCTO (Izquierda) -->
+                <section id="detailSection" class="lg:col-span-7 w-full">
 
-                <!-- DETALLE DEL ARTÍCULO SELECCIONADO -->
-                <section id="detailSection" class="lg:col-span-7">
-                    
-                    <!-- EMPTY STATE -->
                     <div id="emptyState" class="bg-white rounded-3xl p-8 text-center border border-slate-200/80 shadow-soft flex flex-col items-center justify-center min-h-[320px]">
                         <div class="w-16 h-16 bg-red-50 text-bata-red rounded-full flex items-center justify-center mb-3 shadow-sm">
                             <i class="fa-solid fa-shoe-prints text-2xl"></i>
@@ -236,21 +224,20 @@
                         </p>
                     </div>
 
-                    <!-- TARJETA DETALLE PRODUCTO -->
                     <div id="productCard" class="hidden bg-white rounded-3xl border border-slate-200/80 shadow-soft overflow-hidden transition-all">
                         <div class="p-4 sm:p-5 border-b border-slate-100">
                             <div class="grid grid-cols-12 gap-3 sm:gap-4 items-center">
-                                
+
                                 <div class="col-span-5 flex justify-center">
-                                    <div class="photo-stage relative w-36 h-36 sm:w-52 sm:h-52 rounded-2xl border border-slate-100 flex items-center justify-center p-2 sm:p-3 group overflow-hidden">
+                                    <div class="photo-stage relative w-36 h-36 sm:w-52 sm:h-52 rounded-2xl border border-slate-200/50 flex items-center justify-center p-2 sm:p-3 group overflow-hidden">
                                         <img id="cardImage" src="" alt="Producto" class="img-product max-w-full max-h-full object-contain" onerror="handleImageError(this)">
-                                        
+
                                         <div id="imageFallback" class="hidden absolute inset-0 text-slate-400 flex flex-col items-center justify-center p-2 text-center bg-slate-50">
                                             <i class="fa-solid fa-shoe-prints text-3xl mb-1 text-slate-300"></i>
                                             <span class="text-[9px] uppercase font-bold text-slate-400">Sin Imagen</span>
                                         </div>
 
-                                        <button id="zoomImageBtn" class="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-bata-red text-white w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all shadow-md">
+                                        <button id="zoomImageBtn" class="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-bata-red text-white w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all shadow-md z-10">
                                             <i class="fa-solid fa-expand"></i>
                                         </button>
                                     </div>
@@ -268,6 +255,8 @@
                                         </div>
 
                                         <h2 id="cardTitle" class="text-base sm:text-xl font-black text-slate-900 leading-snug break-words">-</h2>
+                                        
+                                        <div id="cardBrand" class="text-xs font-bold text-slate-500 mt-1 mb-2">Marca: -</div>
 
                                         <div class="mt-1">
                                             <span class="text-[9px] text-slate-400 font-bold uppercase block">Precio</span>
@@ -296,7 +285,6 @@
                             </div>
                         </div>
 
-                        <!-- DESGLOSE DE TALLAS -->
                         <div class="p-4 sm:p-5 bg-white">
                             <div class="flex items-center justify-between mb-3">
                                 <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
@@ -312,11 +300,20 @@
                     </div>
                 </section>
 
+                <!-- CATÁLOGO DISPONIBLE AGRUPADO (Derecha) -->
+                <section id="resultsSection" class="lg:col-span-5 flex flex-col gap-2 w-full">
+                    <div class="flex items-center justify-between text-xs font-extrabold text-slate-500 uppercase tracking-wider px-1">
+                        <span id="resultsCountHeader">Catálogo Disponible</span>
+                        <span id="resultsCountBadge" class="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded-full">0</span>
+                    </div>
+
+                    <div id="catalogList" class="flex flex-col gap-2 max-h-[calc(100vh-280px)] overflow-y-auto no-scrollbar pr-1 pb-4"></div>
+                </section>
+
             </div>
 
         </main>
 
-        <!-- BARRA DE NAVEGACIÓN INFERIOR -->
         <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 shadow-nav px-2 py-1.5">
             <div class="max-w-md mx-auto flex justify-between items-center text-slate-500 text-[10px] font-bold">
                 <button class="nav-item active flex-1 flex flex-col items-center py-1 text-bata-red">
@@ -353,7 +350,7 @@
         <div id="qr-reader"></div>
 
         <div class="relative z-10 flex flex-col justify-between h-full w-full p-4 pointer-events-none">
-            
+
             <div class="w-full flex flex-col gap-3 pointer-events-auto">
                 <div class="flex items-center justify-between text-white pt-2 px-1">
                     <button id="closeScannerBtn" class="p-2 rounded-full hover:bg-white/20 transition-all text-xl focus:outline-none">
@@ -377,7 +374,7 @@
 
             <div class="flex flex-col items-center justify-center my-auto w-full">
                 <h2 class="text-white font-bold text-base mb-4 drop-shadow-md text-center">Escanea el código de barras</h2>
-                
+
                 <div class="relative w-72 h-44 sm:w-80 sm:h-48 rounded-3xl flex items-center justify-center overflow-hidden bg-black/10 backdrop-blur-[1px]">
                     <div class="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-white rounded-tl-2xl"></div>
                     <div class="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-white rounded-tr-2xl"></div>
@@ -426,9 +423,159 @@
     </div>
 
     <script>
+        /* ============================================================
+           CONSTANTES
+           ============================================================ */
         const URL_APPS_STORAGE_KEY = "bata_offline_inventory_db";
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzAop3ucrjAhM4wFR-xWrD-ZvmAsHfFg1VN6sjHAWDkZ2IY1f2IuNnBRHavOk8-DBJ9ng/exec";
 
+        /* ============================================================
+           NOMBRES + MARCAS + IMÁGENES DESDE BATA
+           ============================================================ */
+        const CONSTRUCTION_KEY = 'key_FhQfS3ZngZ2H7onn';
+        const PRODUCT_CACHE_KEY = 'bata_product_names_cache_v5';
+        const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+        const NOTFOUND_TTL_MS = 60 * 60 * 1000;
+        
+        // ⚡ SUBIMOS LA CONCURRENCIA A 12 PARA QUE VUELE
+        const MAX_CONCURRENT_FETCHES = 12; 
+        const FETCH_TIMEOUT_MS = 5000;
+
+        let productNameCache = {};
+        try {
+            productNameCache = JSON.parse(localStorage.getItem(PRODUCT_CACHE_KEY) || '{}');
+        } catch (e) { productNameCache = {}; }
+
+        function saveProductCache() {
+            try { localStorage.setItem(PRODUCT_CACHE_KEY, JSON.stringify(productNameCache)); } catch (e) {}
+        }
+
+        function isCacheValid(entry) {
+            if (!entry || !entry.ts) return false;
+            const ttl = entry.notFound ? NOTFOUND_TTL_MS : CACHE_TTL_MS;
+            return (Date.now() - entry.ts) < ttl;
+        }
+
+        function getSkuVariations(rawSku) {
+            const clean = String(rawSku || '').replace(/\D/g, '');
+            if (!clean) return [];
+            const variants = new Set([clean]);
+            if (clean.length === 7) {
+                variants.add(clean + '1');
+                variants.add(clean + '0');
+            }
+            return Array.from(variants);
+        }
+
+        async function queryConstructor(skuQuery) {
+            try {
+                const url = new URL(`https://ac.cnstrc.com/search/${encodeURIComponent(skuQuery)}`);
+                url.searchParams.set('key', CONSTRUCTION_KEY);
+                url.searchParams.set('num_results_per_page', '3'); // Traemos solo 3 para ser más rápidos
+
+                const ctrl = new AbortController();
+                const tid = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+
+                const r = await fetch(url, {
+                    headers: { Accept: 'application/json' },
+                    signal: ctrl.signal
+                }).finally(() => clearTimeout(tid));
+
+                if (!r.ok) return null;
+                const data = await r.json();
+                const results = (data.response && data.response.results) || [];
+                if (!results.length) return null;
+
+                for (const res of results) {
+                    const d = res.data || {};
+                    const blob = `${d.id || ''} ${d.sku || ''} ${d.url || ''}`;
+                    if (blob.includes(skuQuery)) {
+                        return {
+                            name: res.value,
+                            brand: d.brand || '',
+                            url: d.url || '',
+                            image: d.image_url || '',
+                            price: d.price,
+                            matchedSku: skuQuery,
+                            ts: Date.now()
+                        };
+                    }
+                }
+                const first = results[0];
+                const d = first.data || {};
+                return {
+                    name: first.value,
+                    brand: d.brand || '',
+                    url: d.url || '',
+                    image: d.image_url || '',
+                    price: d.price,
+                    matchedSku: skuQuery,
+                    approximate: true,
+                    ts: Date.now()
+                };
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function fetchBataProductInfo(rawSku) {
+            const original = String(rawSku || '').replace(/\D/g, '');
+            if (!original) return null;
+
+            if (productNameCache[original] && isCacheValid(productNameCache[original])) {
+                return productNameCache[original];
+            }
+
+            const variations = getSkuVariations(original);
+            let result = null;
+
+            for (const variant of variations) {
+                result = await queryConstructor(variant);
+                if (result && result.name) {
+                    break;
+                }
+            }
+
+            if (result && result.name) {
+                result.originalSku = original;
+                productNameCache[original] = result;
+                saveProductCache();
+                return result;
+            }
+
+            const nf = { name: null, notFound: true, ts: Date.now(), triedSku: variations };
+            productNameCache[original] = nf;
+            saveProductCache();
+            return nf;
+        }
+
+        /* ---------- Pool con concurrencia alta ---------- */
+        const nameFetchPool = [];
+        let activeFetches = 0;
+
+        function queueBataName(sku, callback) {
+            nameFetchPool.push({ sku, callback });
+            processNamePool();
+        }
+
+        function processNamePool() {
+            while (activeFetches < MAX_CONCURRENT_FETCHES && nameFetchPool.length > 0) {
+                const task = nameFetchPool.shift();
+                activeFetches++;
+                fetchBataProductInfo(task.sku)
+                    .then(info => { 
+                        try { task.callback(info); } catch (e) {} 
+                    })
+                    .finally(() => {
+                        activeFetches--;
+                        if (nameFetchPool.length > 0) processNamePool();
+                    });
+            }
+        }
+
+        /* ============================================================
+           ESTADO GLOBAL
+           ============================================================ */
         let currentDatabase = [];
         let filteredDatabase = [];
         let html5QrcodeScanner = null;
@@ -458,6 +605,7 @@
         const cardCategory = document.getElementById('cardCategory');
         const cardCode = document.getElementById('cardCode');
         const cardTitle = document.getElementById('cardTitle');
+        const cardBrand = document.getElementById('cardBrand');
         const cardPrice = document.getElementById('cardPrice');
         const stockBadge = document.getElementById('stockBadge');
         const totalPairs = document.getElementById('totalPairs');
@@ -485,7 +633,6 @@
         const modalImageCaption = document.getElementById('modalImageCaption');
         const closeImageModalBtn = document.getElementById('closeImageModalBtn');
 
-        // GESTOR DE HISTORIAL PARA EL BOTÓN "ATRÁS"
         window.addEventListener('popstate', (e) => {
             if (!scannerModal.classList.contains('hidden')) {
                 stopCameraScanner(false);
@@ -565,12 +712,34 @@
             });
         });
 
+        /* ============================================================
+           BÚSQUEDA Y FILTRADO POR MARCA
+           ============================================================ */
         function extractSkuFromEan13(code) {
             const cleanCode = String(code).trim().replace(/\D/g, '');
             if (cleanCode.length === 13) {
                 return cleanCode.substring(1, 8);
             }
             return cleanCode;
+        }
+
+        function getProductBrand(item) {
+            const cleanSku = String(item.sku || '').replace(/\D/g, '');
+            const cached = productNameCache[cleanSku];
+            let b = '';
+
+            if (cached && cached.brand) b = cached.brand.toLowerCase();
+            else if (item.brand) b = item.brand.toLowerCase();
+            else b = String(item.title || '').toLowerCase();
+
+            if (b.includes('adidas')) return 'Adidas';
+            if (b.includes('north star')) return 'North Star';
+            if (b.includes('bubblegummers')) return 'Bubblegummers';
+            if (b.includes('weinbrenner')) return 'Weinbrenner';
+            if (b.includes('power')) return 'Power';
+            if (b.includes('bata')) return 'Bata';
+            
+            return 'Otras';
         }
 
         searchInput.addEventListener('input', (e) => {
@@ -597,7 +766,7 @@
                 });
                 btn.classList.add('active', 'bg-slate-900', 'text-white');
                 btn.classList.remove('bg-white', 'text-slate-700');
-                
+
                 selectedBrand = btn.dataset.brand;
                 applyFilters();
             });
@@ -612,15 +781,15 @@
                 const title = item.title ? String(item.title).toLowerCase() : '';
                 const category = item.category ? String(item.category).toLowerCase() : '';
 
-                const matchesQuery = !rawQuery || 
-                                     sku.includes(rawQuery) || 
-                                     sku.includes(extractedSku) || 
-                                     title.includes(rawQuery) || 
+                const matchesQuery = !rawQuery ||
+                                     sku.includes(rawQuery) ||
+                                     sku.includes(extractedSku) ||
+                                     title.includes(rawQuery) ||
                                      category.includes(rawQuery);
 
-                const matchesBrand = selectedBrand === 'all' || 
-                                     (item.category && item.category.toLowerCase().includes(selectedBrand.toLowerCase())) ||
-                                     (item.title && item.title.toLowerCase().includes(selectedBrand.toLowerCase()));
+                const itemBrand = getProductBrand(item);
+                const matchesBrand = selectedBrand === 'all' ||
+                                     itemBrand.toLowerCase() === selectedBrand.toLowerCase();
 
                 return matchesQuery && matchesBrand;
             });
@@ -634,6 +803,9 @@
             }
         }
 
+        /* ============================================================
+           LISTA DEL CATÁLOGO (PRECARGA MASIVA Y AGRUPACIÓN)
+           ============================================================ */
         function renderCatalogList(items) {
             catalogList.innerHTML = '';
             resultsCountBadge.textContent = items.length;
@@ -643,18 +815,29 @@
                 return;
             }
 
-            items.forEach(item => {
-                const totalStock = item.sizes ? Object.values(item.sizes).reduce((a, b) => a + Number(b), 0) : (Number(item.totalStock) || 0);
+            // Generador de tarjeta
+            const createCard = (item) => {
+                const totalStock = item.sizes
+                    ? Object.values(item.sizes).reduce((a, b) => a + Number(b), 0)
+                    : (Number(item.totalStock) || 0);
+
+                const skuKey = String(item.sku || '').trim();
+                const cleanKey = skuKey.replace(/\D/g, '');
+                const cached = productNameCache[cleanKey];
+                const hasCachedName = cached && cached.name;
+                const displayTitle = hasCachedName ? cached.name : (item.title || 'Artículo');
+
                 const div = document.createElement('div');
                 div.className = "product-card bg-white p-3 rounded-2xl border border-slate-100 shadow-soft cursor-pointer flex items-center justify-between hover:border-bata-red transition-all";
-                
+
                 div.innerHTML = `
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                             <i class="fa-solid fa-shoe-prints text-slate-400 text-sm"></i>
                         </div>
                         <div class="min-w-0">
-                            <h4 class="text-xs font-black text-slate-900 truncate">${item.title || 'Artículo'}</h4>
+                            <h4 class="bata-name ${hasCachedName ? 'is-resolved' : ''} text-xs font-black text-slate-900 truncate"
+                                data-sku="${cleanKey}">${displayTitle}</h4>
                             <p class="text-[10px] font-mono text-slate-400">SKU: ${item.sku || '-'}</p>
                         </div>
                     </div>
@@ -666,11 +849,57 @@
                     </div>
                 `;
 
-                div.addEventListener('click', () => {
-                    renderProductCard(item);
+                div.addEventListener('click', () => renderProductCard(item));
+                return div;
+            };
+
+            // Agrupación
+            if (selectedBrand === 'all') {
+                const groups = {};
+                items.forEach(item => {
+                    const brand = getProductBrand(item);
+                    if (!groups[brand]) groups[brand] = [];
+                    groups[brand].push(item);
                 });
 
-                catalogList.appendChild(div);
+                Object.keys(groups).sort().forEach(brand => {
+                    const header = document.createElement('div');
+                    header.className = "text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 mb-1 px-1 flex justify-between items-center";
+                    header.innerHTML = `<span>${brand}</span> <span class="bg-slate-100 px-2 py-0.5 rounded text-[9px]">${groups[brand].length}</span>`;
+                    catalogList.appendChild(header);
+
+                    groups[brand].forEach(item => {
+                        catalogList.appendChild(createCard(item));
+                    });
+                });
+            } else {
+                items.forEach(item => {
+                    catalogList.appendChild(createCard(item));
+                });
+            }
+
+            // 🔥 AQUI ESTÁ LA MAGIA: Precargamos TODOS los nombres/marcas en segundo plano
+            prefetchAllCatalogNames(items);
+        }
+
+        // Precarga masiva
+        function prefetchAllCatalogNames(items) {
+            items.forEach(item => {
+                const skuKey = String(item.sku || '').trim().replace(/\D/g, '');
+                if (!skuKey) return;
+
+                const cached = productNameCache[skuKey];
+                if (cached && isCacheValid(cached)) return;
+
+                // Encolamos para que se consulte en paralelo
+                queueBataName(skuKey, (info) => {
+                    // Cuando llega la info, actualizamos el DOM si el elemento sigue visible
+                    const el = catalogList.querySelector(`.bata-name[data-sku="${skuKey}"]`);
+                    if (el && info && info.name) {
+                        el.textContent = info.name;
+                        el.classList.add('is-resolved');
+                    }
+                });
             });
         }
 
@@ -692,6 +921,9 @@
             `;
         }
 
+        /* ============================================================
+           IMAGEN
+           ============================================================ */
         function handleImageError(imgElement) {
             imgElement.classList.add('hidden');
             if (imageFallback) imageFallback.classList.remove('hidden');
@@ -726,7 +958,7 @@
                 const queue = new Int32Array(width * height);
                 let head = 0, tail = 0;
                 const minWhite = 238;
-                
+
                 const enqueue = (x, y) => {
                     if (x < 0 || y < 0 || x >= width || y >= height) return;
                     const pos = y * width + x;
@@ -737,32 +969,49 @@
                         queue[tail++] = pos;
                     }
                 };
-                
+
                 for (let x = 0; x < width; x++) { enqueue(x, 0); enqueue(x, height - 1); }
                 for (let y = 0; y < height; y++) { enqueue(0, y); enqueue(width - 1, y); }
-                
+
                 while (head < tail) {
                     const pos = queue[head++];
                     data[pos * 4 + 3] = 0;
                     const x = pos % width, y = Math.floor(pos / width);
                     enqueue(x + 1, y); enqueue(x - 1, y); enqueue(x, y + 1); enqueue(x, y - 1);
                 }
-                
+
                 ctx.putImageData(imageData, 0, 0);
-                imgElement.onload = null; 
+                imgElement.onload = null;
                 imgElement.src = canvas.toDataURL('image/png');
             } catch (err) {}
         }
 
-        function renderProductCard(product) {
-            currentMatchedProduct = product;
-            emptyState.classList.add('hidden');
-            productCard.classList.remove('hidden');
+        function applyBataImage(bataUrl, product) {
+            if (!bataUrl) { applyLocalImage(product); return; }
 
+            cardImage.dataset.fromBata = 'true';
+            cardImage.dataset.bataUrl = bataUrl;
+            delete cardImage.dataset.processedSku;
+            cardImage.removeAttribute('crossorigin');
+
+            cardImage.classList.remove('hidden');
+            imageFallback.classList.add('hidden');
+
+            cardImage.onload = null;
+            cardImage.onerror = () => {
+                delete cardImage.dataset.fromBata;
+                applyLocalImage(product);
+            };
+            cardImage.src = bataUrl;
+        }
+
+        function applyLocalImage(product) {
             const originalImageUrl = product.imageUrl || getOriginalProductImageUrl(product.sku);
             const imageUrl = product.imageUrl || getProductImageUrl(product.sku);
-            
+
             cardImage.crossOrigin = 'anonymous';
+            delete cardImage.dataset.fromBata;
+            delete cardImage.dataset.bataUrl;
             delete cardImage.dataset.processedSku;
             cardImage.onload = () => removeWhiteBackground(cardImage, product.sku);
             cardImage.onerror = () => {
@@ -776,14 +1025,60 @@
             cardImage.classList.remove('hidden');
             imageFallback.classList.add('hidden');
             cardImage.src = imageUrl;
+        }
+
+        /* ============================================================
+           TARJETA DEL PRODUCTO
+           ============================================================ */
+        function renderProductCard(product) {
+            currentMatchedProduct = product;
+            emptyState.classList.add('hidden');
+            productCard.classList.remove('hidden');
+
+            const cleanSku = String(product.sku || '').trim().replace(/\D/g, '');
+            const cached = productNameCache[cleanSku];
+
+            if (cached && cached.name && cached.image) {
+                applyBataImage(cached.image, product);
+            } else {
+                applyLocalImage(product);
+            }
 
             cardCategory.textContent = product.category || 'CALZADO';
             cardCode.textContent = `SKU: ${product.sku}`;
-            cardTitle.textContent = product.title || `Artículo ${product.sku}`;
             cardPrice.textContent = product.price || 'S/ 0.00';
             ageingTag.textContent = product.ageingDays ? `Antigüedad: ${product.ageingDays}` : 'Antigüedad: N/A';
+            
+            const brandDetected = getProductBrand(product);
+            cardBrand.textContent = `Marca: ${brandDetected}`;
 
-            const totalStock = product.sizes ? Object.values(product.sizes).reduce((a, b) => a + Number(b), 0) : (Number(product.totalStock) || 0);
+            if (cached && cached.name) {
+                cardTitle.textContent = cached.name;
+            } else {
+                cardTitle.innerHTML = `${product.title || 'Artículo ' + product.sku}
+                    <i class="fa-solid fa-spinner fa-spin text-[10px] text-slate-400 ml-1"></i>`;
+
+                queueBataName(cleanSku, (info) => {
+                    if (currentMatchedProduct !== product) return;
+                    if (info && info.name) {
+                        cardTitle.textContent = info.name;
+                        
+                        if (info.brand) {
+                            cardBrand.textContent = `Marca: ${info.brand}`;
+                        }
+
+                        if (info.image && cardImage.dataset.fromBata !== 'true') {
+                            applyBataImage(info.image, product);
+                        }
+                    } else {
+                        cardTitle.textContent = product.title || `Artículo ${product.sku}`;
+                    }
+                });
+            }
+
+            const totalStock = product.sizes
+                ? Object.values(product.sizes).reduce((a, b) => a + Number(b), 0)
+                : (Number(product.totalStock) || 0);
             totalPairs.textContent = `${totalStock} prs`;
 
             if (totalStock <= 0) {
@@ -804,7 +1099,7 @@
                 sortedSizes.forEach(size => {
                     const count = Number(product.sizes[size]) || 0;
                     const sizeBox = document.createElement('div');
-                    
+
                     let containerClass = "p-2 rounded-xl border flex flex-col items-center justify-center text-center transition-all ";
                     let numberClass = "text-base font-black ";
                     let badgeClass = "text-[9px] font-extrabold px-1.5 py-0.5 rounded mt-0.5 ";
@@ -836,12 +1131,16 @@
             }
         }
 
+        /* ============================================================
+           MODAL IMAGEN
+           ============================================================ */
         zoomImageBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
             const src = cardImage.src;
             if (src && !cardImage.classList.contains('hidden')) {
                 modalPreviewImage.src = src;
-                modalImageCaption.textContent = `${currentMatchedProduct.title || 'SKU: ' + currentMatchedProduct.sku}`;
+                modalPreviewImage.dataset.fromBata = cardImage.dataset.fromBata;
+                modalImageCaption.textContent = `${cardTitle.textContent || 'SKU: ' + currentMatchedProduct.sku}`;
                 imageModal.classList.remove('hidden');
                 history.pushState({ modalOpen: 'image' }, '');
             }
@@ -858,12 +1157,14 @@
             }).catch(() => showToast('Error al copiar', 'error'));
         });
 
+        /* ============================================================
+           ESCÁNER
+           ============================================================ */
         scanBtn.addEventListener('click', openScanner);
         centerScanNav.addEventListener('click', openScanner);
 
-        // ABRIR ESCÁNER CENTRALIZADO CON REGISTRO DE HISTORIAL OBLIGATORIO
         function openScanner() {
-            if (!scannerModal.classList.contains('hidden')) return; // Ya está abierto
+            if (!scannerModal.classList.contains('hidden')) return;
             scannerModal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             history.pushState({ modalOpen: 'scanner' }, '');
@@ -904,7 +1205,7 @@
                     } else {
                         stopCameraScanner(false);
                     }
-                    
+
                     const extractedSku = extractSkuFromEan13(decodedText);
                     searchInput.value = extractedSku;
                     clearBtn.classList.remove('hidden');
@@ -967,6 +1268,9 @@
             });
         }
 
+        /* ============================================================
+           SHAKE
+           ============================================================ */
         function setupPreciseShake() {
             if (window.DeviceMotionEvent) {
                 window.addEventListener('devicemotion', (e) => {
@@ -987,7 +1291,7 @@
                                     lastShakeTime = now + 2000;
                                     if (navigator.vibrate) navigator.vibrate(100);
                                     showToast("Doble sacudida: Abriendo escáner", "success");
-                                    openScanner(); // Se usa la función centralizada que incluye el historial
+                                    openScanner();
                                 }
                             } else {
                                 shakeCount = 1;
@@ -1003,6 +1307,9 @@
             }
         }
 
+        /* ============================================================
+           VOZ
+           ============================================================ */
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
@@ -1017,7 +1324,6 @@
             }
 
             voiceBtn.addEventListener('click', toggleVoiceRecognition);
-            headerBar.addEventListener('dblclick', toggleVoiceRecognition);
 
             recognition.onstart = () => {
                 isRecordingVoice = true;
@@ -1027,7 +1333,7 @@
 
             recognition.onresult = (event) => {
                 let rawTranscript = event.results[0][0].transcript.toLowerCase();
-                
+
                 if (rawTranscript.includes('escanear') || rawTranscript.includes('camara') || rawTranscript.includes('cámara')) {
                     openScanner();
                     return;
@@ -1057,10 +1363,16 @@
             voiceBtn.style.display = 'none';
         }
 
+        /* ============================================================
+           TTS
+           ============================================================ */
         speakStockBtn.addEventListener('click', () => {
             if (!currentMatchedProduct) return;
-            const totalStock = currentMatchedProduct.sizes ? Object.values(currentMatchedProduct.sizes).reduce((a, b) => a + Number(b), 0) : 0;
-            const textToSpeak = `Calzado ${currentMatchedProduct.title}. Quedan ${totalStock} pares en almacén.`;
+            const totalStock = currentMatchedProduct.sizes
+                ? Object.values(currentMatchedProduct.sizes).reduce((a, b) => a + Number(b), 0)
+                : 0;
+            const title = cardTitle.textContent || currentMatchedProduct.title || '';
+            const textToSpeak = `Calzado ${title}. Quedan ${totalStock} pares en almacén.`;
 
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(textToSpeak);
@@ -1069,6 +1381,9 @@
             }
         });
 
+        /* ============================================================
+           UTILIDADES
+           ============================================================ */
         function playBeepSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1088,9 +1403,9 @@
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
             const toastIcon = document.getElementById('toastIcon');
-            
+
             toastMessage.textContent = message;
-            
+
             if (type === 'success') {
                 toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-base";
             } else if (type === 'error') {
