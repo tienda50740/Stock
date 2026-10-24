@@ -487,12 +487,10 @@
 
         // GESTOR DE HISTORIAL PARA EL BOTÓN "ATRÁS"
         window.addEventListener('popstate', (e) => {
-            // Si el escáner está abierto, lo cerramos sin salir de la página
             if (!scannerModal.classList.contains('hidden')) {
                 stopCameraScanner(false);
                 return;
             }
-            // Si la previsualización de imagen está abierta, la cerramos
             if (!imageModal.classList.contains('hidden')) {
                 imageModal.classList.add('hidden');
                 return;
@@ -863,7 +861,9 @@
         scanBtn.addEventListener('click', openScanner);
         centerScanNav.addEventListener('click', openScanner);
 
+        // ABRIR ESCÁNER CENTRALIZADO CON REGISTRO DE HISTORIAL OBLIGATORIO
         function openScanner() {
+            if (!scannerModal.classList.contains('hidden')) return; // Ya está abierto
             scannerModal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             history.pushState({ modalOpen: 'scanner' }, '');
@@ -987,7 +987,7 @@
                                     lastShakeTime = now + 2000;
                                     if (navigator.vibrate) navigator.vibrate(100);
                                     showToast("Doble sacudida: Abriendo escáner", "success");
-                                    openScanner();
+                                    openScanner(); // Se usa la función centralizada que incluye el historial
                                 }
                             } else {
                                 shakeCount = 1;
